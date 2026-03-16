@@ -93,6 +93,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,
 .btn-social{width:100%;padding:10px;border-radius:8px;font-size:.83rem;font-weight:600;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
 .btn-social.dc{background:var(--discord);color:#fff}
 .btn-social.dc:hover{opacity:.9}
+.btn-social.google{background:#DB4437;color:#fff}
+.btn-social.google:hover{opacity:.9}
+.btn-social.github{background:#333;color:#fff}
+.btn-social.github:hover{opacity:.9}
 .modal-switch{text-align:center;margin-top:16px;font-size:.82rem;color:var(--text2)}
 .modal-switch a{color:var(--gold);cursor:pointer;font-weight:600}
 
@@ -205,9 +209,10 @@ footer{background:#fff;border-top:1px solid var(--border);padding:32px 0 20px}
       <button class="nav-btn btn-ghost" onclick="openModal('login')">Giriş Yap</button>
       <button class="nav-btn btn-gold" onclick="openModal('register')">Kayıt Ol</button>
     </div>
-    <div class="nav-user" id="navUser">
+    <div class="nav-user" id="navUser" onclick="openModal('settings')">
       <div class="avatar" id="navAvatar">U</div>
       <span id="navUsername">Kullanıcı</span>
+      <i class="fas fa-chevron-down" style="font-size:0.7rem; color:var(--text3); margin-left:4px;"></i>
     </div>
   </div>
 </nav>
@@ -222,7 +227,7 @@ footer{background:#fff;border-top:1px solid var(--border);padding:32px 0 20px}
     <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="btn btn-discord"><i class="fab fa-discord"></i> Discord</a>
   </div>
   <div class="hero-stats">
-    <div class="stat"><h3>10K+</h3><p>Kullanıcı</p></div>
+    <div class="stat"><h3 id="realUserCount">...</h3><p>Kayıtlı Kullanıcı</p></div>
     <div class="stat"><h3>Ücretsiz</h3><p>Tamamen Bedava</p></div>
     <div class="stat"><h3>7/24</h3><p>Destek</p></div>
   </div>
@@ -287,12 +292,19 @@ footer{background:#fff;border-top:1px solid var(--border);padding:32px 0 20px}
         <button class="card-btn"><i class="fas fa-arrow-right"></i> Katıl</button>
       </a>
     </div>
-    <div class="dash-info">
-      <h4><i class="fas fa-user"></i> Hesap Bilgileri</h4>
-      <div class="info-row"><span>Kullanıcı Adı</span><span id="infoUsername">-</span></div>
-      <div class="info-row"><span>E-posta</span><span id="infoEmail">-</span></div>
-      <div class="info-row"><span>Hesap Durumu</span><span style="color:var(--green)">✓ Aktif</span></div>
-      <div class="info-row"><span>Üyelik</span><span>Ücretsiz</span></div>
+    <div class="dash-cards" style="grid-template-columns: 1fr;">
+      <div class="dash-info" style="margin-bottom:0; height:fit-content;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h4 style="margin:0;"><i class="fas fa-user-circle"></i> Detaylı Hesap Bilgileri</h4>
+          <button class="nav-btn btn-ghost" onclick="openModal('settings')" style="padding:4px 12px; font-size:0.75rem;"><i class="fas fa-cog"></i> Ayarlar</button>
+        </div>
+        <div class="info-row"><span>Kullanıcı Adı</span><span id="infoUsername" style="font-weight:600">-</span></div>
+        <div class="info-row"><span>E-posta</span><span id="infoEmail">-</span></div>
+        <div class="info-row"><span>Hesap ID</span><span id="infoId" style="font-size:0.75rem; color:var(--text3)">-</span></div>
+        <div class="info-row"><span>Kayıt Tarihi</span><span id="infoCreated">-</span></div>
+        <div class="info-row"><span>Hesap Durumu</span><span style="color:var(--green)"><i class="fas fa-check-circle"></i> Onaylı</span></div>
+        <div class="info-row"><span>Paket</span><span style="color:var(--gold)"><i class="fas fa-crown"></i> Studio Free</span></div>
+      </div>
     </div>
   </div>
 </div>
@@ -311,9 +323,7 @@ footer{background:#fff;border-top:1px solid var(--border);padding:32px 0 20px}
       <div class="form-group"><label>Şifre Tekrar</label><input type="password" id="regPassword2" placeholder="Şifreyi tekrarla" required><div class="form-error" id="regPassword2Err"></div></div>
       <button type="submit" class="btn-submit" id="regBtn">Kayıt Ol</button>
     </form>
-    <div class="modal-divider">veya</div>
-    <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="btn-social dc"><i class="fab fa-discord"></i> Discord ile devam et</a>
-    <div class="modal-switch">Hesabın var mı? <a onclick="switchModal('login')">Giriş Yap</a></div>
+    <div class="modal-switch" style="margin-top:20px;">Hesabın var mı? <a onclick="switchModal('login')">Giriş Yap</a></div>
   </div>
   <div class="modal" id="loginModal" style="display:none">
     <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
@@ -325,9 +335,47 @@ footer{background:#fff;border-top:1px solid var(--border);padding:32px 0 20px}
       <div class="form-group"><label>Şifre</label><input type="password" id="loginPassword" placeholder="Şifren" required><div class="form-error" id="loginPasswordErr"></div></div>
       <button type="submit" class="btn-submit" id="loginBtn">Giriş Yap</button>
     </form>
-    <div class="modal-divider">veya</div>
-    <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="btn-social dc"><i class="fab fa-discord"></i> Discord ile devam et</a>
-    <div class="modal-switch">Hesabın yok mu? <a onclick="switchModal('register')">Kayıt Ol</a></div>
+    <div class="modal-switch" style="margin-top:20px;">Hesabın yok mu? <a onclick="switchModal('register')">Kayıt Ol</a></div>
+  </div>
+  
+  <div class="modal" id="settingsModal" style="display:none; padding:30px;">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <h2><i class="fas fa-cog"></i> Hesap Ayarları</h2>
+    <p class="subtitle" style="margin-bottom:16px;">Profilini buradan güncelleyebilir veya çıkış yapabilirsin.</p>
+    
+    <div style="background:var(--bg2); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
+      <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--accent);"><i class="fas fa-user-edit"></i> Profil Bilgileri</h4>
+      <form onsubmit="handleUpdateProfile(event)">
+        <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="updateUsername" required minlength="3"></div>
+        <div class="form-group"><label>E-posta</label><input type="email" id="updateEmail" required></div>
+        <button type="submit" class="btn-submit" id="btnUpdateProfile" style="padding:10px; font-size:0.85rem;">Profili Güncelle</button>
+      </form>
+    </div>
+    
+    <div style="background:var(--bg2); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
+      <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--accent);"><i class="fas fa-lock"></i> Şifre Değiştir</h4>
+      <p style="font-size:0.8rem; color:var(--text2); margin-bottom:12px; line-height:1.4;">Güvenliğiniz için şifre değiştirme bağlantısını e-posta adresinize göndereceğiz.</p>
+      <button onclick="handleSendPasswordReset(event)" class="btn-submit" id="btnUpdatePassword" style="background:var(--accent); padding:10px; font-size:0.85rem; width:100%;">Şifre Sıfırlama Bağlantısı Gönder</button>
+    </div>
+
+    <div style="border-top:1px solid var(--border); padding-top:16px; margin-top:16px;">
+      <button onclick="logout()" class="btn-submit" style="background:var(--red); padding:10px; font-size:0.85rem; width:100%;"><i class="fas fa-sign-out-alt"></i> Hesaptan Çıkış Yap</button>
+    </div>
+  </div>
+
+  <div class="modal" id="otpModal" style="display:none; text-align:center;">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <div style="font-size:3rem; color:var(--gold); margin-bottom:16px;"><i class="fas fa-envelope-open-text"></i></div>
+    <h2>Doğrulama Kodu</h2>
+    <p class="subtitle">E-posta adresine 6 haneli bir kod gönderdik. Lütfen aşağıya gir.</p>
+    <form onsubmit="handleVerifyOTP(event)">
+      <div class="form-group">
+        <input type="text" id="otpCode" placeholder="000000" maxlength="6" style="text-align:center; font-size:1.5rem; letter-spacing:8px; font-weight:800; padding:15px;" required>
+        <div class="form-error" id="otpError"></div>
+      </div>
+      <button type="submit" class="btn-submit" id="otpBtn">Onayla ve Giriş Yap</button>
+    </form>
+    <div class="modal-switch" style="margin-top:20px;">Kod gelmedi mi? <a onclick="resendOTP()">Tekrar Gönder</a></div>
   </div>
 </div>
 
@@ -362,12 +410,22 @@ function getLocal(){return JSON.parse(localStorage.getItem('urun_current')||'nul
 function setLocal(u){localStorage.setItem('urun_current',JSON.stringify(u))}
 
 // MODAL
-function openModal(t){document.getElementById('modalOverlay').classList.add('open');document.getElementById('registerModal').style.display=t==='register'?'block':'none';document.getElementById('loginModal').style.display=t==='login'?'block':'none';clearErrors()}
+let lastEmail = ""; // To track email for OTP
+let lastType = "signup"; // signup or login
+
+function openModal(t){
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('registerModal').style.display=t==='register'?'block':'none';
+  document.getElementById('loginModal').style.display=t==='login'?'block':'none';
+  document.getElementById('settingsModal').style.display=t==='settings'?'block':'none';
+  document.getElementById('otpModal').style.display=t==='otp'?'block':'none';
+  clearErrors();
+}
 function closeModal(){document.getElementById('modalOverlay').classList.remove('open')}
 function closeModalOutside(e){if(e.target===document.getElementById('modalOverlay'))closeModal()}
 function switchModal(t){openModal(t)}
 function clearErrors(){document.querySelectorAll('.form-error').forEach(e=>{e.textContent='';e.classList.remove('show')})}
-function showError(id,msg){const el=document.getElementById(id);el.textContent=msg;el.classList.add('show')}
+function showError(id,msg){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.classList.add('show')}
 
 // REGISTER
 async function handleRegister(e){
@@ -392,14 +450,21 @@ async function handleRegister(e){
       const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{username}}});
       if(error)throw error;
       if(data.user){
-        closeModal();
-        showToast('Hesabın oluşturuldu! Hoş geldin, '+username);
-        updateUI();
+        lastEmail = email;
+        lastType = "signup";
+        openModal('otp');
+        showToast('Onay kodu e-postana gönderildi.', false);
         btn.disabled=false;btn.textContent='Kayıt Ol';
         return;
       }
     }catch(err){
       console.warn('Supabase kayıt hatası, localStorage kullanılacak:',err.message);
+      // If it's a real auth error (not connection), don't fallback to local
+      if(err.status) {
+        showError('regEmailErr', err.message);
+        btn.disabled=false;btn.textContent='Kayıt Ol';
+        return;
+      }
       useLocal=true;
     }
   }
@@ -429,7 +494,28 @@ async function handleLogin(e){
   if(sb&&!useLocal){
     try{
       const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
-      if(error)throw error;
+      if(error) {
+        // If not confirmed, Supabase might allow re-sending OTP or just fail
+        if(error.message.includes('confirm')) {
+           lastEmail = email;
+           lastType = "signup";
+           await sb.auth.resend({type: 'signup', email: email});
+           openModal('otp');
+           return;
+        }
+        throw error;
+      }
+      
+      // Check if email is confirmed
+      if (data.user && !data.user.email_confirmed_at) {
+        lastEmail = email;
+        lastType = "signup";
+        await sb.auth.resend({type: 'signup', email: email});
+        openModal('otp');
+        btn.disabled=false;btn.textContent='Giriş Yap';
+        return;
+      }
+
       closeModal();
       const name=data.user?.user_metadata?.username||email.split('@')[0];
       showToast('Giriş yapıldı! Hoş geldin, '+name);
@@ -438,8 +524,8 @@ async function handleLogin(e){
       return;
     }catch(err){
       // If Supabase fails with auth error, show it
-      if(err.message&&(err.message.includes('Invalid')||err.message.includes('credentials'))){
-        showError('loginPasswordErr','E-posta veya şifre hatalı.');
+      if(err.message&&(err.message.includes('Invalid')||err.message.includes('credentials')||err.message.includes('confirmed'))){
+        showError('loginPasswordErr', err.message.includes('confirmed') ? 'E-posta onaylanmamış.' : 'E-posta veya şifre hatalı.');
         btn.disabled=false;btn.textContent='Giriş Yap';
         return;
       }
@@ -465,6 +551,25 @@ async function logout(){
   updateUI();
 }
 
+// OAUTH LOGIN
+async function handleOAuthLogin(provider) {
+  if (sb && !useLocal) {
+    try {
+      const { data, error } = await sb.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+    } catch (err) {
+      showToast('Hata: ' + err.message, true);
+    }
+  } else {
+    showToast('Yerel modda sosyal medya girişi desteklenmez.', true);
+  }
+}
+
 // UI UPDATE
 async function updateUI(){
   let user=null;
@@ -473,17 +578,40 @@ async function updateUI(){
   if(sb&&!useLocal){
     try{
       const{data:{session}}=await sb.auth.getSession();
-      if(session?.user){
+      
+      // Check if user has email confirmed OR if they logged in via OAuth
+      const isEmailConfirmed = session?.user?.email_confirmed_at;
+      const isOAuth = session?.user?.app_metadata?.provider && session.user.app_metadata.provider !== 'email';
+
+      if(session?.user && (isEmailConfirmed || isOAuth)) {
         user={
-          username:session.user.user_metadata?.username||session.user.email.split('@')[0],
-          email:session.user.email
+          // Use provider metadata if username is missing
+          username:session.user.user_metadata?.username || session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email.split('@')[0],
+          email:session.user.email,
+          created: new Date(session.user.created_at).toLocaleDateString('tr-TR'),
+          id: session.user.id
         };
+      } else if (session?.user && !isEmailConfirmed && !isOAuth) {
+        // Force logout if somehow session exists but not confirmed and NOT oauth
+        await sb.auth.signOut();
       }
     }catch(e){useLocal=true}
   }
 
   // Fallback: localStorage
-  if(!user)user=getLocal();
+  if(!user){
+    let localUser = getLocal();
+    if(localUser){
+      let users = getUsers();
+      let fullUser = users.find(u => u.email === localUser.email);
+      user = {
+        username: localUser.username,
+        email: localUser.email,
+        created: fullUser && fullUser.created ? new Date(fullUser.created).toLocaleDateString('tr-TR') : 'Bilinmiyor',
+        id: 'LOC-' + Math.abs((localUser.email||'').split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16).padEnd(8,'0')
+      };
+    }
+  }
 
   const authBtns=document.getElementById('authButtons');
   const navUser=document.getElementById('navUser');
@@ -500,11 +628,142 @@ async function updateUI(){
     document.getElementById('dashEmail').textContent=user.email;
     document.getElementById('infoUsername').textContent=user.username;
     document.getElementById('infoEmail').textContent=user.email;
+    document.getElementById('infoId').textContent=user.id;
+    document.getElementById('infoCreated').textContent=user.created;
+    
+    // Update inputs
+    document.getElementById('updateUsername').value = user.username;
+    document.getElementById('updateEmail').value = user.email;
+
     hero.style.display='none';dash.style.display='block';dash.classList.add('show');main.style.display='none';
-    window.scrollTo({top:0});
   }else{
     authBtns.style.display='flex';navUser.style.display='none';
     hero.style.display='block';dash.style.display='none';dash.classList.remove('show');main.style.display='block';
+  }
+}
+
+// PROFILE & SETTINGS UPDATE
+async function handleUpdateProfile(e) {
+  e.preventDefault();
+  const username = document.getElementById('updateUsername').value.trim();
+  const email = document.getElementById('updateEmail').value.trim();
+  const btn = document.getElementById('btnUpdateProfile');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Güncelleniyor...';
+
+  if (sb && !useLocal) {
+    try {
+      const { error } = await sb.auth.updateUser({
+        email: email,
+        data: { username: username }
+      });
+      if (error) throw error;
+      showToast('Profil güncellendi!');
+      updateUI();
+    } catch (err) {
+      showToast('Hata: ' + err.message, true);
+    }
+  } else {
+    // Local storage fallback
+    let current = getLocal();
+    let users = getUsers();
+    let userIndex = users.findIndex(u => u.email === current.email);
+    if(userIndex > -1){
+      if(email !== current.email && users.find(u => u.email === email)){
+        showToast('Bu e-posta zaten kullanımda.', true);
+        btn.disabled = false; btn.textContent = 'Profili Güncelle';
+        return;
+      }
+      users[userIndex].username = username;
+      users[userIndex].email = email;
+      saveUsers(users);
+      current.username = username;
+      current.email = email;
+      setLocal(current);
+      showToast('Profil güncellendi!');
+      updateUI();
+    }
+  }
+  btn.disabled = false; btn.textContent = 'Profili Güncelle';
+}
+
+async function handleSendPasswordReset(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btnUpdatePassword');
+
+  let currentEmail = document.getElementById('infoEmail').textContent;
+  if (!currentEmail || currentEmail === '-') {
+    showToast('Önce giriş yapmalısınız.', true);
+    return;
+  }
+
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Gönderiliyor...';
+
+  if (sb && !useLocal) {
+    try {
+      const { error } = await sb.auth.resetPasswordForEmail(currentEmail, {
+        redirectTo: window.location.origin
+      });
+      if (error) throw error;
+      showToast('Şifre sıfırlama bağlantısı e-postanıza gönderildi!');
+    } catch (err) {
+      showToast('Hata: ' + err.message, true);
+    }
+  } else {
+    // Local storage test info
+    setTimeout(() => {
+      showToast('Yerel moddasınız. E-posta gönderimi simüle edildi!');
+    }, 800);
+  }
+  
+  setTimeout(() => {
+    btn.disabled = false; btn.textContent = 'Şifre Sıfırlama Bağlantısı Gönder';
+  }, 1000);
+}
+
+// VERIFY OTP
+async function handleVerifyOTP(e) {
+  e.preventDefault();
+  const code = document.getElementById('otpCode').value.trim();
+  const btn = document.getElementById('otpBtn');
+  const err = document.getElementById('otpError');
+  err.textContent = ""; err.classList.remove('show');
+
+  if (code.length !== 6) {
+    showError('otpError', 'Lütfen 6 haneli kodu girin.');
+    return;
+  }
+
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Doğrulanıyor...';
+
+  try {
+    const { data, error } = await sb.auth.verifyOtp({
+      email: lastEmail,
+      token: code,
+      type: lastType === 'signup' ? 'signup' : 'login'
+    });
+
+    if (error) throw error;
+
+    closeModal();
+    showToast('Doğrulama başarılı! Giriş yapıldı.');
+    updateUI();
+  } catch (err) {
+    showError('otpError', 'Kod hatalı veya süresi dolmuş.');
+    btn.disabled = false; btn.textContent = 'Onayla ve Giriş Yap';
+  }
+}
+
+async function resendOTP() {
+  if (!lastEmail) return;
+  showToast('Kod tekrar gönderiliyor...');
+  try {
+    await sb.auth.resend({
+      type: lastType === 'signup' ? 'signup' : 'login',
+      email: lastEmail
+    });
+    showToast('Yeni kod gönderildi!');
+  } catch (e) {
+    showToast('Hata: ' + e.message, true);
   }
 }
 
@@ -522,7 +781,27 @@ if(sb&&!useLocal){
   try{sb.auth.onAuthStateChange((event,session)=>{updateUI()})}catch(e){}
 }
 
+// REAL USER COUNT
+async function fetchUserCount() {
+  const countEl = document.getElementById('realUserCount');
+  if (sb && !useLocal) {
+    try {
+      // Supabase RPC or direct count from a public profiles table is better
+      // But for basic setup, we can use a small trick if enabled, 
+      // or just show a more realistic 'Aktif' status
+      const { count, error } = await sb.from('profiles').select('*', { count: 'exact', head: true });
+      if (!error && count !== null) {
+        countEl.textContent = count + (count > 1000 ? '+' : '');
+        return;
+      }
+    } catch (e) {}
+  }
+  // Fallback if no profiles table yet
+  countEl.textContent = 'Aktif';
+}
+
 // Init
+fetchUserCount();
 updateUI();
 </script>
 </body>
