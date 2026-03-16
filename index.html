@@ -679,14 +679,8 @@ footer {
 const SUPABASE_URL='https://qyyxblsytifczxcgpvpi.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5eXhibHN5dGlmY3p4Y2dwdnBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MzA2NTIsImV4cCI6MjA4NTIwNjY1Mn0.gFny_HVvl2KGYrs1J0T9mR06U5kR95FI_dOIuHkSvA4';
 
-let sb=null; let useLocal=false;
-try{ sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); }
-catch(e){ useLocal=true; }
-
-function getUsers(){return JSON.parse(localStorage.getItem('urun_users')||'[]')}
-function saveUsers(u){localStorage.setItem('urun_users',JSON.stringify(u))}
-function getLocal(){return JSON.parse(localStorage.getItem('urun_current')||'null')}
-function setLocal(u){localStorage.setItem('urun_current',JSON.stringify(u))}
+let sb = null;
+try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.error(e); }
 
 let lastEmail = ""; let lastType = "signup"; 
 
@@ -715,29 +709,22 @@ async function handleRegister(e){
   const btn=document.getElementById('regBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> İşleniyor...';
 
-  if(sb&&!useLocal){
-    try{
-      const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{username}}});
-      if(error)throw error;
-      if(data.user){
-        lastEmail = email; lastType = "signup";
-        openModal('otp');
-        showToast('Onay kodu gönderildi.', false);
-        btn.disabled=false;btn.textContent='Kayıt Ol';
-        return;
-      }
-    }catch(err){
-      if(err.status) { showError('regEmailErr', err.message); btn.disabled=false;btn.textContent='Kayıt Ol'; return; }
-      useLocal=true;
+  try{
+    const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{username}}});
+    if(error) {
+      if(error.status === 429) throw new Error("Çok fazla istek attınız, lütfen bir süre bekleyin.");
+      throw error;
     }
+    if(data.user){
+      lastEmail = email; lastType = "signup";
+      openModal('otp');
+      showToast('Onay kodu e-postanıza gönderildi.', false);
+    }
+  }catch(err){
+    showError('regEmailErr', err.message || 'Kayıt sırasında bir hata oluştu.');
+  } finally {
+    btn.disabled=false;btn.textContent='Kayıt Ol';
   }
-
-  const users=getUsers();
-  if(users.find(u=>u.email===email)){showError('regEmailErr','E-posta kayıtlı.');btn.disabled=false;btn.textContent='Kayıt Ol';return}
-  users.push({username,email,password:pass,created:new Date().toISOString()});
-  saveUsers(users); setLocal({username,email});
-  closeModal();showToast('Hoş geldin, '+username); updateUI();
-  btn.disabled=false;btn.textContent='Kayıt Ol';
 }
 
 async function handleLogin(e){
@@ -747,46 +734,37 @@ async function handleLogin(e){
   const btn=document.getElementById('loginBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> İşleniyor...';
 
-  if(sb&&!useLocal){
-    try{
-      const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
-      if(error) {
-        if(error.message.includes('confirm')) {
-           lastEmail = email; lastType = "signup";
-           await sb.auth.resend({type: 'signup', email: email});
-           openModal('otp'); btn.disabled=false;btn.textContent='Giriş Yap'; return;
-        } throw error;
-      }
-      if (data.user && !data.user.email_confirmed_at) {
-        lastEmail = email; lastType = "signup";
-        await sb.auth.resend({type: 'signup', email: email});
-        openModal('otp'); btn.disabled=false;btn.textContent='Giriş Yap'; return;
-      }
-      closeModal();
-      showToast('Giriş başarılı.'); updateUI();
-      btn.disabled=false;btn.textContent='Giriş Yap'; return;
-    }catch(err){
-      if(err.message){ showError('loginPasswordErr', 'Hatalı giriş.'); btn.disabled=false;btn.textContent='Giriş Yap'; return; }
-      useLocal=true;
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error) {
+      if(error.message.toLowerCase().includes('confirm') || error.message.includes('Email not confirmed')) {
+         lastEmail = email; lastType = "signup";
+         await sb.auth.resend({type: 'signup', email: email});
+         openModal('otp'); btn.disabled=false;btn.textContent='Giriş Yap'; return;
+      } throw error;
     }
+    if (data.user && !data.user.email_confirmed_at) {
+      lastEmail = email; lastType = "signup";
+      await sb.auth.resend({type: 'signup', email: email});
+      openModal('otp'); btn.disabled=false;btn.textContent='Giriş Yap'; return;
+    }
+    closeModal();
+    showToast('Giriş başarılı.'); updateUI();
+  }catch(err){
+    showError('loginPasswordErr', err.message === 'Invalid login credentials' ? 'Hatalı e-posta veya şifre.' : err.message);
+  } finally {
+    btn.disabled=false;btn.textContent='Giriş Yap';
   }
-
-  const user=getUsers().find(u=>u.email===email&&u.password===pass);
-  if(!user){showError('loginPasswordErr','Hatalı giriş.');btn.disabled=false;btn.textContent='Giriş Yap';return}
-  setLocal({username:user.username,email:user.email});
-  closeModal();showToast('Giriş yapıldı.'); updateUI();
-  btn.disabled=false;btn.textContent='Giriş Yap';
 }
 
 async function logout(){
-  if(sb&&!useLocal){try{await sb.auth.signOut()}catch(e){}}
-  localStorage.removeItem('urun_current');
+  if(sb){try{await sb.auth.signOut()}catch(e){}}
   showToast('Çıkış yapıldı.'); updateUI();
 }
 
 async function updateUI(){
   let user=null;
-  if(sb&&!useLocal){
+  if(sb){
     try{
       const{data:{session}}=await sb.auth.getSession();
       if(session?.user && session.user.email_confirmed_at) {
@@ -799,19 +777,7 @@ async function updateUI(){
       } else if (session?.user && !session.user.email_confirmed_at) {
         await sb.auth.signOut();
       }
-    }catch(e){useLocal=true}
-  }
-
-  if(!user){
-    let localUser = getLocal();
-    if(localUser){
-      let fullUser = getUsers().find(u => u.email === localUser.email);
-      user = {
-        username: localUser.username, email: localUser.email,
-        created: fullUser ? new Date(fullUser.created).toLocaleDateString('tr-TR') : '-',
-        id: 'LOC-' + Math.random().toString(36).substr(2,9).toUpperCase()
-      };
-    }
+    }catch(e){}
   }
 
   if(user){
@@ -852,20 +818,12 @@ async function handleUpdateProfile(e) {
   const btn = document.getElementById('btnUpdateProfile');
   btn.disabled = true;
 
-  if (sb && !useLocal) {
+  if (sb) {
     try {
       const { error } = await sb.auth.updateUser({ email, data: { username } });
       if (error) throw error;
       showToast('Profil güncellendi!'); updateUI();
     } catch (err) { showToast('Hata: ' + err.message, true); }
-  } else {
-    let current = getLocal(); let users = getUsers();
-    let idx = users.findIndex(u => u.email === current.email);
-    if(idx > -1){
-      users[idx].username = username; users[idx].email = email;
-      saveUsers(users); setLocal({username, email});
-      showToast('Profil güncellendi!'); updateUI();
-    }
   }
   btn.disabled = false;
 }
@@ -875,10 +833,10 @@ async function handleSendPasswordReset(e) {
   let currentEmail = document.getElementById('infoEmail').textContent;
   if (!currentEmail || currentEmail === '-') return;
   
-  if (sb && !useLocal) {
+  if (sb) {
     try { await sb.auth.resetPasswordForEmail(currentEmail); showToast('Bağlantı gönderildi!'); }
     catch (err) { showToast('Hata oluştu.', true); }
-  } else { showToast('Yerel modda gönderim simüle edildi!'); }
+  }
 }
 
 async function handleVerifyOTP(e) {
@@ -890,8 +848,8 @@ async function handleVerifyOTP(e) {
   try {
     const { error } = await sb.auth.verifyOtp({ email: lastEmail, token: code, type: lastType });
     if (error) throw error;
-    closeModal(); showToast('Doğrulandı.'); updateUI();
-  } catch (err) { showError('otpError', 'Geçersiz kod.'); }
+    closeModal(); showToast('E-posta başarıyla doğrulandı.'); updateUI();
+  } catch (err) { showError('otpError', 'Geçersiz veya süresi dolmuş kod.'); }
 }
 
 async function resendOTP() {
@@ -912,7 +870,7 @@ function showToast(msg,isError){
   setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-if(sb&&!useLocal){ try{sb.auth.onAuthStateChange(()=>updateUI())}catch(e){} }
+if(sb){ try{sb.auth.onAuthStateChange(()=>updateUI())}catch(e){} }
 
 updateUI();
 </script>
