@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ürün Studio</title>
+<meta name="description" content="Ürün Studio - Ücretsiz platform. Hesap oluştur, indir ve başla.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#ffffff;--bg2:#f7f7f8;--bg3:#eeeff2;
+  --card:#ffffff;--accent:#2d4059;--accent2:#3a6073;
+  --gold:#c9a84c;--gold2:#b8953f;
+  --green:#16a34a;--red:#dc2626;
+  --text:#1a1a1a;--text2:#6b7280;--text3:#9ca3af;
+  --border:#e5e7eb;--border2:#d1d5db;
+  --discord:#5865F2;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow2:0 4px 12px rgba(0,0,0,.08);
+  --shadow3:0 10px 30px rgba(0,0,0,.1)
+}
+body{font-family:'Inter',sans-serif;background:var(--bg2);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+.logo img{height:36px}
+.logo-text{font-size:1.1rem;font-weight:800;color:var(--accent)}
+.logo-text span{color:var(--gold)}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{font-size:.85rem;font-weight:500;color:var(--text2);transition:.2s}
+.nav-links a:hover{color:var(--accent)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-btn{padding:8px 18px;border-radius:8px;font-size:.83rem;font-weight:600;cursor:pointer;border:none;transition:.2s;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-gold:hover{background:var(--gold2);box-shadow:var(--shadow2)}
+.nav-user{display:none;align-items:center;gap:8px;cursor:pointer;padding:4px 12px 4px 4px;border-radius:8px;border:1px solid var(--border);transition:.2s}
+.nav-user:hover{border-color:var(--gold)}
+.nav-user .avatar{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff}
+.nav-user span{font-size:.83rem;font-weight:500;color:var(--text)}
+
+/* HERO */
+.hero{margin-top:60px;padding:80px 40px;text-align:center;background:var(--bg)}
+.hero-logo{width:100px;margin-bottom:20px}
+.hero h1{font-size:2.6rem;font-weight:900;color:var(--accent);margin-bottom:12px;line-height:1.15}
+.hero h1 span{color:var(--gold)}
+.hero p{color:var(--text2);font-size:1.05rem;max-width:500px;margin:0 auto 28px;line-height:1.6}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{padding:12px 28px;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;border:none;transition:.2s;font-family:inherit;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--gold);color:#fff;box-shadow:0 2px 8px rgba(201,168,76,.2)}
+.btn-primary:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(201,168,76,.3)}
+.btn-discord{background:var(--discord);color:#fff}
+.btn-discord:hover{opacity:.9;transform:translateY(-1px)}
+.btn-outline{background:#fff;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.hero-stats{display:flex;gap:48px;justify-content:center;margin-top:40px}
+.stat{text-align:center}
+.stat h3{font-size:1.4rem;font-weight:800;color:var(--gold)}
+.stat p{font-size:.78rem;color:var(--text3);margin-top:2px}
+
+/* PAGE SECTIONS */
+.container{max-width:900px;margin:0 auto;padding:0 32px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:200;opacity:0;pointer-events:none;transition:.25s;display:flex;align-items:center;justify-content:center}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border:1px solid var(--border);border-radius:16px;padding:36px;width:400px;max-width:92vw;position:relative;transform:scale(.95) translateY(12px);transition:.3s;box-shadow:var(--shadow3)}
+.modal-overlay.open .modal{transform:scale(1) translateY(0)}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text3);font-size:1rem;cursor:pointer;transition:.2s;width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{color:var(--text);background:var(--bg2)}
+.modal-logo{width:56px;margin-bottom:14px}
+.modal h2{font-size:1.3rem;font-weight:700;color:var(--accent);margin-bottom:4px}
+.modal .subtitle{color:var(--text2);font-size:.83rem;margin-bottom:22px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.78rem;font-weight:500;color:var(--text2);margin-bottom:4px}
+.form-group input{width:100%;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.87rem;outline:none;transition:.2s;font-family:inherit}
+.form-group input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.1)}
+.form-group input::placeholder{color:var(--text3)}
+.form-error{color:var(--red);font-size:.72rem;margin-top:3px;display:none}
+.form-error.show{display:block}
+.btn-submit{width:100%;padding:12px;border-radius:8px;font-size:.9rem;font-weight:600;border:none;cursor:pointer;font-family:inherit;background:var(--gold);color:#fff;transition:.2s;margin-top:4px}
+.btn-submit:hover{background:var(--gold2)}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed}
+.modal-divider{text-align:center;margin:16px 0;position:relative;color:var(--text3);font-size:.76rem}
+.modal-divider::before,.modal-divider::after{content:'';position:absolute;top:50%;width:calc(50% - 16px);height:1px;background:var(--border)}
+.modal-divider::before{left:0}.modal-divider::after{right:0}
+.btn-social{width:100%;padding:10px;border-radius:8px;font-size:.83rem;font-weight:600;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
+.btn-social.dc{background:var(--discord);color:#fff}
+.btn-social.dc:hover{opacity:.9}
+.modal-switch{text-align:center;margin-top:16px;font-size:.82rem;color:var(--text2)}
+.modal-switch a{color:var(--gold);cursor:pointer;font-weight:600}
+
+/* DASHBOARD */
+.dashboard{display:none;margin-top:60px;min-height:calc(100vh - 60px);padding:40px 32px}
+.dashboard.show{display:block}
+.dash-grid{max-width:900px;margin:0 auto}
+.welcome-bar{background:#fff;border:1px solid var(--border);border-radius:14px;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;box-shadow:var(--shadow);flex-wrap:wrap;gap:16px}
+.welcome-left{display:flex;align-items:center;gap:16px}
+.welcome-left .avatar-lg{width:52px;height:52px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff}
+.welcome-left div h2{font-size:1.2rem;font-weight:700;color:var(--accent)}
+.welcome-left div p{font-size:.83rem;color:var(--text2);margin-top:2px}
+.welcome-right{display:flex;gap:10px;flex-wrap:wrap}
+
+.dash-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.dash-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:28px;box-shadow:var(--shadow);transition:.2s;cursor:pointer;text-align:center}
+.dash-card:hover{box-shadow:var(--shadow2);transform:translateY(-2px)}
+.dash-card i{font-size:2rem;margin-bottom:12px}
+.dash-card.download-card i{color:var(--gold)}
+.dash-card.discord-card i{color:var(--discord)}
+.dash-card h3{font-size:1rem;font-weight:600;margin-bottom:6px;color:var(--accent)}
+.dash-card p{font-size:.82rem;color:var(--text2);margin-bottom:16px;line-height:1.5}
+.dash-card .card-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border-radius:8px;font-size:.85rem;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:.2s}
+.download-card .card-btn{background:var(--gold);color:#fff}
+.download-card .card-btn:hover{background:var(--gold2)}
+.discord-card .card-btn{background:var(--discord);color:#fff}
+.discord-card .card-btn:hover{opacity:.9}
+
+.dash-info{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px 28px;box-shadow:var(--shadow)}
+.dash-info h4{font-size:.9rem;font-weight:600;margin-bottom:14px;color:var(--accent)}
+.info-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bg3);font-size:.84rem}
+.info-row:last-child{border:none}
+.info-row span:first-child{color:var(--text2)}
+.info-row span:last-child{font-weight:500;color:var(--text)}
+
+/* FEATURES */
+.features-section{padding:60px 0;background:var(--bg)}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:800px;margin:0 auto;padding:0 32px}
+.feat{text-align:center;padding:28px 18px;border-radius:12px;border:1px solid var(--border);background:#fff;transition:.2s}
+.feat:hover{box-shadow:var(--shadow2);transform:translateY(-2px)}
+.feat i{font-size:1.6rem;color:var(--gold);margin-bottom:10px}
+.feat h4{font-size:.88rem;font-weight:600;margin-bottom:4px;color:var(--accent)}
+.feat p{font-size:.76rem;color:var(--text2);line-height:1.5}
+
+/* DOWNLOAD SECTION */
+.dl-section{padding:50px 0;text-align:center}
+.dl-box{background:#fff;border:1px solid var(--border);border-radius:14px;padding:40px;max-width:560px;margin:0 auto;box-shadow:var(--shadow)}
+.dl-box i.dl-icon{font-size:2.5rem;color:var(--gold);margin-bottom:14px}
+.dl-box h3{font-size:1.2rem;font-weight:700;color:var(--accent);margin-bottom:6px}
+.dl-box p{color:var(--text2);font-size:.88rem;margin-bottom:22px}
+.dl-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.dl-info{margin-top:16px;display:flex;gap:16px;justify-content:center;font-size:.74rem;color:var(--text3);flex-wrap:wrap}
+.dl-info span{display:flex;align-items:center;gap:4px}
+.dl-info i{color:var(--green);font-size:.65rem}
+
+/* DC BANNER */
+.dc-banner{background:var(--discord);border-radius:14px;padding:28px;display:flex;align-items:center;justify-content:space-between;max-width:560px;margin:0 auto 50px;transition:.2s;cursor:pointer}
+.dc-banner:hover{opacity:.95;transform:translateY(-2px);box-shadow:var(--shadow2)}
+.dc-left{display:flex;align-items:center;gap:14px;color:#fff}
+.dc-left i{font-size:1.8rem}
+.dc-left div h3{font-size:1rem;font-weight:600;margin-bottom:2px}
+.dc-left div p{font-size:.8rem;opacity:.8}
+.dc-btn{background:rgba(255,255,255,.2);color:#fff;padding:8px 18px;border-radius:8px;font-weight:600;font-size:.82rem;border:none;cursor:pointer;transition:.2s;font-family:inherit}
+.dc-btn:hover{background:rgba(255,255,255,.3)}
+
+/* FOOTER */
+footer{background:#fff;border-top:1px solid var(--border);padding:32px 0 20px}
+.footer-inner{max-width:800px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.footer-left{display:flex;align-items:center;gap:10px}
+.footer-left img{height:28px}
+.footer-left span{font-size:.82rem;color:var(--text2)}
+.footer-right a{color:var(--text3);font-size:1rem;margin-left:12px;transition:.2s}
+.footer-right a:hover{color:var(--discord)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:10px;font-size:.84rem;font-weight:500;z-index:300;transform:translateY(80px);opacity:0;transition:.3s;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow3)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast i{color:var(--green)}
+.toast.error i{color:var(--red)}
+
+/* LOADING */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){
+  .nav-links{display:none}
+  .features-grid{grid-template-columns:1fr}
+  .dash-cards{grid-template-columns:1fr}
+  .hero h1{font-size:1.8rem}
+  .hero-stats{flex-direction:column;gap:12px}
+  .welcome-bar{flex-direction:column;text-align:center}
+  .welcome-left{flex-direction:column}
+  .dc-banner{flex-direction:column;text-align:center;gap:14px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo" onclick="goHome()">
+    <img src="logo.png" alt="Ürün Studio">
+    <div class="logo-text">ÜRÜN <span>STUDIO</span></div>
+  </div>
+  <div class="nav-links">
+    <a href="#" onclick="goHome()">Ana Sayfa</a>
+    <a href="https://discord.gg/mqKDJBqU2X" target="_blank"><i class="fab fa-discord"></i> Discord</a>
+  </div>
+  <div class="nav-right">
+    <div id="authButtons">
+      <button class="nav-btn btn-ghost" onclick="openModal('login')">Giriş Yap</button>
+      <button class="nav-btn btn-gold" onclick="openModal('register')">Kayıt Ol</button>
+    </div>
+    <div class="nav-user" id="navUser">
+      <div class="avatar" id="navAvatar">U</div>
+      <span id="navUsername">Kullanıcı</span>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="heroSection">
+  <img src="logo.png" alt="Ürün Studio" class="hero-logo">
+  <h1>Ürün <span>Studio</span></h1>
+  <p>Ücretsiz hesap oluştur, Ürün Studio'yu indir ve hemen başla. Topluluğumuza katıl!</p>
+  <div class="hero-btns">
+    <button class="btn btn-primary" onclick="openModal('register')"><i class="fas fa-user-plus"></i> Ücretsiz Kayıt Ol</button>
+    <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="btn btn-discord"><i class="fab fa-discord"></i> Discord</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><h3>10K+</h3><p>Kullanıcı</p></div>
+    <div class="stat"><h3>Ücretsiz</h3><p>Tamamen Bedava</p></div>
+    <div class="stat"><h3>7/24</h3><p>Destek</p></div>
+  </div>
+</section>
+
+<!-- MAIN (not logged in) -->
+<div id="mainContent">
+  <div class="dl-section">
+    <div class="dl-box">
+      <i class="fas fa-download dl-icon"></i>
+      <h3>Ürün Studio'yu İndir</h3>
+      <p>Hesap oluştur, indir ve başla. Tamamen ücretsiz!</p>
+      <div class="dl-btns">
+        <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="btn btn-primary"><i class="fab fa-windows"></i> Windows İçin İndir</a>
+      </div>
+      <div class="dl-info">
+        <span><i class="fas fa-check-circle"></i> Ücretsiz</span>
+        <span><i class="fas fa-shield-alt"></i> Güvenli</span>
+        <span><i class="fab fa-windows"></i> Win 10/11</span>
+      </div>
+    </div>
+  </div>
+  <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="dc-banner">
+    <div class="dc-left"><i class="fab fa-discord"></i><div><h3>Discord Topluluğu</h3><p>Destek al, arkadaşlar edin.</p></div></div>
+    <button class="dc-btn">Katıl →</button>
+  </a>
+  <div class="features-section" id="ozellikler">
+    <div class="features-grid">
+      <div class="feat"><i class="fas fa-user-plus"></i><h4>Ücretsiz Hesap</h4><p>Hemen ücretsiz hesap oluştur.</p></div>
+      <div class="feat"><i class="fas fa-download"></i><h4>Kolay İndirme</h4><p>İndir ve hemen başla.</p></div>
+      <div class="feat"><i class="fab fa-discord"></i><h4>Topluluk</h4><p>Discord'da binlerce kişi.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD (logged in) -->
+<div class="dashboard" id="dashboard">
+  <div class="dash-grid">
+    <div class="welcome-bar">
+      <div class="welcome-left">
+        <div class="avatar-lg" id="dashAvatar">U</div>
+        <div>
+          <h2>Hoş geldin, <span id="dashUsername" style="color:var(--gold)">Kullanıcı</span></h2>
+          <p id="dashEmail">email@email.com</p>
+        </div>
+      </div>
+      <div class="welcome-right">
+        <button class="nav-btn btn-ghost" onclick="logout()" style="color:var(--red);border-color:var(--red)"><i class="fas fa-sign-out-alt"></i> Çıkış</button>
+      </div>
+    </div>
+    <div class="dash-cards">
+      <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="dash-card download-card">
+        <i class="fas fa-download"></i>
+        <h3>Ürün Studio İndir</h3>
+        <p>Windows için uygulamayı indir.</p>
+        <button class="card-btn"><i class="fab fa-windows"></i> İndir</button>
+      </a>
+      <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="dash-card discord-card">
+        <i class="fab fa-discord"></i>
+        <h3>Discord Sunucusu</h3>
+        <p>Topluluğa katıl, destek al.</p>
+        <button class="card-btn"><i class="fas fa-arrow-right"></i> Katıl</button>
+      </a>
+    </div>
+    <div class="dash-info">
+      <h4><i class="fas fa-user"></i> Hesap Bilgileri</h4>
+      <div class="info-row"><span>Kullanıcı Adı</span><span id="infoUsername">-</span></div>
+      <div class="info-row"><span>E-posta</span><span id="infoEmail">-</span></div>
+      <div class="info-row"><span>Hesap Durumu</span><span style="color:var(--green)">✓ Aktif</span></div>
+      <div class="info-row"><span>Üyelik</span><span>Ücretsiz</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="registerModal" style="display:none">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <img src="logo.png" alt="Ürün Studio" class="modal-logo">
+    <h2>Hesap Oluştur</h2>
+    <p class="subtitle">Ücretsiz hesabını oluştur.</p>
+    <form onsubmit="handleRegister(event)">
+      <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="regUsername" placeholder="Kullanıcı adın" required minlength="3"><div class="form-error" id="regUsernameErr"></div></div>
+      <div class="form-group"><label>E-posta</label><input type="email" id="regEmail" placeholder="ornek@email.com" required><div class="form-error" id="regEmailErr"></div></div>
+      <div class="form-group"><label>Şifre</label><input type="password" id="regPassword" placeholder="En az 6 karakter" required minlength="6"><div class="form-error" id="regPasswordErr"></div></div>
+      <div class="form-group"><label>Şifre Tekrar</label><input type="password" id="regPassword2" placeholder="Şifreyi tekrarla" required><div class="form-error" id="regPassword2Err"></div></div>
+      <button type="submit" class="btn-submit" id="regBtn">Kayıt Ol</button>
+    </form>
+    <div class="modal-divider">veya</div>
+    <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="btn-social dc"><i class="fab fa-discord"></i> Discord ile devam et</a>
+    <div class="modal-switch">Hesabın var mı? <a onclick="switchModal('login')">Giriş Yap</a></div>
+  </div>
+  <div class="modal" id="loginModal" style="display:none">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <img src="logo.png" alt="Ürün Studio" class="modal-logo">
+    <h2>Giriş Yap</h2>
+    <p class="subtitle">Hesabına giriş yap.</p>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group"><label>E-posta</label><input type="email" id="loginEmail" placeholder="ornek@email.com" required><div class="form-error" id="loginEmailErr"></div></div>
+      <div class="form-group"><label>Şifre</label><input type="password" id="loginPassword" placeholder="Şifren" required><div class="form-error" id="loginPasswordErr"></div></div>
+      <button type="submit" class="btn-submit" id="loginBtn">Giriş Yap</button>
+    </form>
+    <div class="modal-divider">veya</div>
+    <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="btn-social dc"><i class="fab fa-discord"></i> Discord ile devam et</a>
+    <div class="modal-switch">Hesabın yok mu? <a onclick="switchModal('register')">Kayıt Ol</a></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left"><img src="logo.png" alt=""><span>© 2026 Ürün Studio</span></div>
+    <div class="footer-right"><a href="https://discord.gg/mqKDJBqU2X" target="_blank"><i class="fab fa-discord"></i></a></div>
+  </div>
+</footer>
+
+<script>
+// SUPABASE INIT
+const SUPABASE_URL='https://qyyxblsytifczxcgpvpi.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5eXhibHN5dGlmY3p4Y2dwdnBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MzA2NTIsImV4cCI6MjA4NTIwNjY1Mn0.gFny_HVvl2KGYrs1J0T9mR06U5kR95FI_dOIuHkSvA4';
+
+let sb=null;
+let useLocal=false;
+
+try{
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+}catch(e){
+  console.warn('Supabase bağlantısı kurulamadı, localStorage kullanılacak:',e);
+  useLocal=true;
+}
+
+// LOCAL STORAGE HELPERS
+function getUsers(){return JSON.parse(localStorage.getItem('urun_users')||'[]')}
+function saveUsers(u){localStorage.setItem('urun_users',JSON.stringify(u))}
+function getLocal(){return JSON.parse(localStorage.getItem('urun_current')||'null')}
+function setLocal(u){localStorage.setItem('urun_current',JSON.stringify(u))}
+
+// MODAL
+function openModal(t){document.getElementById('modalOverlay').classList.add('open');document.getElementById('registerModal').style.display=t==='register'?'block':'none';document.getElementById('loginModal').style.display=t==='login'?'block':'none';clearErrors()}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open')}
+function closeModalOutside(e){if(e.target===document.getElementById('modalOverlay'))closeModal()}
+function switchModal(t){openModal(t)}
+function clearErrors(){document.querySelectorAll('.form-error').forEach(e=>{e.textContent='';e.classList.remove('show')})}
+function showError(id,msg){const el=document.getElementById(id);el.textContent=msg;el.classList.add('show')}
+
+// REGISTER
+async function handleRegister(e){
+  e.preventDefault();clearErrors();
+  const username=document.getElementById('regUsername').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const pass=document.getElementById('regPassword').value;
+  const pass2=document.getElementById('regPassword2').value;
+  let ok=true;
+  if(username.length<3){showError('regUsernameErr','En az 3 karakter.');ok=false}
+  if(!email.includes('@')||!email.includes('.')){showError('regEmailErr','Geçerli e-posta gir.');ok=false}
+  if(pass.length<6){showError('regPasswordErr','En az 6 karakter.');ok=false}
+  if(pass!==pass2){showError('regPassword2Err','Şifreler eşleşmiyor.');ok=false}
+  if(!ok)return;
+
+  const btn=document.getElementById('regBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Kayıt olunuyor...';
+
+  // Try Supabase first
+  if(sb&&!useLocal){
+    try{
+      const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{username}}});
+      if(error)throw error;
+      if(data.user){
+        closeModal();
+        showToast('Hesabın oluşturuldu! Hoş geldin, '+username);
+        updateUI();
+        btn.disabled=false;btn.textContent='Kayıt Ol';
+        return;
+      }
+    }catch(err){
+      console.warn('Supabase kayıt hatası, localStorage kullanılacak:',err.message);
+      useLocal=true;
+    }
+  }
+
+  // Fallback: localStorage
+  const users=getUsers();
+  if(users.find(u=>u.email===email)){showError('regEmailErr','Bu e-posta zaten kayıtlı.');btn.disabled=false;btn.textContent='Kayıt Ol';return}
+  if(users.find(u=>u.username===username)){showError('regUsernameErr','Bu kullanıcı adı alınmış.');btn.disabled=false;btn.textContent='Kayıt Ol';return}
+  const user={username,email,password:pass,created:new Date().toISOString()};
+  users.push(user);saveUsers(users);
+  setLocal({username,email});
+  closeModal();showToast('Hesabın oluşturuldu! Hoş geldin, '+username);
+  updateUI();
+  btn.disabled=false;btn.textContent='Kayıt Ol';
+}
+
+// LOGIN
+async function handleLogin(e){
+  e.preventDefault();clearErrors();
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPassword').value;
+
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Giriş yapılıyor...';
+
+  // Try Supabase first
+  if(sb&&!useLocal){
+    try{
+      const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+      if(error)throw error;
+      closeModal();
+      const name=data.user?.user_metadata?.username||email.split('@')[0];
+      showToast('Giriş yapıldı! Hoş geldin, '+name);
+      updateUI();
+      btn.disabled=false;btn.textContent='Giriş Yap';
+      return;
+    }catch(err){
+      // If Supabase fails with auth error, show it
+      if(err.message&&(err.message.includes('Invalid')||err.message.includes('credentials'))){
+        showError('loginPasswordErr','E-posta veya şifre hatalı.');
+        btn.disabled=false;btn.textContent='Giriş Yap';
+        return;
+      }
+      console.warn('Supabase giriş hatası, localStorage kullanılacak:',err.message);
+      useLocal=true;
+    }
+  }
+
+  // Fallback: localStorage
+  const user=getUsers().find(u=>u.email===email&&u.password===pass);
+  if(!user){showError('loginPasswordErr','E-posta veya şifre hatalı.');btn.disabled=false;btn.textContent='Giriş Yap';return}
+  setLocal({username:user.username,email:user.email});
+  closeModal();showToast('Giriş yapıldı! Hoş geldin, '+user.username);
+  updateUI();
+  btn.disabled=false;btn.textContent='Giriş Yap';
+}
+
+// LOGOUT
+async function logout(){
+  if(sb&&!useLocal){try{await sb.auth.signOut()}catch(e){}}
+  localStorage.removeItem('urun_current');
+  showToast('Çıkış yapıldı.');
+  updateUI();
+}
+
+// UI UPDATE
+async function updateUI(){
+  let user=null;
+
+  // Try Supabase session
+  if(sb&&!useLocal){
+    try{
+      const{data:{session}}=await sb.auth.getSession();
+      if(session?.user){
+        user={
+          username:session.user.user_metadata?.username||session.user.email.split('@')[0],
+          email:session.user.email
+        };
+      }
+    }catch(e){useLocal=true}
+  }
+
+  // Fallback: localStorage
+  if(!user)user=getLocal();
+
+  const authBtns=document.getElementById('authButtons');
+  const navUser=document.getElementById('navUser');
+  const hero=document.getElementById('heroSection');
+  const dash=document.getElementById('dashboard');
+  const main=document.getElementById('mainContent');
+
+  if(user){
+    authBtns.style.display='none';navUser.style.display='flex';
+    document.getElementById('navAvatar').textContent=user.username[0].toUpperCase();
+    document.getElementById('navUsername').textContent=user.username;
+    document.getElementById('dashAvatar').textContent=user.username[0].toUpperCase();
+    document.getElementById('dashUsername').textContent=user.username;
+    document.getElementById('dashEmail').textContent=user.email;
+    document.getElementById('infoUsername').textContent=user.username;
+    document.getElementById('infoEmail').textContent=user.email;
+    hero.style.display='none';dash.style.display='block';dash.classList.add('show');main.style.display='none';
+    window.scrollTo({top:0});
+  }else{
+    authBtns.style.display='flex';navUser.style.display='none';
+    hero.style.display='block';dash.style.display='none';dash.classList.remove('show');main.style.display='block';
+  }
+}
+
+function goHome(){window.scrollTo({top:0,behavior:'smooth'})}
+
+function showToast(msg,isError){
+  const t=document.getElementById('toast');
+  if(isError)t.classList.add('error');else t.classList.remove('error');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// Listen Supabase auth state changes
+if(sb&&!useLocal){
+  try{sb.auth.onAuthStateChange((event,session)=>{updateUI()})}catch(e){}
+}
+
+// Init
+updateUI();
+</script>
+</body>
+</html>
