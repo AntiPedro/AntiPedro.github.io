@@ -206,6 +206,160 @@ nav {
 }
 .download-badge i { color: var(--primary); }
 
+/* PLATFORM DOWNLOAD SELECTOR */
+.platform-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 520px;
+}
+.platform-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+}
+.platform-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  transition: var(--transition);
+  font-family: inherit;
+}
+.platform-tab:hover {
+  color: var(--text);
+}
+.platform-tab.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.35);
+}
+.platform-tab i {
+  font-size: 1.1rem;
+}
+.platform-content {
+  width: 100%;
+  min-height: 140px;
+}
+.platform-panel {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: fadeInUp 0.3s ease;
+}
+.platform-panel.active {
+  display: flex;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.download-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: var(--transition);
+}
+.download-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+}
+.download-card .os-icon {
+  font-size: 2.2rem;
+  color: var(--primary);
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.download-card .os-info {
+  flex: 1;
+  text-align: left;
+}
+.download-card .os-info h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.download-card .os-info p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+.btn-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  transition: var(--transition);
+  font-family: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-download:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
+}
+.btn-download.disabled {
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  border: 1px solid var(--border);
+}
+.btn-download.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+.coming-soon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.coming-soon-badge i {
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 /* ABOUT SECTION */
 .about-section {
   padding: 80px 40px;
@@ -440,72 +594,7 @@ footer {
   .dash-actions button { width: 100%; }
   .welcome-left { flex-direction: column; }
 }
-/* FRIENDS & CHAT CSS */
-.friends-chat-container {
-  display: flex;
-  flex-direction: column;
-  height: 600px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
-  margin-top: 24px;
-}
-.fc-header {
-  padding: 16px;
-  background: #111115;
-  border-bottom: 1px solid var(--border);
-  display: flex; gap: 10px;
-}
-.fc-tab {
-  flex: 1; padding: 8px; text-align: center; cursor: pointer;
-  border-radius: 6px; font-size: 0.9rem; font-weight: 600;
-  color: var(--text-muted); transition: var(--transition);
-}
-.fc-tab.active { background: var(--surface-hover); color: var(--text); }
-.fc-tab.active.has-notif::after {
-  content: ''; display: inline-block; width: 8px; height: 8px;
-  background: var(--danger); border-radius: 50%; margin-left: 6px;
-}
 
-.fc-body { flex: 1; display: flex; overflow: hidden; position: relative; }
-
-/* Friends List View */
-.friends-view { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
-.search-box { display: flex; gap: 8px; }
-.search-box input { flex:1; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); }
-.friend-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px; background: var(--bg); border-radius: 6px; border: 1px solid var(--border);
-}
-.friend-info { display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; }
-.friend-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; }
-.friend-name { font-weight: 600; font-size: 0.9rem; }
-.friend-status { font-size: 0.75rem; color: var(--text-muted); }
-.friend-actions { display: flex; gap: 8px; }
-
-/* Chat View */
-.chat-view {
-  position: absolute; inset: 0; background: var(--surface);
-  display: flex; flex-direction: column;
-  transform: translateX(100%); transition: transform 0.3s;
-  z-index: 10;
-}
-.chat-view.open { transform: translateX(0); }
-.chat-header {
-  padding: 16px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 12px; background: #111115;
-}
-.chat-back { cursor: pointer; color: var(--text-muted); padding: 4px; }
-.chat-back:hover { color: var(--text); }
-.chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; }
-.msg.received { align-self: flex-start; background: var(--bg); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
-.msg.sent { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 2px; }
-.chat-input-area { padding: 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; background: var(--bg); }
-.chat-input-area input { flex: 1; padding: 10px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none; }
-.chat-input-area input:focus { border-color: var(--primary); }
-.btn-send { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -539,17 +628,58 @@ footer {
     <h1>Oyun ve Uygulamaların <br>Yepyeni Evi.</h1>
     <p>Ürün Store, favori oyunlarınızı tek bir pratik arayüzde birleştirir. İndirin, her zaman güncel kalın ve toplulukla etkileşimi koparmayın.</p>
     
-    <div class="hero-actions">
-      <button class="btn btn-primary" style="padding: 14px 28px;" onclick="openModal('register')">
-        <i class="fas fa-download"></i> İndir ve Başla
-      </button>
-      <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="btn btn-outline" style="padding: 14px 28px;">
-        <i class="fab fa-discord"></i> Discord'a Katıl
-      </a>
-    </div>
+    <div class="platform-selector">
+      <div class="platform-tabs">
+        <button class="platform-tab active" onclick="switchPlatform('windows')">
+          <i class="fab fa-windows"></i> Windows
+        </button>
+        <button class="platform-tab" onclick="switchPlatform('linux')">
+          <i class="fab fa-linux"></i> Linux
+        </button>
+      </div>
 
-    <div class="download-badge">
-      <i class="fab fa-windows"></i> Windows 10/11 uyumlu • İndir ve Hemen Oynamaya Başla
+      <div class="platform-content">
+        <!-- WINDOWS -->
+        <div class="platform-panel active" id="platformWindows">
+          <div class="download-card">
+            <div class="os-icon">
+              <i class="fab fa-windows"></i>
+            </div>
+            <div class="os-info">
+              <h3>Windows için İndir</h3>
+              <p>Windows 10 / 11 uyumlu &bull; Kurulum dosyası (.exe)</p>
+            </div>
+            <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn-download">
+              <i class="fas fa-download"></i> İndir
+            </a>
+          </div>
+          <div class="download-badge">
+            <i class="fas fa-shield-alt"></i> Güvenli indirme &bull; GitHub Releases üzerinden sunulmaktadır
+          </div>
+        </div>
+
+        <!-- LINUX -->
+        <div class="platform-panel" id="platformLinux">
+          <div class="download-card">
+            <div class="os-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);">
+              <i class="fab fa-linux"></i>
+            </div>
+            <div class="os-info">
+              <h3>Linux için Ürün Store</h3>
+              <p>Linux sürümü şu anda geliştirme aşamasındadır.</p>
+            </div>
+            <span class="btn-download disabled">
+              <i class="fas fa-clock"></i> Yakında
+            </span>
+          </div>
+          <div class="coming-soon-badge">
+            <i class="fas fa-code-branch"></i> Linux desteği henüz çıkmadı. Geliştirmeler devam ediyor!
+          </div>
+          <a href="https://discord.gg/mqKDJBqU2X" target="_blank" class="btn btn-outline" style="padding: 10px 20px; font-size: 0.85rem;">
+            <i class="fab fa-discord"></i> Gelişmelerden haberdar olmak için Discord'a katıl
+          </a>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -637,49 +767,7 @@ footer {
     </div>
   </div>
 
-  <!-- FRIENDS & CHAT CONTAINER -->
-  <div class="friends-chat-container">
-    <div class="fc-header">
-      <div class="fc-tab active" id="tabFriends" onclick="switchTab('friends')"><i class="fas fa-user-friends"></i> Arkadaşlar</div>
-      <div class="fc-tab" id="tabRequests" onclick="switchTab('requests')"><i class="fas fa-bell"></i> İstekler <span id="reqBadge" style="display:none; color:var(--danger); font-size:0.7rem;"><i class="fas fa-circle"></i></span></div>
-    </div>
-    
-    <div class="fc-body">
-      <!-- Friends View -->
-      <div class="friends-view" id="viewFriends">
-        <div class="search-box">
-          <input type="text" id="addFriendInput" placeholder="Kullanıcı adı ile arkadaş ekle...">
-          <button class="btn btn-primary" onclick="sendFriendRequest()"><i class="fas fa-plus"></i></button>
-        </div>
-        <div id="friendsList" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
-           <div style="text-align:center; color:var(--text-muted); font-size:0.85rem; padding: 20px;">Arkadaş listeniz yükleniyor...</div>
-        </div>
-      </div>
 
-      <!-- Requests View -->
-      <div class="friends-view" id="viewRequests" style="display:none;">
-        <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--text-muted);">Gelen İstekler</h4>
-        <div id="requestsList" style="display:flex; flex-direction:column; gap:8px;"></div>
-      </div>
-
-      <!-- Chat Overlap View -->
-      <div class="chat-view" id="chatView">
-        <div class="chat-header">
-          <div class="chat-back" onclick="closeChat()"><i class="fas fa-arrow-left"></i></div>
-          <div class="friend-avatar" id="chatAvatar" style="width:30px; height:30px; font-size:0.8rem;"></div>
-          <div style="font-weight:600; font-size:0.95rem;" id="chatName">Sohbet</div>
-        </div>
-        <div class="chat-messages" id="chatMessages">
-           <!-- Messages go here -->
-        </div>
-        <form class="chat-input-area" onsubmit="sendMessage(event)">
-          <input type="text" id="chatInput" placeholder="Bir mesaj yazın..." autocomplete="off" required>
-          <button type="submit" class="btn-send"><i class="fas fa-paper-plane"></i></button>
-        </form>
-      </div>
-
-    </div>
-  </div>
 
 </div>
 
@@ -965,201 +1053,23 @@ async function resendOTP() {
   catch (e) { showToast('Hata oluştu.', true); }
 }
 
-/* SOCIAL & CHAT LOGIC */
-let currentUser = null;
-let currentChatUserId = null;
-let chatSubscription = null;
 
-function switchTab(tab) {
-  document.getElementById('tabFriends').classList.toggle('active', tab==='friends');
-  document.getElementById('tabRequests').classList.toggle('active', tab==='requests');
-  document.getElementById('viewFriends').style.display = tab==='friends' ? 'flex' : 'none';
-  document.getElementById('viewRequests').style.display = tab==='requests' ? 'flex' : 'none';
-  if(tab === 'requests') document.getElementById('reqBadge').style.display = 'none';
-}
-
-async function loadSocials() {
-  if(!currentUser || !sb) return;
-  
-  // Load Requests
-  try {
-    const { data: reqs, error } = await sb.from('friend_requests')
-      .select('id, from_user, profiles!friend_requests_from_user_fkey(username)')
-      .eq('to_user', currentUser.id).eq('status', 'pending');
-    
-    const reqList = document.getElementById('requestsList');
-    reqList.innerHTML = '';
-    
-    if(reqs && reqs.length > 0) {
-      document.getElementById('reqBadge').style.display = 'inline-block';
-      reqs.forEach(r => {
-        const username = r.profiles?.username || 'Bilinmeyen';
-        reqList.innerHTML += `
-          <div class="friend-item">
-            <div class="friend-info">
-              <div class="friend-avatar">${username[0].toUpperCase()}</div>
-              <div class="friend-name">${username}</div>
-            </div>
-            <div class="friend-actions">
-              <button class="btn btn-primary" style="padding:4px 8px; font-size:0.8rem;" onclick="acceptRequest('${r.id}')"><i class="fas fa-check"></i></button>
-            </div>
-          </div>
-        `;
-      });
-    } else {
-      reqList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.85rem;">Yeni istek yok.</div>';
-    }
-  } catch(e){}
-
-  // Load Friends
-  try {
-    const { data: frends, error: ferr } = await sb.from('friendships')
-      .select('user1, user2')
-      .or(`user1.eq.${currentUser.id},user2.eq.${currentUser.id}`);
-    
-    let friendListHTML = '';
-    const FL = document.getElementById('friendsList');
-
-    if(frends && frends.length > 0) {
-      FL.innerHTML = '';
-      for (const f of frends) {
-        let friendId = f.user1 === currentUser.id ? f.user2 : f.user1;
-        const { data: p } = await sb.from('profiles').select('username, status').eq('id', friendId).single();
-        if(p) {
-          friendListHTML += `
-            <div class="friend-item">
-              <div class="friend-info" onclick="openChat('${friendId}', '${p.username}')">
-                <div class="friend-avatar">${p.username[0].toUpperCase()}</div>
-                <div>
-                  <div class="friend-name">${p.username}</div>
-                  <div class="friend-status">${p.status === 'online' ? '<span style="color:var(--success)">Çevrimiçi</span>' : 'Çevrimdışı'}</div>
-                </div>
-              </div>
-              <div class="friend-actions">
-                <button class="btn btn-outline" style="padding:4px 8px;" onclick="openChat('${friendId}', '${p.username}')"><i class="fas fa-comment"></i></button>
-              </div>
-            </div>
-          `;
-        }
-      }
-      FL.innerHTML = friendListHTML || '<div style="text-align:center; color:var(--text-muted); font-size:0.85rem;">Hiç arkadaşınız yok.</div>';
-    } else {
-      FL.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.85rem;">Henüz hiç arkadaşınız yok. Yukarıdan birilerini ekleyin.</div>';
-    }
-  } catch(e){}
-}
-
-async function sendFriendRequest() {
-  const username = document.getElementById('addFriendInput').value.trim();
-  if(!username || !sb || !currentUser) return;
-  
-  try {
-    const { data: targetProfile, error: errTarget } = await sb.from('profiles').select('id').eq('username', username).single();
-    if(errTarget || !targetProfile) { showToast('Kullanıcı bulunamadı.', true); return; }
-    if(targetProfile.id === currentUser.id) { showToast('Kendinizi ekleyemezsiniz.', true); return; }
-    
-    const { error } = await sb.from('friend_requests').insert({from_user: currentUser.id, to_user: targetProfile.id});
-    if(error){
-      if(error.code === '23505') showToast('İstek zaten gönderilmiş.', true);
-      else showToast('Hata: ' + error.message, true);
-    } else {
-      showToast('İstek gönderildi!');
-      document.getElementById('addFriendInput').value = '';
-    }
-  } catch(e) {}
-}
-
-async function acceptRequest(requestId) {
-  try {
-    const { data: req } = await sb.from('friend_requests').select('*').eq('id', requestId).single();
-    if(req) {
-      await sb.from('friendships').insert({user1: req.from_user, user2: req.to_user});
-      await sb.from('friend_requests').delete().eq('id', requestId);
-      showToast('İstek kabul edildi!');
-      loadSocials();
-    }
-  } catch(e){}
-}
-
-async function openChat(friendId, friendName) {
-  currentChatUserId = friendId;
-  document.getElementById('chatName').textContent = friendName;
-  document.getElementById('chatAvatar').textContent = friendName[0].toUpperCase();
-  document.getElementById('chatView').classList.add('open');
-  await loadMessages();
-  subscribeToMessages();
-}
-
-function closeChat() {
-  document.getElementById('chatView').classList.remove('open');
-  currentChatUserId = null;
-  if(chatSubscription) { sb.removeChannel(chatSubscription); chatSubscription = null; }
-}
-
-async function loadMessages() {
-  const msgsDiv = document.getElementById('chatMessages');
-  msgsDiv.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin-top:20px;">Mesajlar yükleniyor...</div>';
-  
-  try {
-    const { data: msgs, error } = await sb.from('messages')
-      .select('*')
-      .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatUserId}),and(sender_id.eq.${currentChatUserId},receiver_id.eq.${currentUser.id})`)
-      .order('created_at', { ascending: true });
-      
-    msgsDiv.innerHTML = '';
-    if(msgs && msgs.length>0) {
-      msgs.forEach(m => appendMessageToUI(m));
-    } else {
-      msgsDiv.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin-top:20px;">Sohbete başlayın!</div>';
-    }
-  }catch(e){}
-}
-
-function appendMessageToUI(msgObj) {
-  const msgsDiv = document.getElementById('chatMessages');
-  if(msgsDiv.innerHTML.includes('Sohbete başlayın!')) msgsDiv.innerHTML = '';
-  const isMine = msgObj.sender_id === currentUser.id;
-  const div = document.createElement('div');
-  div.className = 'msg ' + (isMine ? 'sent' : 'received');
-  div.textContent = msgObj.content;
-  msgsDiv.appendChild(div);
-  msgsDiv.scrollTop = msgsDiv.scrollHeight;
-}
-
-async function sendMessage(e) {
-  e.preventDefault();
-  const input = document.getElementById('chatInput');
-  const content = input.value.trim();
-  if(!content || !currentChatUserId || !sb) return;
-  input.value = '';
-  
-  // UI'a hemen ekle
-  const fakeMsg = { sender_id: currentUser.id, receiver_id: currentChatUserId, content: content };
-  appendMessageToUI(fakeMsg);
-
-  try {
-    await sb.from('messages').insert({ sender_id: currentUser.id, receiver_id: currentChatUserId, content: content });
-  }catch(err){ showToast('Mesaj gönderilemedi', true); }
-}
-
-function subscribeToMessages() {
-  if(chatSubscription) { sb.removeChannel(chatSubscription); }
-  chatSubscription = sb.channel('public:messages')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-      const msg = payload.new;
-      if (msg.receiver_id === currentUser.id && msg.sender_id === currentChatUserId) {
-        appendMessageToUI(msg);
-      } else if (msg.receiver_id === currentUser.id && msg.sender_id !== currentChatUserId) {
-        showToast('Yeni mesajınız var!'); // Basit bildirim
-      }
-    })
-    .subscribe();
-}
 
 function goHome(){window.scrollTo({top:0,behavior:'smooth'})}
 function toggleMenu() {
   const menu = document.getElementById('navLinks');
   menu.classList.toggle('active');
+}
+function switchPlatform(platform) {
+  document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.platform-panel').forEach(p => { p.classList.remove('active'); });
+  if (platform === 'windows') {
+    document.querySelector('.platform-tab:first-child').classList.add('active');
+    document.getElementById('platformWindows').classList.add('active');
+  } else {
+    document.querySelector('.platform-tab:last-child').classList.add('active');
+    document.getElementById('platformLinux').classList.add('active');
+  }
 }
 function showToast(msg,isError){
   const t=document.getElementById('toast');
@@ -1171,15 +1081,10 @@ function showToast(msg,isError){
 if(sb){ 
   try {
     sb.auth.onAuthStateChange((event, session) => {
+      updateUI();
       if(session?.user) {
-         currentUser = session.user;
-         updateUI();
-         loadSocials(); // Sosyalleri yükle
          // Online durumu güncelle (Basit bir çözüm)
          sb.from('profiles').update({status:'online', last_seen: new Date()}).eq('id', session.user.id).then(()=>{});
-      } else {
-         currentUser = null;
-         updateUI();
       }
     })
   }catch(e){} 
