@@ -826,10 +826,13 @@ async function handleRegister(e){
       if(error.status === 429) throw new Error("Çok fazla istek attınız, lütfen bir süre bekleyin.");
       throw error;
     }
-    if(data.user){
-      lastEmail = email; lastType = "signup";
-      openModal('otp');
-      showToast('Onay kodu e-postanıza gönderildi.', false);
+    if(data.user && data.session){
+      closeModal();
+      showToast('Kayıt başarılı! Hoş geldin.'); updateUI();
+    } else if(data.user) {
+      const{data:d2,error:e2}=await sb.auth.signInWithPassword({email,password:pass});
+      if(!e2){closeModal();showToast('Kayıt başarılı!');updateUI();}
+      else{showToast('Kayıt olundu, giriş yapabilirsiniz.');closeModal();}
     }
   }catch(err){
     showError('regEmailErr', err.message || 'Kayıt sırasında bir hata oluştu.');
@@ -847,18 +850,7 @@ async function handleLogin(e){
 
   try{
     const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
-    if(error) {
-      if(error.message.toLowerCase().includes('confirm') || error.message.includes('Email not confirmed')) {
-         lastEmail = email; lastType = "signup";
-         await sb.auth.resend({type: 'signup', email: email});
-         openModal('otp'); btn.disabled=false;btn.textContent='Giriş Yap'; return;
-      } throw error;
-    }
-    if (data.user && !data.user.email_confirmed_at) {
-      lastEmail = email; lastType = "signup";
-      await sb.auth.resend({type: 'signup', email: email});
-      openModal('otp'); btn.disabled=false;btn.textContent='Giriş Yap'; return;
-    }
+    if(error) throw error;
     closeModal();
     showToast('Giriş başarılı.'); updateUI();
   }catch(err){
@@ -878,15 +870,13 @@ async function updateUI(){
   if(sb){
     try{
       const{data:{session}}=await sb.auth.getSession();
-      if(session?.user && session.user.email_confirmed_at) {
+      if(session?.user) {
         user={
           username:session.user.user_metadata?.username || session.user.email.split('@')[0],
           email:session.user.email,
           created: new Date(session.user.created_at).toLocaleDateString('tr-TR'),
           id: session.user.id
         };
-      } else if (session?.user && !session.user.email_confirmed_at) {
-        await sb.auth.signOut();
       }
     }catch(e){}
   }
