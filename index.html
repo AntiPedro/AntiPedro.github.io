@@ -605,8 +605,8 @@ footer {
   </div>
   <div class="nav-links" id="navLinks">
     <a href="#" onclick="goHome(); toggleMenu();">Ana Sayfa</a>
-    <a href="#hakkinda" onclick="toggleMenu();">Hakkında</a>
-    <a href="#ozellikler" onclick="toggleMenu();">Özellikler</a>
+    <a href="#hakkinda" onclick="goHome(); toggleMenu();">Hakkında</a>
+    <a href="#ozellikler" onclick="goHome(); toggleMenu();">Özellikler</a>
     <a href="https://discord.gg/mqKDJBqU2X" target="_blank">Topluluk</a>
   </div>
   <div class="nav-right">
@@ -614,7 +614,7 @@ footer {
       <button class="btn btn-outline" onclick="openModal('login')">Giriş</button>
       <button class="btn btn-primary" onclick="openModal('register')">Kayıt Ol</button>
     </div>
-    <div class="nav-user" id="navUser" onclick="openModal('settings')">
+    <div class="nav-user" id="navUser" onclick="showDashboard()">
       <div class="avatar" id="navAvatar">U</div>
       <span id="navUsername" class="hide-mobile">Kullanıcı</span>
     </div>
@@ -729,7 +729,7 @@ footer {
       </div>
     </div>
     <div class="dash-actions">
-      <button class="btn btn-primary"><i class="fas fa-download"></i> Programı İndir</button>
+      <button class="btn btn-primary" onclick="openModal('download')"><i class="fas fa-download"></i> Programı İndir</button>
       <button class="btn btn-outline" onclick="openModal('settings')"><i class="fas fa-cog"></i> Ayarlar</button>
     </div>
   </div>
@@ -743,7 +743,7 @@ footer {
       <div class="library-empty">
         <i class="fas fa-box-open"></i>
         <p>Kütüphanen şu an boş görünüyor.<br>İstemciyi indirip oyun keşfetmeye başlayabilirsin.</p>
-        <button class="btn btn-outline">Mağazaya Göz At</button>
+        <button class="btn btn-outline" onclick="openModal('download')">İstemciyi İndir</button>
       </div>
     </div>
 
@@ -860,6 +860,54 @@ footer {
     <div class="modal-switch">Kod gelmedi mi? <a onclick="resendOTP()">Tekrar İste</a></div>
   </div>
 
+  <div class="modal" id="downloadModal" style="display:none">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <h2>İndir</h2>
+    <p class="subtitle">İşletim sisteminizi seçin.</p>
+    
+    <div class="platform-selector" style="margin-top:20px;">
+      <div class="platform-tabs">
+        <button class="platform-tab active" onclick="switchPlatformDash('windows')" id="tabWinDash">
+          <i class="fab fa-windows"></i> Windows
+        </button>
+        <button class="platform-tab" onclick="switchPlatformDash('linux')" id="tabLinDash">
+          <i class="fab fa-linux"></i> Linux
+        </button>
+      </div>
+
+      <div class="platform-content">
+        <!-- WINDOWS -->
+        <div class="platform-panel active" id="platformWindowsDash">
+          <div class="download-card" style="padding:24px 20px;">
+            <div class="os-icon" style="width:48px;height:48px;font-size:1.8rem; flex-shrink:0;">
+              <i class="fab fa-windows"></i>
+            </div>
+            <div class="os-info">
+              <h3 style="font-size: 1rem;">Windows için İndir</h3>
+              <p style="font-size: 0.75rem;">Windows 10 / 11</p>
+            </div>
+            <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn-download" style="padding:10px 16px; font-size: 0.85rem;">
+              <i class="fas fa-download"></i> İndir
+            </a>
+          </div>
+        </div>
+
+        <!-- LINUX -->
+        <div class="platform-panel" id="platformLinuxDash">
+          <div class="download-card" style="padding:24px 20px;">
+            <div class="os-icon" style="width:48px;height:48px;font-size:1.8rem; color: #f59e0b; background: rgba(245, 158, 11, 0.1); flex-shrink:0;">
+              <i class="fab fa-linux"></i>
+            </div>
+            <div class="os-info">
+              <h3 style="font-size: 1rem;">Linux <span style="font-size:0.7rem; font-weight:normal; background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">Yakında</span></h3>
+              <p style="font-size: 0.75rem;">Geliştirme aşamasında</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
@@ -885,7 +933,7 @@ let lastEmail = ""; let lastType = "signup";
 
 function openModal(t){
   document.getElementById('modalOverlay').classList.add('open');
-  ['register','login','settings','otp'].forEach(m => {
+  ['register','login','settings','otp','download'].forEach(m => {
     document.getElementById(m+'Modal').style.display = t===m ? 'block' : 'none';
   });
   clearErrors();
@@ -916,7 +964,7 @@ async function handleRegister(e){
     }
     if(data.user && data.session){
       closeModal();
-      showToast('Kayıt başarılı! Hoş geldin.'); updateUI();
+      showToast('Kayıt başarılı! Hoş geldin.'); showDashboard(); updateUI();
     } else if(data.user) {
       if(data.user.identities && data.user.identities.length === 0) {
         showError('regEmailErr', 'Bu e-posta kayıtlı. Lütfen giriş yapın.');
@@ -925,7 +973,7 @@ async function handleRegister(e){
         return;
       }
       const{data:d2,error:e2}=await sb.auth.signInWithPassword({email,password:pass});
-      if(!e2){closeModal();showToast('Kayıt başarılı!');updateUI();}
+      if(!e2){closeModal();showToast('Kayıt başarılı!'); showDashboard(); updateUI();}
       else{showToast('Kayıt olundu, giriş yapabilirsiniz.');closeModal();}
     }
   }catch(err){
@@ -946,7 +994,7 @@ async function handleLogin(e){
     const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
     if(error) throw error;
     closeModal();
-    showToast('Giriş başarılı.'); updateUI();
+    showToast('Giriş başarılı.'); showDashboard(); updateUI();
   }catch(err){
     showError('loginPasswordErr', err.message === 'Invalid login credentials' ? 'Hatalı e-posta veya şifre.' : err.message);
   } finally {
@@ -993,16 +1041,15 @@ async function updateUI(){
     document.getElementById('updateUsername').value = user.username;
     document.getElementById('updateEmail').value = user.email;
 
-    document.getElementById('mainContent').style.display='none';
-    const dash = document.getElementById('dashboard');
-    dash.style.display='block'; dash.classList.add('show');
-    window.scrollTo({top:0, behavior:'smooth'});
+    if (!window.initialLayoutSet) {
+      window.initialLayoutSet = true;
+      showDashboard();
+    }
   }else{
+    window.initialLayoutSet = true;
     document.getElementById('authButtons').style.display='flex';
     document.getElementById('navUser').style.display='none';
-    document.getElementById('mainContent').style.display='block';
-    const dash = document.getElementById('dashboard');
-    dash.style.display='none'; dash.classList.remove('show');
+    goHome();
   }
 }
 
@@ -1043,7 +1090,7 @@ async function handleVerifyOTP(e) {
   try {
     const { error } = await sb.auth.verifyOtp({ email: lastEmail, token: code, type: lastType });
     if (error) throw error;
-    closeModal(); showToast('E-posta başarıyla doğrulandı.'); updateUI();
+    closeModal(); showToast('E-posta başarıyla doğrulandı.'); showDashboard(); updateUI();
   } catch (err) { showError('otpError', 'Geçersiz veya süresi dolmuş kod.'); }
 }
 
@@ -1055,7 +1102,19 @@ async function resendOTP() {
 
 
 
-function goHome(){window.scrollTo({top:0,behavior:'smooth'})}
+function goHome(){
+  document.getElementById('mainContent').style.display='block';
+  const dash = document.getElementById('dashboard');
+  dash.style.display='none'; dash.classList.remove('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showDashboard(){
+  document.getElementById('mainContent').style.display='none';
+  const dash = document.getElementById('dashboard');
+  dash.style.display='block'; dash.classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 function toggleMenu() {
   const menu = document.getElementById('navLinks');
   menu.classList.toggle('active');
@@ -1069,6 +1128,19 @@ function switchPlatform(platform) {
   } else {
     document.querySelector('.platform-tab:last-child').classList.add('active');
     document.getElementById('platformLinux').classList.add('active');
+  }
+}
+
+function switchPlatformDash(platform) {
+  const modal = document.getElementById('downloadModal');
+  modal.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+  modal.querySelectorAll('.platform-panel').forEach(p => { p.classList.remove('active'); });
+  if (platform === 'windows') {
+    document.getElementById('tabWinDash').classList.add('active');
+    document.getElementById('platformWindowsDash').classList.add('active');
+  } else {
+    document.getElementById('tabLinDash').classList.add('active');
+    document.getElementById('platformLinuxDash').classList.add('active');
   }
 }
 function showToast(msg,isError){
