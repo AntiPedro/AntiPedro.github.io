@@ -830,6 +830,12 @@ async function handleRegister(e){
       closeModal();
       showToast('Kayıt başarılı! Hoş geldin.'); updateUI();
     } else if(data.user) {
+      if(data.user.identities && data.user.identities.length === 0) {
+        showError('regEmailErr', 'Bu e-posta kayıtlı. Lütfen giriş yapın.');
+        document.getElementById('regBtn').disabled=false;
+        document.getElementById('regBtn').textContent='Kayıt Ol';
+        return;
+      }
       const{data:d2,error:e2}=await sb.auth.signInWithPassword({email,password:pass});
       if(!e2){closeModal();showToast('Kayıt başarılı!');updateUI();}
       else{showToast('Kayıt olundu, giriş yapabilirsiniz.');closeModal();}
