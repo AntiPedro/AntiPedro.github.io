@@ -1843,15 +1843,38 @@ function renderAdminChat() {
   msgs.scrollTop = msgs.scrollHeight;
 }
 
+// Supabase Gerçek Zamanlı (Realtime) İnternet Üzeri Chat Bağlantısı
+const supportChannel = sb ? sb.channel('urun-live-support', { config: { broadcast: { ack: false } } }) : null;
+
+if (supportChannel) {
+  supportChannel.on('broadcast', { event: 'chat_message' }, (payload) => {
+    const msg = payload.payload;
+    let history = JSON.parse(localStorage.getItem('urun_support_chat') || '[]');
+    // Çift mesaj (kendimizin yolladığı) olasılığını engellemek için kimlik kontrolü yapıyoruz
+    if (!history.some(h => h.id === msg.id)) {
+      history.push(msg);
+      localStorage.setItem('urun_support_chat', JSON.stringify(history));
+      renderUserChat();
+      renderAdminChat();
+    }
+  }).subscribe();
+}
+
 function sendAIMessage() {
   const input = document.getElementById('aiInput');
   const text = input.value.trim();
   if(!text) return;
   
+  let msg = {id: Math.random().toString(36).substr(2, 9), sender: 'user', text: text, ts: Date.now()};
+  
   let history = JSON.parse(localStorage.getItem('urun_support_chat') || '[]');
-  history.push({sender: 'user', text: text, ts: Date.now()});
+  history.push(msg);
   localStorage.setItem('urun_support_chat', JSON.stringify(history));
   input.value = '';
+  
+  if (supportChannel) {
+    supportChannel.send({ type: 'broadcast', event: 'chat_message', payload: msg });
+  }
   
   renderUserChat();
   renderAdminChat();
@@ -1862,10 +1885,16 @@ function sendAdminMessage() {
   const text = input.value.trim();
   if(!text) return;
   
+  let msg = {id: Math.random().toString(36).substr(2, 9), sender: 'admin', text: text, ts: Date.now()};
+  
   let history = JSON.parse(localStorage.getItem('urun_support_chat') || '[]');
-  history.push({sender: 'admin', text: text, ts: Date.now()});
+  history.push(msg);
   localStorage.setItem('urun_support_chat', JSON.stringify(history));
   input.value = '';
+  
+  if (supportChannel) {
+    supportChannel.send({ type: 'broadcast', event: 'chat_message', payload: msg });
+  }
   
   renderAdminChat();
   renderUserChat();
