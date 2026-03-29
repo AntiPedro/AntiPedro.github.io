@@ -816,9 +816,6 @@ footer {
         <div class="dropdown-option" onclick="selectLang('ZH', '🇨🇳 ZH')">🇨🇳 ZH</div>
       </div>
     </div>
-    <button class="btn btn-outline" style="border:none; font-size:1.1rem; padding:8px; margin-right:8px;" onclick="toggleTheme()" id="themeToggleBtn" title="Gece/Gündüz Modu">
-      <i class="fas fa-moon"></i>
-    </button>
     <div id="authButtons" style="display:flex; gap:8px;">
       <button class="btn btn-outline" onclick="openAuth('login')" data-i18n="navLogin">Giriş</button>
       <button class="btn btn-primary" onclick="openAuth('register')" data-i18n="navRegister">Kayıt Ol</button>
@@ -967,7 +964,7 @@ footer {
       </div>
     </div>
     <div class="dash-actions">
-      <button class="btn btn-outline text-warning" onclick="openModal('admin')"><i class="fas fa-headset"></i> <span data-i18n="adminBtn">Destek Paneli (Yetkili)</span></button>
+      <button id="adminSupportBtn" class="btn btn-outline text-warning" style="display:none;" onclick="openModal('admin')"><i class="fas fa-headset"></i> <span data-i18n="adminBtn">Destek Paneli (Yetkili)</span></button>
       <button class="btn btn-primary" onclick="openModal('download')"><i class="fas fa-download"></i> <span data-i18n="dashDlBtn">Programı İndir</span></button>
       <button class="btn btn-outline" onclick="openModal('settings')"><i class="fas fa-cog"></i> <span data-i18n="dashSet">Ayarlar</span></button>
     </div>
@@ -1194,18 +1191,31 @@ footer {
     </div>
   </div>
 
-  <div class="modal" id="adminModal" style="display:none; width:100%; max-width:600px;">
+  <div class="modal" id="adminModal" style="display:none; width:100%; max-width:800px;">
     <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
     <h2>Yetkili Yönetim <span class="text-primary">Destek Masası</span></h2>
     <p class="subtitle">Platforma bağlanan kullanıcıların destek taleplerine anında yanıt verin.</p>
     
-    <div style="background:var(--card-bg); border:1px solid var(--border); border-radius:12px; height:400px; display:flex; flex-direction:column; margin-top:20px;">
-      <div id="adminChatMessages" style="flex:1; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
-        <div style="color:var(--text-muted); text-align:center; font-size:0.85rem; padding-top:20px;">Canlı destek bağlantısı bekleniyor...</div>
+    <div style="background:var(--card-bg); border:1px solid var(--border); border-radius:12px; height:450px; display:flex; margin-top:20px; overflow:hidden;">
+      <div style="width: 250px; border-right: 1px solid var(--border); background:rgba(0,0,0,0.05); display:flex; flex-direction:column;">
+        <div style="padding:12px; font-weight:bold; border-bottom:1px solid var(--border); font-size:0.9rem;">Aktif Talepler</div>
+        <div id="adminUserList" style="flex:1; overflow-y:auto;">
+          <!-- Kullanıcı listesi buraya eklenecek -->
+        </div>
       </div>
-      <div style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px;">
-        <input type="text" id="adminChatInput" placeholder="Kullanıcıya yanıt yazın..." style="flex:1; padding:10px 16px; border-radius:24px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:white;" onkeypress="if(event.key==='Enter') sendAdminMessage()">
-        <button class="btn btn-primary" style="border-radius:24px; padding:10px 20px;" onclick="sendAdminMessage()"><i class="fas fa-paper-plane"></i></button>
+      <div style="flex:1; display:flex; flex-direction:column;">
+        <div id="adminChatMessages" style="flex:1; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+          <div style="color:var(--text-muted); text-align:center; font-size:0.85rem; padding-top:20px;">Lütfen soldan bir konuşma seçin</div>
+        </div>
+        <div style="padding: 16px; border-top: 1px solid rgba(255,255,255,0.05); background: var(--card-bg); display:flex; gap: 10px; align-items:center;">
+          <div style="flex:1; position:relative; display:flex; align-items:center;">
+            <i class="fas fa-keyboard" style="position:absolute; left:16px; color:var(--text-muted); font-size:1rem;"></i>
+            <input type="text" id="adminChatInput" placeholder="Kullanıcıya mesajınızı yazın..." disabled style="width:100%; padding:14px 20px 14px 44px; border-radius:30px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.3); color:white; font-size:0.95rem; outline:none; transition: border 0.3s;" onfocus="this.style.border='1px solid var(--primary)'" onblur="this.style.border='1px solid rgba(255,255,255,0.1)'" onkeypress="if(event.key==='Enter') sendAdminMessage()">
+          </div>
+          <button class="btn btn-primary" id="adminChatBtn" disabled style="border-radius:50%; width:48px; height:48px; padding:0; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(23, 222, 107, 0.4);" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" onclick="sendAdminMessage()">
+            <i class="fas fa-paper-plane" style="margin-right:2px; font-size:1.1rem;"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1420,6 +1430,16 @@ async function updateUI(){
     
     document.getElementById('updateUsername').value = user.username;
     document.getElementById('updateEmail').value = user.email;
+
+    // Sadece yetkili hesaplar Yetkili kısmını görebilir.
+    const adminBtn = document.getElementById('adminSupportBtn');
+    if (adminBtn) {
+      if (['estas@gmail.com', 'yelerax@gmail.com'].includes(user.email)) {
+        adminBtn.style.display = 'inline-block';
+      } else {
+        adminBtn.style.display = 'none';
+      }
+    }
 
     if (!window.initialLayoutSet) {
       window.initialLayoutSet = true;
@@ -1741,6 +1761,9 @@ function changeLanguage(langKey) {
     let text = t[key] || fb[key] || trk[key];
     if (text) el.setAttribute('placeholder', text);
   });
+  
+  if(typeof renderUserChat === 'function') renderUserChat();
+  if(typeof renderAdminChat === 'function') renderAdminChat();
 }
 
 function toggleDropdown() {
@@ -1787,131 +1810,325 @@ function removeTyping() {
   if(el) el.remove();
 }
 
-/* CANLI DESTEK SIMULASYONU / GERÇEK ZAMANLI SOHBET ALTYAPISI */
-// Kullanıcı ve admin sekmesi arasında anında iletişimi `localStorage` üzerinden Event dinleyicilerle sağlıyoruz
+/* CANLI DESTEK SIMULASYONU / GELİŞMİŞ ÇOKLU KULLANICI SOHBET ALTYAPISI */
+let mySessionId = localStorage.getItem('urun_session_id');
+if(!mySessionId) {
+  mySessionId = 'u_' + Math.random().toString(36).substr(2, 6);
+  localStorage.setItem('urun_session_id', mySessionId);
+}
+
+let activeAdminSession = null;
+
+function getChatUsername() {
+  let uiName = document.getElementById('dashUsername')?.innerText;
+  if(uiName && !['Kullanıcı', 'Username', 'Kullanıcı Adı', 'Benutzername'].includes(uiName)) return uiName;
+  
+  let navName = document.getElementById('navUsername')?.innerText;
+  if(navName && !['Kullanıcı', 'Username', 'Kullanıcı Adı', 'Benutzername'].includes(navName)) return navName;
+  
+  return null;
+}
+
+// ÇEVİRİ ALTYAPISI (Tam Otomatik & Çift Yönlü & Anlık)
+const tlCache = JSON.parse(localStorage.getItem('urun_tl_cache') || '{}');
+
+async function getTranslation(text, targetLang) {
+  if(!text) return "";
+  let tl = targetLang === 'ZH' ? 'zh-CN' : targetLang.toLowerCase();
+  
+  let cacheKey = encodeURIComponent(text) + '_' + tl;
+  if (tlCache[cacheKey]) return tlCache[cacheKey];
+  
+  try {
+     let res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`);
+     let data = await res.json();
+     let trans = "";
+     data[0].forEach(d => { if(d[0]) trans += d[0]; });
+     
+     if (trans) {
+       tlCache[cacheKey] = trans;
+       localStorage.setItem('urun_tl_cache', JSON.stringify(tlCache));
+       return trans;
+     }
+  } catch(e) {}
+  return text;
+}
+
+const supportChannel = sb ? sb.channel('urun-live-support', { config: { broadcast: { ack: false } } }) : null;
+
+if (supportChannel) {
+  supportChannel.on('broadcast', { event: 'chat_message' }, async (payload) => {
+    const msg = payload.payload;
+    
+    // Sadece kendi oturumunu ilgilendiren mesajları al (Müşteri için)
+    if (msg.sessionId === mySessionId) {
+      let uHist = JSON.parse(localStorage.getItem('urun_client_chat') || '[]');
+      if (!uHist.some(h => h.id === msg.id)) {
+        uHist.push(msg);
+        localStorage.setItem('urun_client_chat', JSON.stringify(uHist));
+        renderUserChat();
+      }
+    }
+    
+    // Yönetici paneli için her talebi al
+    let aHist = JSON.parse(localStorage.getItem('urun_admin_chats') || '{}');
+    if (!aHist[msg.sessionId]) aHist[msg.sessionId] = [];
+    if (!aHist[msg.sessionId].some(h => h.id === msg.id)) {
+      aHist[msg.sessionId].push(msg);
+      localStorage.setItem('urun_admin_chats', JSON.stringify(aHist));
+      renderAdminUserList();
+      if(activeAdminSession === msg.sessionId) renderAdminChat();
+    }
+  }).subscribe();
+}
+
+function selectAdminUser(sId) {
+  activeAdminSession = sId;
+  const inp = document.getElementById('adminChatInput');
+  const btn = document.getElementById('adminChatBtn');
+  if(inp && btn) { inp.disabled = false; btn.disabled = false; }
+  renderAdminUserList();
+  renderAdminChat();
+}
+
+function renderAdminUserList() {
+  const list = document.getElementById('adminUserList');
+  if(!list) return;
+  let aHist = JSON.parse(localStorage.getItem('urun_admin_chats') || '{}');
+  list.innerHTML = '';
+  
+  const sessions = Object.keys(aHist);
+  if (sessions.length === 0) {
+    list.innerHTML = '<div style="padding:16px; color:var(--text-muted); font-size:0.8rem; text-align:center;">Talep Yok</div>';
+    return;
+  }
+  
+  sessions.forEach(sId => {
+    let msgs = aHist[sId];
+    if(msgs.length === 0) return;
+    let username = msgs[0].username || 'Kullanıcı';
+    let div = document.createElement('div');
+    div.style.padding = '12px';
+    div.style.borderBottom = '1px solid var(--border)';
+    div.style.cursor = 'pointer';
+    div.style.transition = '0.2s';
+    if(sId === activeAdminSession) div.style.background = 'rgba(255,255,255,0.08)';
+    div.onmouseenter = () => div.style.background = 'rgba(255,255,255,0.12)';
+    div.onmouseleave = () => div.style.background = (sId === activeAdminSession) ? 'rgba(255,255,255,0.08)' : '';
+    
+    div.innerHTML = `<strong>${username}</strong><div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">${msgs[msgs.length-1].text.substring(0, 20)}...</div>`;
+    div.onclick = () => selectAdminUser(sId);
+    list.appendChild(div);
+  });
+}
+
+function sendAIMessage() {
+  const username = getChatUsername();
+  if(!username) {
+    alert(currentLang === 'TR' ? "Canlı desteğe yazabilmek için lütfen giriş yapın veya kayıt olun." : "Please login or register to write to live support.");
+    return;
+  }
+  
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if(!text) return;
+  
+  let msg = {id: Math.random().toString(36).substr(2, 9), sessionId: mySessionId, username: username, sender: 'user', text: text, ts: Date.now()};
+  
+  let uHist = JSON.parse(localStorage.getItem('urun_client_chat') || '[]');
+  uHist.push(msg);
+  localStorage.setItem('urun_client_chat', JSON.stringify(uHist));
+  input.value = '';
+  
+  let aHist = JSON.parse(localStorage.getItem('urun_admin_chats') || '{}');
+  if(!aHist[msg.sessionId]) aHist[msg.sessionId] = [];
+  aHist[msg.sessionId].push(msg);
+  localStorage.setItem('urun_admin_chats', JSON.stringify(aHist));
+  
+  if (supportChannel) supportChannel.send({ type: 'broadcast', event: 'chat_message', payload: msg });
+  
+  // VERİTABANINA KAYDET (Kalıcılık için)
+  if (sb) {
+    sb.from('support_messages').insert([{
+      session_id: mySessionId,
+      sender: 'user',
+      username: username,
+      message: text
+    }]).then(); // Arka planda sessiz çalışır
+  }
+  
+  renderUserChat();
+  renderAdminUserList();
+  if(activeAdminSession === msg.sessionId) renderAdminChat();
+}
+
+function sendAdminMessage() {
+  const email = document.getElementById('dashEmail')?.innerText;
+  if(!['estas@gmail.com', 'yelerax@gmail.com'].includes(email)) {
+    alert("Bunu yalnızca yetkili hesaplar yanıtlayabilir.");
+    return;
+  }
+
+  if(!activeAdminSession) return;
+  const adminName = getChatUsername() || "Yetkili";
+  
+  const input = document.getElementById('adminChatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  
+  let msg = {id: Math.random().toString(36).substr(2, 9), sessionId: activeAdminSession, username: adminName, sender: 'admin', text: text, ts: Date.now()};
+  
+  let aHist = JSON.parse(localStorage.getItem('urun_admin_chats') || '{}');
+  aHist[activeAdminSession].push(msg);
+  localStorage.setItem('urun_admin_chats', JSON.stringify(aHist));
+  input.value = '';
+  
+  if(mySessionId === activeAdminSession) {
+    let uHist = JSON.parse(localStorage.getItem('urun_client_chat') || '[]');
+    uHist.push(msg);
+    localStorage.setItem('urun_client_chat', JSON.stringify(uHist));
+    renderUserChat();
+  }
+  
+  if (supportChannel) supportChannel.send({ type: 'broadcast', event: 'chat_message', payload: msg });
+  
+  // VERİTABANINA KAYDET (Kalıcılık için)
+  if (sb) {
+    sb.from('support_messages').insert([{
+      session_id: activeAdminSession,
+      sender: 'admin',
+      username: adminName,
+      message: text
+    }]).then(); // Arka planda sessiz çalışır
+  }
+  
+  renderAdminChat();
+  renderAdminUserList();
+}
 
 function renderUserChat() {
   const msgs = document.getElementById('aiChatMessages');
   if(!msgs) return;
-  const history = JSON.parse(localStorage.getItem('urun_support_chat') || '[]');
+  const history = JSON.parse(localStorage.getItem('urun_client_chat') || '[]');
   
   if (history.length === 0) {
-    msgs.innerHTML = '<div class="ai-msg bot" data-i18n="aiWelcome">Canlı Destek sistemine hoş geldiniz! Sizi müsait bir temsilciye bağlamadan önce, sorununuzu veya talebinizi kısaca yazar mısınız?</div>';
+    msgs.innerHTML = '<div class="ai-msg bot" style="animation: chatPopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;" data-i18n="aiWelcome">Canlı Destek sistemine hoş geldiniz! Sizi müsait bir temsilciye bağlamadan önce, sorununuzu veya talebinizi kısaca yazar mısınız?</div>';
   } else {
     msgs.innerHTML = '';
     history.forEach(msg => {
+      const isUser = msg.sender === 'user';
       const div = document.createElement('div');
-      div.className = 'ai-msg ' + (msg.sender === 'user' ? 'user' : 'bot');
-      div.textContent = msg.text;
+      div.className = 'ai-msg ' + (isUser ? 'user' : 'bot');
+      div.style.animation = 'chatPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+      
+      div.innerHTML = `<div style="font-size:0.7rem; opacity:0.7; margin-bottom:4px; text-align:${isUser?'right':'left'}">${msg.username || (isUser?'Sen':'Yetkili')}</div><span class="chat-txt"><i class="fas fa-spinner fa-spin" style="font-size:0.7rem;"></i></span>`;
       msgs.appendChild(div);
+      
+      getTranslation(msg.text, currentLang).then(tlText => {
+         let sub = (!isUser && tlText !== msg.text) ? `<br><small style="opacity:0.4; font-size:0.6rem;">(Oto-Çeviri)</small>` : "";
+         div.querySelector('.chat-txt').innerHTML = tlText + sub;
+         msgs.scrollTop = msgs.scrollHeight;
+      });
     });
   }
-  msgs.scrollTop = msgs.scrollHeight;
 }
 
 function renderAdminChat() {
   const msgs = document.getElementById('adminChatMessages');
   if(!msgs) return;
-  const history = JSON.parse(localStorage.getItem('urun_support_chat') || '[]');
   
-  if (history.length === 0) {
-    msgs.innerHTML = '<div style="color:var(--text-muted); text-align:center; font-size:0.85rem; padding-top:20px;">Şu an bekleyen herhangi bir destek talebi bulunmuyor.</div>';
-  } else {
-    msgs.innerHTML = '';
-    history.forEach(msg => {
-      const div = document.createElement('div');
-      div.style.maxWidth = '85%';
-      div.style.padding = '10px 14px';
-      div.style.borderRadius = '16px';
-      div.style.fontSize = '0.9rem';
-      div.style.lineHeight = '1.4';
-      
-      if (msg.sender === 'user') {
-         div.style.alignSelf = 'flex-start';
-         div.style.background = 'var(--card-bg)';
-         div.style.border = '1px solid var(--border)';
-         div.style.color = 'var(--text)';
-      } else {
-         div.style.alignSelf = 'flex-end';
-         div.style.background = 'var(--primary)';
-         div.style.color = '#fff';
-      }
-      div.textContent = msg.text;
-      msgs.appendChild(div);
-    });
+  if (!activeAdminSession) {
+    msgs.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding-top:20px;">Lütfen soldan bir konuşma seçin</div>';
+    return;
   }
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-// Supabase Gerçek Zamanlı (Realtime) İnternet Üzeri Chat Bağlantısı
-const supportChannel = sb ? sb.channel('urun-live-support', { config: { broadcast: { ack: false } } }) : null;
-
-if (supportChannel) {
-  supportChannel.on('broadcast', { event: 'chat_message' }, (payload) => {
-    const msg = payload.payload;
-    let history = JSON.parse(localStorage.getItem('urun_support_chat') || '[]');
-    // Çift mesaj (kendimizin yolladığı) olasılığını engellemek için kimlik kontrolü yapıyoruz
-    if (!history.some(h => h.id === msg.id)) {
-      history.push(msg);
-      localStorage.setItem('urun_support_chat', JSON.stringify(history));
-      renderUserChat();
-      renderAdminChat();
+  
+  const aHist = JSON.parse(localStorage.getItem('urun_admin_chats') || '{}');
+  const history = aHist[activeAdminSession] || [];
+  
+  msgs.innerHTML = '';
+  history.forEach(msg => {
+    const isUser = msg.sender === 'user';
+    const div = document.createElement('div');
+    div.style.maxWidth = '85%';
+    div.style.padding = '10px 14px';
+    div.style.borderRadius = '16px';
+    div.style.fontSize = '0.9rem';
+    div.style.lineHeight = '1.4';
+    div.style.animation = 'chatPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+    
+    if (isUser) {
+       div.style.alignSelf = 'flex-start';
+       div.style.background = 'var(--card-bg)';
+       div.style.border = '1px solid var(--border)';
+       div.style.color = 'var(--text)';
+    } else {
+       div.style.alignSelf = 'flex-end';
+       div.style.background = 'var(--primary)';
+       div.style.color = '#fff';
     }
-  }).subscribe();
+    
+    div.innerHTML = `<div style="font-size:0.75rem; opacity:0.7; margin-bottom:4px; text-align:${isUser?'left':'right'}">${msg.username || (isUser?'Sen':'Yetkili')}</div><span class="chat-txt"><i class="fas fa-spinner fa-spin" style="font-size:0.7rem;"></i></span>`;
+    msgs.appendChild(div);
+    
+    getTranslation(msg.text, currentLang).then(tlText => {
+       let sub = (isUser && tlText !== msg.text) ? `<br><small style="opacity:0.4; font-size:0.6rem;">(Oto-Çeviri)</small>` : "";
+       div.querySelector('.chat-txt').innerHTML = tlText + sub;
+       msgs.scrollTop = msgs.scrollHeight;
+    });
+  });
 }
 
-function sendAIMessage() {
-  const input = document.getElementById('aiInput');
-  const text = input.value.trim();
-  if(!text) return;
-  
-  let msg = {id: Math.random().toString(36).substr(2, 9), sender: 'user', text: text, ts: Date.now()};
-  
-  let history = JSON.parse(localStorage.getItem('urun_support_chat') || '[]');
-  history.push(msg);
-  localStorage.setItem('urun_support_chat', JSON.stringify(history));
-  input.value = '';
-  
-  if (supportChannel) {
-    supportChannel.send({ type: 'broadcast', event: 'chat_message', payload: msg });
-  }
-  
-  renderUserChat();
-  renderAdminChat();
-}
-
-function sendAdminMessage() {
-  const input = document.getElementById('adminChatInput');
-  const text = input.value.trim();
-  if(!text) return;
-  
-  let msg = {id: Math.random().toString(36).substr(2, 9), sender: 'admin', text: text, ts: Date.now()};
-  
-  let history = JSON.parse(localStorage.getItem('urun_support_chat') || '[]');
-  history.push(msg);
-  localStorage.setItem('urun_support_chat', JSON.stringify(history));
-  input.value = '';
-  
-  if (supportChannel) {
-    supportChannel.send({ type: 'broadcast', event: 'chat_message', payload: msg });
-  }
-  
-  renderAdminChat();
-  renderUserChat();
-}
-
-// Sekmeler arası (veya tek ekranda anında) senkronizasyon dinleyicisi!
 window.addEventListener('storage', (e) => {
-  if (e.key === 'urun_support_chat') {
-    renderUserChat();
-    renderAdminChat();
+  if (e.key === 'urun_client_chat') renderUserChat();
+  if (e.key === 'urun_admin_chats') {
+    renderAdminUserList();
+    if(activeAdminSession) renderAdminChat();
   }
 });
 
-// Sayfa yüklendiğinde sohbetleri senkronize et
+// VERİTABANINDAN GEÇMİŞİ YÜKLE
+async function loadChatHistory() {
+  if (!sb) return;
+  try {
+    const { data: msgs, error } = await sb.from('support_messages').select('*').order('created_at', { ascending: true });
+    if (error || !msgs) return; // Tablo henüz kurulmamışsa vs. hata vermeden lokalden devam et
+    
+    let uHist = [];
+    let aHist = {};
+    
+    msgs.forEach(m => {
+      let msgObj = { id: m.id, sessionId: m.session_id, username: m.username, sender: m.sender, text: m.message, ts: new Date(m.created_at).getTime() };
+      
+      if(!aHist[m.session_id]) aHist[m.session_id] = [];
+      aHist[m.session_id].push(msgObj);
+      
+      if (m.session_id === mySessionId) uHist.push(msgObj);
+    });
+    
+    localStorage.setItem('urun_client_chat', JSON.stringify(uHist));
+    localStorage.setItem('urun_admin_chats', JSON.stringify(aHist));
+    
+    renderUserChat();
+    renderAdminUserList();
+    if(activeAdminSession) renderAdminChat();
+  } catch (err) {}
+}
+
+// Animasyon stillerini JS üzerinden dinamik olarak HTML head'e basıyoruz
+const animStyle = document.createElement('style');
+animStyle.innerHTML = `
+@keyframes chatPopIn {
+  0% { opacity: 0; transform: translateY(15px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+`;
+document.head.appendChild(animStyle);
+
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
+        loadChatHistory();
         renderUserChat();
+        renderAdminUserList();
     }, 500);
 });
 </script>
