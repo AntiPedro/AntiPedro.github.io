@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ürün Store</title>
 <meta name="description" content="Ürün Store - Tüm oyunların ve uygulamaların tek bir yerde. Ücretsiz indir, oyna ve topluluğa katıl.">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#18181b">
+<link rel="apple-touch-icon" href="./icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -700,6 +703,93 @@ footer {
 .yellow-semi .mouth-line { width: 18px; height: 3px; background: #a16207; border-radius: 3px; margin-top: 8px; margin-left: 8px; }
 .focused-away .pupil { transform: translate(calc(-50% - 6px), calc(-50% - 2px)) !important; }
 
+/* GOOGLE SIGN-IN BUTTON */
+.btn-google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.btn-google:hover {
+  border-color: var(--text-muted);
+  background: var(--surface-hover);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+.btn-google:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.btn-google svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.auth-page.show .btn-google { opacity: 0; animation: authFadeUp 0.6s 0.45s ease forwards; }
+.auth-page.show .auth-divider { opacity: 0; animation: authFadeUp 0.6s 0.5s ease forwards; }
+
+/* PASSWORD STRENGTH METER */
+.password-strength { margin-top: 8px; }
+.strength-bar-container { display: flex; gap: 4px; margin-bottom: 6px; }
+.strength-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: all 0.4s ease; }
+.strength-bar.active.weak { background: #ef4444; }
+.strength-bar.active.medium { background: #f59e0b; }
+.strength-bar.active.strong { background: #10b981; }
+.strength-bar.active.very-strong { background: #06b6d4; }
+.strength-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); transition: color 0.3s; margin-bottom: 6px; }
+.strength-label.weak { color: #ef4444; }
+.strength-label.medium { color: #f59e0b; }
+.strength-label.strong { color: #10b981; }
+.strength-label.very-strong { color: #06b6d4; }
+.strength-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.strength-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 14px; font-size: 0.72rem; font-weight: 500; background: rgba(59, 130, 246, 0.08); color: var(--text-muted); border: 1px solid transparent; transition: all 0.3s ease; }
+.strength-chip.met { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
+.strength-chip.met i { color: #10b981; }
+.strength-chip.unmet { background: rgba(239, 68, 68, 0.06); color: var(--text-muted); border-color: rgba(239, 68, 68, 0.12); }
+.strength-chip i { font-size: 0.65rem; }
+
+/* DISABLED AUTH BUTTON */
+.btn-submit:disabled, .btn-submit[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.3);
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+}
+.btn-submit:not(:disabled) {
+  transition: all 0.3s ease;
+}
+
 /* GALLERY */
 .gallery-section { padding: 80px 40px; background: var(--bg); border-top: 1px solid var(--border); }
 .gallery-container { max-width: 1000px; margin: 0 auto; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 24px; }
@@ -1024,10 +1114,17 @@ footer {
         <div class="auth-logo-icon"><i class="fas fa-meteor"></i></div>
         <h2 data-i18n="authW">Hoş Geldin!</h2>
         <p class="subtitle" data-i18n="authWD">Lütfen detaylarını gir.</p>
+        <!-- GOOGLE SIGN-IN -->
+        <button class="btn-google" onclick="signInWithGoogle()" id="loginGoogleBtn">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          <span data-i18n="authGoogle">Google ile Giriş Yap</span>
+        </button>
+        <div class="auth-divider" data-i18n="authOr">veya</div>
         <form onsubmit="handleLogin(event)">
           <div class="form-group custom-input" style="margin-bottom:24px;">
-            <label data-i18n="dashEmail">E-posta</label>
-            <input type="email" id="loginEmail" placeholder="ornek@email.com" required>
+            <label data-i18n="loginUserEmail">E-posta veya Kullanıcı Adı</label>
+            <input type="text" id="loginEmail" data-i18n-placeholder="loginUserEmail" placeholder="ornek@email.com veya kullanıcı" required>
+            <div class="form-error" id="loginEmailErr" style="color:var(--danger); font-size:0.8rem; margin-top:4px; display:none;"></div>
           </div>
           <div class="form-group custom-input password-wrapper" style="margin-bottom:24px;">
             <label data-i18n="authPass">Şifre</label>
@@ -1038,7 +1135,7 @@ footer {
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox"> <span data-i18n="authRem">30 gün hatırla</span></label>
             <a style="cursor:pointer; font-weight:600; color:var(--text);" data-i18n="authFor">Şifremi unuttum</a>
           </div>
-          <button type="submit" class="btn btn-primary btn-submit" id="loginBtn" style="border-radius:24px; margin-top:0; padding:12px;" data-i18n="authLog">Giriş Yap</button>
+          <button type="submit" class="btn btn-primary btn-submit" id="loginBtn" disabled style="border-radius:24px; margin-top:0; padding:12px;" data-i18n="authLog">Giriş Yap</button>
         </form>
         <div class="modal-switch" style="margin-top:28px;"><span data-i18n="authNoAcc">Hesabın yok mu? </span><a onclick="switchAuth('register')" data-i18n="navRegister">Kayıt Ol</a></div>
       </div>
@@ -1047,6 +1144,12 @@ footer {
         <div class="auth-logo-icon"><i class="fas fa-meteor"></i></div>
         <h2 data-i18n="authJoin">Aramıza Katıl</h2>
         <p class="subtitle" data-i18n="authJoinD">Platforma giriş yapmak için ücretsiz kayıt ol.</p>
+        <!-- GOOGLE SIGN-UP -->
+        <button class="btn-google" onclick="signInWithGoogle()" id="regGoogleBtn">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          <span data-i18n="authGoogleReg">Google ile Kayıt Ol</span>
+        </button>
+        <div class="auth-divider" data-i18n="authOr">veya</div>
         <form onsubmit="handleRegister(event)">
           <div class="form-group custom-input">
             <label data-i18n="dashUser">Kullanıcı Adı</label>
@@ -1058,8 +1161,19 @@ footer {
           </div>
           <div class="form-group custom-input password-wrapper">
             <label data-i18n="authPass">Şifre</label>
-            <input type="password" id="regPassword" data-i18n-placeholder="authPass" placeholder="En az 6 karakter" required minlength="6" onfocus="document.getElementById('charContainer').classList.remove('focused-away')">
+            <input type="password" id="regPassword" data-i18n-placeholder="authPass" placeholder="En az 6 karakter" required minlength="6" onfocus="document.getElementById('charContainer').classList.remove('focused-away')" oninput="checkPasswordStrength(this.value); validateRegisterForm()">
             <i class="fas fa-eye password-toggle" onclick="togglePassword('regPassword', this)"></i>
+          </div>
+          <!-- PASSWORD STRENGTH INDICATOR -->
+          <div class="password-strength" id="passwordStrengthBox" style="display:none; margin-top:-16px; margin-bottom:16px;">
+            <div class="strength-bar-container">
+              <div class="strength-bar" id="sBar1"></div>
+              <div class="strength-bar" id="sBar2"></div>
+              <div class="strength-bar" id="sBar3"></div>
+              <div class="strength-bar" id="sBar4"></div>
+            </div>
+            <div class="strength-label" id="strengthLabel"></div>
+            <div class="strength-suggestions" id="strengthSuggestions"></div>
           </div>
           <div class="form-group custom-input password-wrapper" style="margin-bottom:20px;">
             <label data-i18n="authPass2">Şifre tekrar</label>
@@ -1071,7 +1185,7 @@ footer {
               <a href="#" onclick="openModal('kvkk')" style="font-weight:600; color:var(--text); text-decoration:underline;" data-i18n="authTerms">Kullanım Koşulları ve KVKK Aydınlatma Metni'ni</a> <span data-i18n="authTerms2">okudum, anladım ve kabul ediyorum.</span>
             </label>
           </div>
-          <button type="submit" class="btn btn-primary btn-submit" id="regBtn" style="border-radius:24px; margin-top:0; padding:12px;" data-i18n="authReg">Hesap Oluştur</button>
+          <button type="submit" class="btn btn-primary btn-submit" id="regBtn" disabled style="border-radius:24px; margin-top:0; padding:12px;" data-i18n="authReg">Hesap Oluştur</button>
         </form>
         <div class="modal-switch" style="margin-top:28px;"><span data-i18n="authHasAcc">Hesabın var mı? </span><a onclick="switchAuth('login')" data-i18n="authLog">Giriş Yap</a></div>
       </div>
@@ -1233,6 +1347,9 @@ footer {
       </div>
       <button onclick="toggleChat()" style="background:transparent; border:none; color:white; font-size:1.1rem; cursor:pointer;"><i class="fas fa-times"></i></button>
     </div>
+    <div style="background: rgba(255,255,255,0.03); text-align:center; padding: 6px; font-size: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-muted);">
+      <i class="fas fa-clock" style="margin-right:4px; opacity:0.8;"></i><span data-i18n="aiWaitTime">Uzman destek ekibimiz taleplerinize en geç 24 saat içerisinde dönüş sağlayacaktır.</span>
+    </div>
     <div class="ai-chat-messages" id="aiChatMessages">
       <div class="ai-msg bot" data-i18n="aiWelcome">Merhaba! Ürün Store hakkında sormak istediğiniz bir şey var mı?</div>
     </div>
@@ -1347,12 +1464,22 @@ async function handleRegister(e){
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> İşleniyor...';
 
   try{
+    if (sb) {
+      const { data: uData } = await sb.from('user_profiles').select('username').ilike('username', username).single();
+      if (uData && uData.username) {
+        showError('regUsernameErr', 'Bu kullanıcı adı alınmış. Lütfen başka bir tane seçin.');
+        document.getElementById('regUsername').focus();
+        throw new Error('Bu kullanıcı adı kullanımda.');
+      }
+    }
+
     const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{username}}});
     if(error) {
       if(error.status === 429) throw new Error("Çok fazla istek attınız, lütfen bir süre bekleyin.");
       throw error;
     }
     if(data.user && data.session){
+      if(sb) await sb.from('user_profiles').insert([{username, email}]);
       closeAuth();
       showToast('Kayıt başarılı! Hoş geldin.'); showDashboard(); updateUI();
     } else if(data.user) {
@@ -1363,8 +1490,14 @@ async function handleRegister(e){
         return;
       }
       const{data:d2,error:e2}=await sb.auth.signInWithPassword({email,password:pass});
-      if(!e2){closeAuth();showToast('Kayıt başarılı!'); showDashboard(); updateUI();}
-      else{showToast('Kayıt olundu, giriş yapabilirsiniz.');closeAuth();}
+      if(!e2){
+        if(sb) await sb.from('user_profiles').insert([{username, email}]);
+        closeAuth();showToast('Kayıt başarılı!'); showDashboard(); updateUI();
+      }
+      else{
+        if(sb) await sb.from('user_profiles').insert([{username, email}]);
+        showToast('Kayıt olundu, giriş yapabilirsiniz.');closeAuth();
+      }
     }
   }catch(err){
     showError('regEmailErr', err.message || 'Kayıt sırasında bir hata oluştu.');
@@ -1375,12 +1508,22 @@ async function handleRegister(e){
 
 async function handleLogin(e){
   e.preventDefault();clearErrors();
-  const email=document.getElementById('loginEmail').value.trim();
+  let email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPassword').value;
   const btn=document.getElementById('loginBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> İşleniyor...';
 
   try{
+    if (sb && !email.includes('@')) {
+      const { data: uData } = await sb.from('user_profiles').select('email').ilike('username', email).single();
+      if (uData && uData.email) {
+        email = uData.email;
+      } else {
+        showError('loginEmailErr', 'Bu kullanıcı adı sistemde bulunamadı.');
+        throw new Error('Kullanıcı bulunamadı');
+      }
+    }
+
     const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
     if(error) throw error;
     closeAuth();
@@ -1638,7 +1781,8 @@ const translations = {
     winSafe: "Güvenli indirme • GitHub Releases üzerinden sunulmaktadır",
     dashWelcome: "Hoş Geldin", dashUser: "Kullanıcı Adı", dashEmail: "E-posta", dashId: "Hesap ID", dashDate: "Kayıt Tarihi", dashStat: "Durum", dashAct: "Onaylı", dashOut: "Çıkış Yap", dashDlBtn: "Programı İndir", dashSet: "Ayarlar", dashSum: "Hesap Özeti",
     authBack: "Geri Dön", authW: "Hoş Geldin!", authWD: "Lütfen detaylarını gir.", authPass: "Şifre", authRem: "30 gün hatırla", authFor: "Şifremi unuttum", authLog: "Giriş Yap", authNoAcc: "Hesabın yok mu? ", authJoin: "Aramıza Katıl", authJoinD: "Platforma giriş yapmak için ücretsiz kayıt ol.", authPass2: "Şifre tekrar", authPass2P: "Şifrenizi doğrulayın", authTerms: "Kullanım Koşulları ve KVKK Aydınlatma Metni'ni", authTerms2: " okudum, anladım ve kabul ediyorum.", authReg: "Hesap Oluştur", authHasAcc: "Hesabın var mı? ",
-    aiPlace: "Mesajınızı yazın...", footerAllRights: "Tüm Hakları Saklıdır."
+    aiPlace: "Mesajınızı yazın...", footerAllRights: "Tüm Hakları Saklıdır.",
+    authGoogle: "Google ile Giriş Yap", authGoogleReg: "Google ile Kayıt Ol", authOr: "veya"
   },
   EN: {
     brandName: "PRODUCT <span class='text-primary'>STORE</span>",
@@ -1659,7 +1803,8 @@ const translations = {
     winSafe: "Secure download • Provided via GitHub Releases",
     dashWelcome: "Welcome", dashUser: "Username", dashEmail: "Email", dashId: "Account ID", dashDate: "Registration Date", dashStat: "Status", dashAct: "Verified", dashOut: "Log Out", dashDlBtn: "Download App", dashSet: "Settings", dashSum: "Account Summary",
     authBack: "Go Back", authW: "Welcome Back!", authWD: "Please enter your details.", authPass: "Password", authRem: "Remember 30 days", authFor: "Forgot password", authLog: "Login", authNoAcc: "Don't have an account? ", authJoin: "Join Us", authJoinD: "Sign up for free to access the platform.", authPass2: "Repeat password", authPass2P: "Verify your password", authTerms: "Terms of Service and Privacy Policy", authTerms2: " I have read and agree.", authReg: "Create Account", authHasAcc: "Already have an account? ",
-    aiPlace: "Type your message...", footerAllRights: "All Rights Reserved."
+    aiPlace: "Type your message...", footerAllRights: "All Rights Reserved.",
+    authGoogle: "Sign in with Google", authGoogleReg: "Sign up with Google", authOr: "or"
   },
   DE: {
     brandName: "PRODUKT <span class='text-primary'>STORE</span>",
@@ -1742,6 +1887,22 @@ const translations = {
     aiPrompt: "你是产品商店的智能支持助手。请简明、友好地用中文给出回答。"
   }
 };
+
+translations['TR'].aiWaitTime = "Uzman destek ekibimiz taleplerinize en geç 24 saat içerisinde dönüş sağlayacaktır.";
+translations['EN'].aiWaitTime = "Our expert support team will respond to your queries within 24 hours at the latest.";
+translations['DE'].aiWaitTime = "Unser Experten-Supportteam wird Ihre Anfragen spätestens innerhalb von 24 Stunden beantworten.";
+translations['FR'].aiWaitTime = "Notre équipe d'assistance experte répondra à vos demandes dans un délai maximum de 24 heures.";
+translations['ES'].aiWaitTime = "Nuestro equipo de soporte experto responderá a sus consultas en un plazo máximo de 24 horas.";
+translations['RU'].aiWaitTime = "Наша служба поддержки ответит на ваши запросы не позднее, чем через 24 часа.";
+translations['ZH'].aiWaitTime = "我们的专家支持团队最迟将在 24 小时内回复您的查询。";
+
+translations['TR'].loginUserEmail = "E-posta veya Kullanıcı Adı";
+translations['EN'].loginUserEmail = "Email or Username";
+translations['DE'].loginUserEmail = "E-Mail oder Benutzername";
+translations['FR'].loginUserEmail = "E-mail ou Nom d'utilisateur";
+translations['ES'].loginUserEmail = "Correo o Nombre de usuario";
+translations['RU'].loginUserEmail = "Почта или Имя пользователя";
+translations['ZH'].loginUserEmail = "电子邮件或用户名";
 
 let currentLang = 'TR';
 function changeLanguage(langKey) {
@@ -2131,6 +2292,159 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAdminUserList();
     }, 500);
 });
+
+/* ======== PASSWORD STRENGTH & FORM VALIDATION ======== */
+
+function checkPasswordStrength(password) {
+  const box = document.getElementById('passwordStrengthBox');
+  const label = document.getElementById('strengthLabel');
+  const suggestions = document.getElementById('strengthSuggestions');
+  const bars = [document.getElementById('sBar1'), document.getElementById('sBar2'), document.getElementById('sBar3'), document.getElementById('sBar4')];
+  
+  if (!password || password.length === 0) {
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = 'block';
+  
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(password);
+  const isLong = password.length >= 8;
+  const isVeryLong = password.length >= 12;
+  
+  let score = 0;
+  if (hasLower) score++;
+  if (hasUpper) score++;
+  if (hasNumber) score++;
+  if (hasSpecial) score++;
+  if (isLong) score++;
+  if (isVeryLong) score++;
+  
+  let level, levelText, barCount;
+  if (score <= 2) { level = 'weak'; levelText = '⚠️ Zayıf şifre'; barCount = 1; }
+  else if (score <= 3) { level = 'medium'; levelText = '🟡 Orta güçlükte'; barCount = 2; }
+  else if (score <= 4) { level = 'strong'; levelText = '✅ Güçlü şifre'; barCount = 3; }
+  else { level = 'very-strong'; levelText = '🛡️ Çok güçlü!'; barCount = 4; }
+  
+  // Update bars
+  bars.forEach((bar, i) => {
+    bar.className = 'strength-bar';
+    if (i < barCount) bar.classList.add('active', level);
+  });
+  
+  // Update label
+  label.className = 'strength-label ' + level;
+  label.textContent = levelText;
+  
+  // Build suggestion chips
+  const checks = [
+    { met: hasUpper, icon: 'fa-font', text: 'Büyük harf (A-Z)' },
+    { met: hasLower, icon: 'fa-font', text: 'Küçük harf (a-z)' },
+    { met: hasNumber, icon: 'fa-hashtag', text: 'Rakam (0-9)' },
+    { met: hasSpecial, icon: 'fa-asterisk', text: 'Özel karakter (!@#$)' },
+    { met: isLong, icon: 'fa-ruler-horizontal', text: '8+ karakter' }
+  ];
+  
+  // Only show unmet ones first, then met ones
+  const unmet = checks.filter(c => !c.met);
+  const met = checks.filter(c => c.met);
+  const sorted = [...unmet, ...met];
+  
+  let html = '';
+  if (unmet.length > 0 && score <= 3) {
+    html += '<div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:4px; width:100%;">Bunları ekleyerek güçlendirebilirsiniz:</div>';
+  }
+  sorted.forEach(c => {
+    const cls = c.met ? 'met' : 'unmet';
+    const icon = c.met ? 'fa-check' : 'fa-plus';
+    html += `<span class="strength-chip ${cls}"><i class="fas ${icon}"></i> ${c.text}</span>`;
+  });
+  suggestions.innerHTML = html;
+}
+
+// ===== FORM VALIDATION: Enable/Disable Buttons =====
+
+function validateLoginForm() {
+  const email = document.getElementById('loginEmail')?.value.trim();
+  const pass = document.getElementById('loginPassword')?.value;
+  const btn = document.getElementById('loginBtn');
+  if (!btn) return;
+  
+  if (email && email.length > 0 && pass && pass.length > 0) {
+    btn.disabled = false;
+  } else {
+    btn.disabled = true;
+  }
+}
+
+function validateRegisterForm() {
+  const username = document.getElementById('regUsername')?.value.trim();
+  const email = document.getElementById('regEmail')?.value.trim();
+  const pass = document.getElementById('regPassword')?.value;
+  const pass2 = document.getElementById('regPassword2')?.value;
+  const kvkk = document.getElementById('kvkkCheck')?.checked;
+  const btn = document.getElementById('regBtn');
+  if (!btn) return;
+  
+  if (username && username.length >= 3 && email && email.length > 0 && pass && pass.length >= 6 && pass2 && pass2.length > 0 && kvkk) {
+    btn.disabled = false;
+  } else {
+    btn.disabled = true;
+  }
+}
+
+// Attach listeners after DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  // Login form listeners
+  const loginEmail = document.getElementById('loginEmail');
+  const loginPass = document.getElementById('loginPassword');
+  if (loginEmail) loginEmail.addEventListener('input', validateLoginForm);
+  if (loginPass) loginPass.addEventListener('input', validateLoginForm);
+  
+  // Register form listeners
+  const regUsername = document.getElementById('regUsername');
+  const regEmail = document.getElementById('regEmail');
+  const regPass = document.getElementById('regPassword');
+  const regPass2 = document.getElementById('regPassword2');
+  const kvkk = document.getElementById('kvkkCheck');
+  
+  if (regUsername) regUsername.addEventListener('input', validateRegisterForm);
+  if (regEmail) regEmail.addEventListener('input', validateRegisterForm);
+  if (regPass) regPass.addEventListener('input', validateRegisterForm);
+  if (regPass2) regPass2.addEventListener('input', validateRegisterForm);
+  if (kvkk) kvkk.addEventListener('change', validateRegisterForm);
+});
+
+/* ======== GOOGLE OAUTH ======== */
+async function signInWithGoogle() {
+  if (!sb) {
+    showToast('Supabase bağlantısı kurulamadı.', true);
+    return;
+  }
+  try {
+    const { data, error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + window.location.pathname
+      }
+    });
+    if (error) throw error;
+    // Supabase will redirect to Google's OAuth page automatically
+  } catch (err) {
+    showToast('Google giriş hatası: ' + (err.message || 'Bir hata oluştu.'), true);
+  }
+}
+
+// PWA Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => console.log('Service worker registered.', reg))
+      .catch((err) => console.log('Service worker not registered.', err));
+  });
+}
 </script>
 </body>
 </html>
