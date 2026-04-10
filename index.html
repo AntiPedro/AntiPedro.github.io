@@ -3,8 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ürün Store</title>
-<meta name="description" content="Ürün Store - Tüm oyunların ve uygulamaların tek bir yerde. Ücretsiz indir, oyna ve topluluğa katıl.">
+
+<!-- SEO Meta Tags -->
+<title>Ürün Store — Oyun ve Uygulamaların Yepyeni Evi</title>
+<meta name="description" content="Ürün Store - Oyun ve uygulamaların tek merkezde buluştuğu platform. Ücretsiz indir, kolayca yönet.">
+<meta name="keywords" content="ürün store, oyun mağazası, ücretsiz oyun indirme, game store, uygulama mağazası">
+<meta name="author" content="Ürün Store">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ürün Store — Oyun ve Uygulamaların Yepyeni Evi">
+<meta property="og:description" content="Favori oyunlarınızı tek platformda yönetin. Hızlı indirme, otomatik güncelleme.">
+<meta property="og:image" content="./icon.png">
+<meta property="og:url" content="https://urunstore.com">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ürün Store — Oyun ve Uygulamaların Yepyeni Evi">
+<meta name="twitter:description" content="Favori oyunlarınızı tek platformda yönetin.">
+
+<!-- Canonical -->
+<link rel="canonical" href="https://urunstore.com">
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#18181b">
 <link rel="apple-touch-icon" href="./icon.png">
@@ -843,6 +863,21 @@ footer {
   .auth-split { flex-direction: column; }
   .auth-visual { display: none; }
   .auth-form-container { padding: 80px 24px; min-height: 100vh; align-items: flex-start; }
+  
+  .ai-widget { bottom: 20px; right: 20px; }
+  .ai-chat-window {
+    position: fixed !important;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+    border: none !important;
+    transform: translateY(100%) !important;
+  }
+  .ai-chat-window.show {
+    transform: translateY(0) !important;
+  }
 }
 
 /* RESPONSIVE */
@@ -869,7 +904,43 @@ footer {
   .nav-links.active { transform: translateY(0); opacity: 1; pointer-events: all; }
   .mobile-btn { display: block; }
   .hide-mobile { display: none; }
+  
+  #adminTabChat { flex-direction: column !important; }
+  .admin-sidebar { width: 100% !important; height: 180px; border-right: none !important; border-bottom: 1px solid var(--border); }
+  .download-card { flex-direction: column; text-align: center; }
+  .download-card .os-info { text-align: center; }
+  .user-row { flex-direction: column; gap: 12px; align-items: flex-start; }
+  .user-actions { width: 100%; justify-content: space-between; }
 }
+
+/* ADMIN PANEL TABS */
+.admin-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.admin-tab { background: transparent; border: none; color: var(--text-muted); padding: 8px 16px; cursor: pointer; font-weight: 600; border-radius: 6px; transition: var(--transition); }
+.admin-tab.active { background: var(--surface-hover); color: var(--text); }
+.admin-tab:hover { color: var(--text); }
+.admin-panel { display: none; flex-direction: column; height: 450px; background:var(--card-bg); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.admin-panel.active { display: flex; }
+
+/* Admin Users List */
+.admin-users-header { display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); background: var(--surface-hover); }
+.admin-search-input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); outline: none; }
+.user-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border); transition: var(--transition); }
+.user-row:hover { background: var(--surface-hover); }
+.user-info { display: flex; align-items: center; gap: 12px; }
+.user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: var(--primary-text); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem; }
+.user-details h4 { margin: 0; font-size: 0.95rem; display: flex; align-items: center; }
+.user-details p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+.user-actions { display: flex; gap: 6px; }
+.user-actions button { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: var(--transition); }
+.user-actions button.btn-ban { color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+.user-actions button.btn-ban:hover { background: rgba(239, 68, 68, 0.1); }
+.user-actions button.btn-timeout { color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }
+.user-actions button.btn-timeout:hover { background: rgba(245, 158, 11, 0.1); }
+.user-actions button.btn-unban { color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
+.user-actions button.btn-unban:hover { background: rgba(16, 185, 129, 0.1); }
+.banned-badge { background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-left: 6px; }
+.timeout-badge { background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-left: 6px; }
+
 @media(max-width: 480px) {
   .hero-actions, .hero-actions button, .hero-actions a { width: 100%; }
   .modal { padding: 24px; }
@@ -882,7 +953,7 @@ footer {
 
 <nav id="navbar">
   <div class="logo" onclick="goHome()">
-    <div class="logo-text" data-i18n="brandName">ÜRÜN <span class="text-primary">STORE</span></div>
+    <img src="./logo.png" alt="Ürün Store" style="height: 48px; width: auto; object-fit: contain;">
   </div>
   <div class="nav-links" id="navLinks">
     <a href="#" onclick="goHome(); toggleMenu();" data-i18n="navHome">Ana Sayfa</a>
@@ -925,55 +996,24 @@ footer {
     <p class="reveal delay-1" data-i18n="heroDesc">Ürün Store, favori oyunlarınızı tek bir pratik arayüzde birleştirir. İndirin, her zaman güncel kalın ve toplulukla etkileşimi koparmayın.</p>
     
     <div class="platform-selector reveal delay-2">
-      <div class="platform-tabs">
-        <button class="platform-tab active" onclick="switchPlatform('windows')">
-          <i class="fab fa-windows"></i> <span data-i18n="winTab">Windows</span>
-        </button>
-        <button class="platform-tab" onclick="switchPlatform('linux')">
-          <i class="fab fa-linux"></i> <span data-i18n="linTab">Linux</span>
-        </button>
-      </div>
-
       <div class="platform-content">
         <!-- WINDOWS -->
-        <div class="platform-panel active" id="platformWindows">
-          <div class="download-card">
-            <div class="os-icon">
+        <div class="platform-panel active" id="platformWindows" style="width: 100%;">
+          <div class="download-card" style="flex-direction: column; text-align: center;">
+            <div class="os-icon" style="margin-bottom: 16px; width: 64px; height: 64px; font-size: 2.5rem;">
               <i class="fab fa-windows"></i>
             </div>
-            <div class="os-info">
-              <h3 data-i18n="winTitle">Windows için İndir</h3>
-              <p data-i18n="winDesc">Windows 10 / 11 uyumlu &bull; Kurulum dosyası (.exe)</p>
+            <div class="os-info" style="text-align: center; width: 100%;">
+              <h3 data-i18n="winTitle" style="font-size: 1.2rem; margin-bottom: 8px;">Windows için İndir</h3>
+              <p data-i18n="winDesc" style="margin-bottom: 20px;">Windows 10 / 11 uyumlu &bull; Kurulum dosyası (.exe)</p>
             </div>
-            <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn-download">
+            <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn-download" style="width: 100%; justify-content: center; padding: 14px;">
               <i class="fas fa-download"></i> <span data-i18n="dlBtn">İndir</span>
             </a>
           </div>
           <div class="download-badge">
             <i class="fas fa-shield-alt"></i> <span data-i18n="winSafe">Güvenli indirme &bull; GitHub Releases üzerinden sunulmaktadır</span>
           </div>
-        </div>
-
-        <!-- LINUX -->
-        <div class="platform-panel" id="platformLinux">
-          <div class="download-card">
-            <div class="os-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);">
-              <i class="fab fa-linux"></i>
-            </div>
-            <div class="os-info">
-              <h3 data-i18n="linTitle">Linux için Ürün Store</h3>
-              <p data-i18n="linDesc">Linux sürümü şu anda geliştirme aşamasındadır.</p>
-            </div>
-            <span class="btn-download disabled">
-              <i class="fas fa-clock"></i> <span data-i18n="comingSoon">Yakında</span>
-            </span>
-          </div>
-          <div class="coming-soon-badge">
-            <i class="fas fa-code-branch"></i> <span data-i18n="linBadge">Linux desteği henüz çıkmadı. Geliştirmeler devam ediyor!</span>
-          </div>
-          <a href="https://discord.gg/jtsKHGcTf4" target="_blank" class="btn btn-outline" style="padding: 10px 20px; font-size: 0.85rem;">
-            <i class="fab fa-discord"></i> <span data-i18n="discordPla">Gelişmelerden haberdar olmak için Discord'a katıl</span>
-          </a>
         </div>
       </div>
     </div>
@@ -1029,7 +1069,7 @@ footer {
           <span data-i18n="faq2_q">Hangi işletim sistemlerini destekliyor?</span>
           <i class="fas fa-chevron-down faq-icon"></i>
         </div>
-        <div class="faq-answer"><p data-i18n="faq2_a">Şu anda Windows 10/11 desteği aktif. Linux versiyonumuz geliştirme aşamasındadır ve yakında yayınlanacaktır.</p></div>
+        <div class="faq-answer"><p data-i18n="faq2_a">Şu anda Windows 10/11 desteği aktif.</p></div>
       </div>
       <div class="faq-item" onclick="this.classList.toggle('active')">
         <div class="faq-question">
@@ -1262,74 +1302,71 @@ footer {
     <h2>İndir</h2>
     <p class="subtitle">İşletim sisteminizi seçin.</p>
     
-    <div class="platform-selector" style="margin-top:20px;">
-      <div class="platform-tabs">
-        <button class="platform-tab active" onclick="switchPlatformDash('windows')" id="tabWinDash">
-          <i class="fab fa-windows"></i> Windows
-        </button>
-        <button class="platform-tab" onclick="switchPlatformDash('linux')" id="tabLinDash">
-          <i class="fab fa-linux"></i> Linux
-        </button>
-      </div>
-
-      <div class="platform-content">
+    <div class="platform-selector" style="margin-top:20px; width: 100%;">
+      <div class="platform-content" style="width: 100%;">
         <!-- WINDOWS -->
-        <div class="platform-panel active" id="platformWindowsDash">
-          <div class="download-card" style="padding:24px 20px;">
-            <div class="os-icon" style="width:48px;height:48px;font-size:1.8rem; flex-shrink:0;">
+        <div class="platform-panel active" id="platformWindowsDash" style="width: 100%;">
+          <div class="download-card" style="padding:24px 20px; flex-direction:column; text-align:center;">
+            <div class="os-icon" style="width:64px;height:64px;font-size:2.5rem; margin:0 auto 16px;">
               <i class="fab fa-windows"></i>
             </div>
-            <div class="os-info">
-              <h3 style="font-size: 1.1rem; font-weight:700;" data-i18n="winTitle">Windows İçin İndir</h3>
-              <p style="font-size: 0.85rem;" data-i18n="winDesc">Windows 10 / 11 uyumlu • Kurulum dosyası (.exe)</p>
+            <div class="os-info" style="text-align:center; width:100%;">
+              <h3 style="font-size: 1.2rem; font-weight:700; margin-bottom: 8px;" data-i18n="winTitle">Windows İçin İndir</h3>
+              <p style="font-size: 0.9rem; margin-bottom: 20px;" data-i18n="winDesc">Windows 10 / 11 uyumlu • Kurulum dosyası (.exe)</p>
             </div>
-            <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn btn-primary" style="margin-top: 10px; width: 100%; border-radius: 8px;">
+            <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn btn-primary" style="width: 100%; border-radius: 8px; padding: 14px;">
               <i class="fas fa-download"></i> <span data-i18n="dlBtn">İndir</span>
             </a>
-          </div>
-        </div>
-
-        <!-- LINUX -->
-        <div class="platform-panel" id="platformLinuxDash">
-          <div class="download-card" style="padding:24px 20px;">
-            <div class="os-icon" style="width:48px;height:48px;font-size:1.8rem; color: #f59e0b; background: rgba(245, 158, 11, 0.1); flex-shrink:0;">
-              <i class="fab fa-linux"></i>
-            </div>
-            <div class="os-info">
-              <h3 style="font-size: 1rem;"><span data-i18n="linTab">Linux</span> <span style="font-size:0.7rem; font-weight:normal; background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 2px 6px; border-radius: 4px; margin-left: 4px;" data-i18n="comingSoon">Yakında</span></h3>
-              <p style="font-size: 0.75rem;" data-i18n="linDesc">Geliştirme aşamasında</p>
-            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="adminModal" style="display:none; width:100%; max-width:800px;">
+  <div class="modal" id="adminModal" style="display:none; width:100%; max-width:850px;">
     <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
-    <h2>Yetkili Yönetim <span class="text-primary">Destek Masası</span></h2>
-    <p class="subtitle">Platforma bağlanan kullanıcıların destek taleplerine anında yanıt verin.</p>
+    <h2>Yetkili <span class="text-primary">Yönetim Paneli</span></h2>
+    <p class="subtitle">Destek taleplerini yönetin ve platform kullanıcılarını kontrol edin.</p>
     
-    <div style="background:var(--card-bg); border:1px solid var(--border); border-radius:12px; height:450px; display:flex; margin-top:20px; overflow:hidden;">
-      <div style="width: 250px; border-right: 1px solid var(--border); background:rgba(0,0,0,0.05); display:flex; flex-direction:column;">
+    <div class="admin-tabs" style="margin-top: 16px;">
+      <button class="admin-tab active" id="tabAdminChat" onclick="switchAdminTab('chat')"><i class="fas fa-comments"></i> Destek Masası</button>
+      <button class="admin-tab" id="tabAdminUsers" onclick="switchAdminTab('users')"><i class="fas fa-users"></i> Kullanıcı Yönetimi</button>
+    </div>
+
+    <!-- Destek Masası Paneli -->
+    <div id="adminPanelChat" class="admin-panel active" style="flex-direction:row;">
+      <div style="width: 250px; border-right: 1px solid var(--border); background:rgba(0,0,0,0.05); display:flex; flex-direction:column;" class="admin-sidebar">
         <div style="padding:12px; font-weight:bold; border-bottom:1px solid var(--border); font-size:0.9rem;">Aktif Talepler</div>
         <div id="adminUserList" style="flex:1; overflow-y:auto;">
           <!-- Kullanıcı listesi buraya eklenecek -->
         </div>
       </div>
-      <div style="flex:1; display:flex; flex-direction:column;">
+      <div style="flex:1; display:flex; flex-direction:column; min-width: 0;">
         <div id="adminChatMessages" style="flex:1; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
           <div style="color:var(--text-muted); text-align:center; font-size:0.85rem; padding-top:20px;">Lütfen soldan bir konuşma seçin</div>
         </div>
-        <div style="padding: 16px; border-top: 1px solid rgba(255,255,255,0.05); background: var(--card-bg); display:flex; gap: 10px; align-items:center;">
+        <div style="padding: 16px; border-top: 1px solid var(--border); background: var(--surface); display:flex; gap: 10px; align-items:center;">
           <div style="flex:1; position:relative; display:flex; align-items:center;">
             <i class="fas fa-keyboard" style="position:absolute; left:16px; color:var(--text-muted); font-size:1rem;"></i>
-            <input type="text" id="adminChatInput" placeholder="Kullanıcıya mesajınızı yazın..." disabled style="width:100%; padding:14px 20px 14px 44px; border-radius:30px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.3); color:white; font-size:0.95rem; outline:none; transition: border 0.3s;" onfocus="this.style.border='1px solid var(--primary)'" onblur="this.style.border='1px solid rgba(255,255,255,0.1)'" onkeypress="if(event.key==='Enter') sendAdminMessage()">
+            <input type="text" id="adminChatInput" placeholder="Kullanıcıya mesajınızı yazın..." disabled style="width:100%; padding:14px 20px 14px 44px; border-radius:30px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:0.95rem; outline:none; transition: border 0.3s;" onfocus="this.style.border='1px solid var(--primary)'" onblur="this.style.border='1px solid var(--border)'" onkeypress="if(event.key==='Enter') sendAdminMessage()">
           </div>
-          <button class="btn btn-primary" id="adminChatBtn" disabled style="border-radius:50%; width:48px; height:48px; padding:0; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(23, 222, 107, 0.4);" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" onclick="sendAdminMessage()">
-            <i class="fas fa-paper-plane" style="margin-right:2px; font-size:1.1rem;"></i>
+          <button class="btn btn-primary" id="adminChatBtn" disabled style="border-radius:50%; width:44px; height:44px; padding:0; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" onclick="sendAdminMessage()">
+            <i class="fas fa-paper-plane" style="font-size:1.1rem;"></i>
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Kullanıcı Yönetimi Paneli -->
+    <div id="adminPanelUsers" class="admin-panel" style="background:var(--surface);">
+      <div class="admin-users-header">
+        <input type="text" id="adminSearchUser" class="admin-search-input" placeholder="Kayıtlı kullanıcı ara (isim veya e-posta)..." onkeyup="filterAdminUsers()">
+        <div style="padding: 8px 12px; font-weight: 600; font-size: 0.9rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+          <i class="fas fa-users" style="margin-right: 6px; color: var(--primary);"></i> <span id="adminTotalUsers">0</span>
+        </div>
+      </div>
+      <div id="adminAllUsersList" style="flex: 1; overflow-y: auto;">
+         <div style="text-align:center; padding:40px; color:var(--text-muted);"><span class="spinner" style="border-top-color:var(--primary); margin-bottom:10px;"></span><br>Kullanıcılar yükleniyor...</div>
       </div>
     </div>
   </div>
@@ -1363,8 +1400,8 @@ footer {
 <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
 
 <footer>
-  <div class="logo">
-    <div class="logo-text" data-i18n="brandName">ÜRÜN <span class="text-primary">STORE</span></div>
+  <div class="logo" onclick="goHome()" style="cursor: pointer;">
+    <img src="./logo.png" alt="Ürün Store" style="height: 48px; width: auto; object-fit: contain;">
   </div>
   <div class="footer-text">© 2026 Ürün Store. <span data-i18n="footerAllRights">Tüm Hakları Saklıdır.</span></div>
   <div>
@@ -1537,6 +1574,8 @@ async function handleLogin(e){
 
 async function logout(){
   if(sb){try{await sb.auth.signOut()}catch(e){}}
+  localStorage.removeItem('urun_client_chat');
+  localStorage.removeItem('urun_session_id');
   showToast('Çıkış yapıldı.'); updateUI();
 }
 
@@ -1700,30 +1739,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-function switchPlatform(platform) {
-  document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.platform-panel').forEach(p => { p.classList.remove('active'); });
-  if (platform === 'windows') {
-    document.querySelector('.platform-tab:first-child').classList.add('active');
-    document.getElementById('platformWindows').classList.add('active');
-  } else {
-    document.querySelector('.platform-tab:last-child').classList.add('active');
-    document.getElementById('platformLinux').classList.add('active');
-  }
-}
 
-function switchPlatformDash(platform) {
-  const modal = document.getElementById('downloadModal');
-  modal.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
-  modal.querySelectorAll('.platform-panel').forEach(p => { p.classList.remove('active'); });
-  if (platform === 'windows') {
-    document.getElementById('tabWinDash').classList.add('active');
-    document.getElementById('platformWindowsDash').classList.add('active');
-  } else {
-    document.getElementById('tabLinDash').classList.add('active');
-    document.getElementById('platformLinuxDash').classList.add('active');
-  }
-}
 function showToast(msg,isError){
   const t=document.getElementById('toast');
   t.className = 'toast show ' + (isError?'error':'');
@@ -1777,7 +1793,7 @@ const translations = {
     faq2_q: "Hangi işletim sistemlerini destekliyor?", faq2_a: "Şu anda Windows 10/11 desteği aktif. Linux versiyonumuz geliştirme aşamasındadır.", faq3_q: "Hesap bilgilerim güvende mi?", faq3_a: "Kesinlikle. Şifreleriniz ve kişisel verileriniz Supabase altyapısıyla korunur.",
     aiTitle: "Canlı Destek", aiWelcome: "Canlı Destek sistemine hoş geldiniz! Sizi müsait bir temsilciye bağlamadan önce, sorununuzu veya talebinizi kısaca yazar mısınız?",
     aiPrompt: "Sen Ürün Store isimli bir uygulamanın asistanısın. Kullanıcıya net, samimi ve TÜRKÇE cevaplar ver.",
-    winTab: "Windows", linTab: "Linux", linTitle: "Linux için Ürün Store", linDesc: "Linux sürümü şu anda geliştirme aşamasındadır.", comingSoon: "Yakında", linBadge: "Linux desteği henüz çıkmadı. Geliştirmeler devam ediyor!", discordPla: "Gelişmelerden haberdar olmak için Discord'a katıl",
+    winTab: "Windows", comingSoon: "Yakında", discordPla: "Gelişmelerden haberdar olmak için Discord'a katıl",
     winSafe: "Güvenli indirme • GitHub Releases üzerinden sunulmaktadır",
     dashWelcome: "Hoş Geldin", dashUser: "Kullanıcı Adı", dashEmail: "E-posta", dashId: "Hesap ID", dashDate: "Kayıt Tarihi", dashStat: "Durum", dashAct: "Onaylı", dashOut: "Çıkış Yap", dashDlBtn: "Programı İndir", dashSet: "Ayarlar", dashSum: "Hesap Özeti",
     authBack: "Geri Dön", authW: "Hoş Geldin!", authWD: "Lütfen detaylarını gir.", authPass: "Şifre", authRem: "30 gün hatırla", authFor: "Şifremi unuttum", authLog: "Giriş Yap", authNoAcc: "Hesabın yok mu? ", authJoin: "Aramıza Katıl", authJoinD: "Platforma giriş yapmak için ücretsiz kayıt ol.", authPass2: "Şifre tekrar", authPass2P: "Şifrenizi doğrulayın", authTerms: "Kullanım Koşulları ve KVKK Aydınlatma Metni'ni", authTerms2: " okudum, anladım ve kabul ediyorum.", authReg: "Hesap Oluştur", authHasAcc: "Hesabın var mı? ",
@@ -1796,10 +1812,10 @@ const translations = {
     f3Title: "Social Hub", f3Desc: "Instantly see what your friends are playing, chat, and join groups with Discord integration.",
     winTitle: "Download for Windows", winDesc: "Windows 10 / 11 compatible • Installer file (.exe)", dlBtn: "Download",
     faqTitle: "Frequently Asked <span class='text-primary'>Questions</span>", faq1_q: "Is the app completely free?", faq1_a: "Yes, downloading and using the Product Store client is completely free. However, specific games might be paid.",
-    faq2_q: "Which operating systems are supported?", faq2_a: "Currently, Windows 10/11 support is active. Our Linux version is in development.", faq3_q: "Are my account details safe?", faq3_a: "Absolutely. Passwords and personal data are protected by Supabase.",
+    faq2_q: "Which operating systems are supported?", faq2_a: "Currently, Windows 10/11 support is active.", faq3_q: "Are my account details safe?", faq3_a: "Absolutely. Passwords and personal data are protected by Supabase.",
     aiTitle: "Live Support", aiWelcome: "Welcome to Live Support! Before connecting you to an available representative, please briefly state your issue.",
     aiPrompt: "You are the smart support assistant for a platform named Product Store. Give concise, friendly, and ENGLISH answers.",
-    winTab: "Windows", linTab: "Linux", linTitle: "Product Store for Linux", linDesc: "Linux version is currently in development.", comingSoon: "Coming Soon", linBadge: "Linux support is not out yet. Development continues!", discordPla: "Join Discord to stay updated",
+    winTab: "Windows", comingSoon: "Coming Soon", discordPla: "Join Discord to stay updated",
     winSafe: "Secure download • Provided via GitHub Releases",
     dashWelcome: "Welcome", dashUser: "Username", dashEmail: "Email", dashId: "Account ID", dashDate: "Registration Date", dashStat: "Status", dashAct: "Verified", dashOut: "Log Out", dashDlBtn: "Download App", dashSet: "Settings", dashSum: "Account Summary",
     authBack: "Go Back", authW: "Welcome Back!", authWD: "Please enter your details.", authPass: "Password", authRem: "Remember 30 days", authFor: "Forgot password", authLog: "Login", authNoAcc: "Don't have an account? ", authJoin: "Join Us", authJoinD: "Sign up for free to access the platform.", authPass2: "Repeat password", authPass2P: "Verify your password", authTerms: "Terms of Service and Privacy Policy", authTerms2: " I have read and agree.", authReg: "Create Account", authHasAcc: "Already have an account? ",
@@ -2016,6 +2032,66 @@ async function getTranslation(text, targetLang) {
 }
 
 const supportChannel = sb ? sb.channel('urun-live-support', { config: { broadcast: { ack: false } } }) : null;
+
+async function sendAIMessage() {
+  const username = getChatUsername();
+  if(!username) {
+    alert(currentLang === 'TR' ? "Canlı desteğe yazabilmek için lütfen giriş yapın." : "Please login to write to live support.");
+    return;
+  }
+  
+  if (sb) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      alert("Oturumunuz geçersiz veya sonlanmış, lütfen tekrar giriş yapın.");
+      logout();
+      return;
+    }
+    const { data: profile } = await sb.from('user_profiles').select('is_banned, banned_until').eq('email', session.user.email).single();
+    if (profile && profile.is_banned) {
+      alert("Hesabınız kalıcı olarak destek hizmetinden uzaklaştırıldı.");
+      return;
+    }
+    if (profile && profile.banned_until) {
+      if (new Date(profile.banned_until) > new Date()) {
+        alert("Destek sistemini kullanmanız geçici olarak durduruldu. Bitiş: " + new Date(profile.banned_until).toLocaleString('tr-TR'));
+        return;
+      }
+    }
+  }
+  
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if(!text) return;
+  
+  let msg = {id: Math.random().toString(36).substr(2, 9), sessionId: mySessionId, username: username, sender: 'user', text: text, ts: Date.now()};
+  
+  let uHist = JSON.parse(localStorage.getItem('urun_client_chat') || '[]');
+  uHist.push(msg);
+  localStorage.setItem('urun_client_chat', JSON.stringify(uHist));
+  input.value = '';
+  
+  let aHist = JSON.parse(localStorage.getItem('urun_admin_chats') || '{}');
+  if(!aHist[msg.sessionId]) aHist[msg.sessionId] = [];
+  aHist[msg.sessionId].push(msg);
+  localStorage.setItem('urun_admin_chats', JSON.stringify(aHist));
+  
+  if (supportChannel) supportChannel.send({ type: 'broadcast', event: 'chat_message', payload: msg });
+  
+  // VERİTABANINA KAYDET (Kalıcılık için)
+  if (sb) {
+    sb.from('support_messages').insert([{
+      session_id: mySessionId,
+      sender: 'user',
+      username: username,
+      message: text
+    }]).then(); // Arka planda sessiz çalışır
+  }
+  
+  renderUserChat();
+  renderAdminUserList();
+  if(activeAdminSession === msg.sessionId) renderAdminChat();
+}
 
 if (supportChannel) {
   supportChannel.on('broadcast', { event: 'chat_message' }, async (payload) => {
@@ -2237,6 +2313,116 @@ function renderAdminChat() {
        msgs.scrollTop = msgs.scrollHeight;
     });
   });
+}
+
+function switchAdminTab(tab) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  
+  if (tab === 'chat') {
+    document.getElementById('tabAdminChat').classList.add('active');
+    document.getElementById('adminPanelChat').classList.add('active');
+  } else {
+    document.getElementById('tabAdminUsers').classList.add('active');
+    document.getElementById('adminPanelUsers').classList.add('active');
+    loadAdminUsers();
+  }
+}
+
+let allUsersCache = [];
+async function loadAdminUsers() {
+  if (!sb) return;
+  const list = document.getElementById('adminAllUsersList');
+  list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);"><span class="spinner" style="border-top-color:var(--primary); margin-bottom:10px;"></span><br>Kullanıcılar yükleniyor...</div>';
+  try {
+    const { data, error } = await sb.from('user_profiles').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    allUsersCache = data || [];
+    document.getElementById('adminTotalUsers').textContent = allUsersCache.length;
+    renderAdminAllUsers(allUsersCache);
+  } catch (err) {
+    list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--danger);">Yüklenirken hata oluştu: ' + err.message + '</div>';
+  }
+}
+
+function renderAdminAllUsers(users) {
+  const list = document.getElementById('adminAllUsersList');
+  if (users.length === 0) {
+    list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">Kullanıcı bulunamadı.</div>';
+    return;
+  }
+  
+  list.innerHTML = '';
+  users.forEach(user => {
+    const div = document.createElement('div');
+    div.className = 'user-row';
+    const isBanned = user.is_banned;
+    const isTimeout = user.banned_until && new Date(user.banned_until) > new Date();
+    
+    let badgeHtml = '';
+    if (isBanned) badgeHtml = '<span class="banned-badge">Banlı</span>';
+    else if (isTimeout) badgeHtml = `<span class="timeout-badge">Timeout (${new Date(user.banned_until).toLocaleString('tr-TR')})</span>`;
+
+    div.innerHTML = `
+      <div class="user-info">
+        <div class="user-avatar">${(user.username || 'U')[0].toUpperCase()}</div>
+        <div class="user-details">
+          <h4>${user.username || 'İsimsiz'} ${badgeHtml}</h4>
+          <p>${user.email}</p>
+        </div>
+      </div>
+      <div class="user-actions">
+        ${(isBanned || isTimeout) 
+          ? `<button class="btn-unban" onclick="unbanUser('${user.id}', '${user.email}')"><i class="fas fa-check-circle"></i> Kullanıma Aç</button>`
+          : `<button class="btn-timeout" onclick="timeoutUser('${user.id}', '${user.email}')"><i class="fas fa-clock"></i> Timeout</button>
+             <button class="btn-ban" onclick="banUser('${user.id}', '${user.email}')"><i class="fas fa-ban"></i> Banla</button>`
+        }
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function filterAdminUsers() {
+  const q = document.getElementById('adminSearchUser').value.toLowerCase();
+  const filtered = allUsersCache.filter(u => 
+    (u.username && u.username.toLowerCase().includes(q)) || 
+    (u.email && u.email.toLowerCase().includes(q))
+  );
+  renderAdminAllUsers(filtered);
+}
+
+async function banUser(id, email) {
+  if (!confirm(`${email} hesabını kalıcı olarak banlamak istediğinize emin misiniz?`)) return;
+  try {
+    const { error } = await sb.from('user_profiles').update({ is_banned: true, banned_until: null }).eq('id', id);
+    if (error) throw error;
+    showToast('Kullanıcı banlandı!');
+    loadAdminUsers();
+  } catch (err) { showToast('Hata: ' + err.message, true); }
+}
+
+async function timeoutUser(id, email) {
+  const hours = prompt(`${email} hesabı için timeout süresi (saat):`, "24");
+  if (!hours || isNaN(hours)) return;
+  try {
+    const until = new Date();
+    until.setHours(until.getHours() + parseInt(hours));
+    const { error } = await sb.from('user_profiles').update({ is_banned: false, banned_until: until.toISOString() }).eq('id', id);
+    if (error) throw error;
+    showToast(`Kullanıcı ${hours} saat uzaklaştırıldı!`);
+    loadAdminUsers();
+  } catch (err) { showToast('Hata: ' + err.message, true); }
+}
+
+async function unbanUser(id, email) {
+  if (!confirm(`${email} hesabının engelini kaldırmak istediğinize emin misiniz?`)) return;
+  try {
+    const { error } = await sb.from('user_profiles').update({ is_banned: false, banned_until: null }).eq('id', id);
+    if (error) throw error;
+    showToast('Engel kaldırıldı!');
+    loadAdminUsers();
+  } catch (err) { showToast('Hata: ' + err.message, true); }
 }
 
 window.addEventListener('storage', (e) => {
