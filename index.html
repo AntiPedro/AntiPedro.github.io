@@ -137,7 +137,7 @@ a { text-decoration: none; color: inherit; }
 nav {
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 64px;
+  height: 90px;
   z-index: 100;
   display: flex;
   align-items: center;
@@ -146,6 +146,9 @@ nav {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
+
+.site-logo { height: 75px; width: auto; object-fit: contain; transition: var(--transition); }
+@media(max-width: 900px) { .site-logo { height: 60px; } }
 
 .logo {
   display: flex;
@@ -882,18 +885,18 @@ footer {
 
 /* RESPONSIVE */
 @media(max-width: 900px) {
-  nav { padding: 0 20px; }
+  nav { padding: 0 20px; height: 80px; }
   .dash-grid { grid-template-columns: 1fr; gap: 24px;}
   .welcome-banner { flex-direction: column; text-align: center; gap: 20px; }
   .dash-actions { width: 100%; justify-content: center; flex-wrap: wrap;}
   footer { flex-direction: column; gap: 16px; text-align: center; }
   
-  .hero { padding: 100px 20px 60px; }
+  .hero { padding: 120px 20px 60px; }
   .about-section, .features-section, .dashboard { padding-left: 20px; padding-right: 20px; }
 
   .nav-links {
     position: absolute;
-    top: 64px; left: 0; width: 100%;
+    top: 80px; left: 0; width: 100%;
     background: var(--surface);
     flex-direction: column;
     padding: 24px; gap: 16px;
