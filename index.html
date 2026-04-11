@@ -33,22 +33,23 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --bg: #f4f4f5;
-  --surface: #ffffff;
-  --surface-hover: #e4e4e7;
-  --border: #d4d4d8;
-  --text: #09090b;
-  --text-muted: #52525b;
+  --bg: #ffffff;
+  --surface: #f8fafc;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
   
-  --primary: #09090b;
-  --primary-dark: #27272a;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
   --accent: #3b82f6;
   
   --danger: #ef4444;
-  --success: #10b981;
+  --success: #22c55e;
   --discord: #5865F2;
-  --transition: all 0.2s ease-in-out;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --primary-text: #ffffff;
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 [data-theme="dark"] {
@@ -137,14 +138,16 @@ a { text-decoration: none; color: inherit; }
 nav {
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 60px;
-  z-index: 100;
+  height: 70px;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px;
-  background: var(--surface);
+  padding: 0 60px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 .site-logo { height: 75px; width: auto; object-fit: contain; transition: var(--transition); }
@@ -159,7 +162,7 @@ nav {
 .logo-text { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
 
   display: flex;
-  gap: 24px;
+  gap: 40px;
   align-items: center;
 }
 .nav-links a {
@@ -170,7 +173,7 @@ nav {
 }
 .nav-links a:hover { color: var(--text); }
 
-.nav-right { display: flex; align-items: center; gap: 12px; }
+.nav-right { display: flex; align-items: center; gap: 20px; }
 
 /* Custom Dropdown */
 .custom-dropdown { position: relative; display: inline-block; margin-right: 8px; user-select: none; }
@@ -215,30 +218,33 @@ nav {
 
 /* HERO SECTION */
 .hero {
-  padding: 110px 40px 80px;
+  padding: 160px 40px 100px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
+  background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.03), transparent);
 }
 .hero h1 {
-  font-size: clamp(2.5rem, 5vw, 4.5rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -1.5px;
-  margin-bottom: 20px;
-  max-width: 800px;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+  margin-bottom: 24px;
+  max-width: 900px;
+  color: var(--text);
 }
 .hero p {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   color: var(--text-muted);
-  max-width: 600px;
-  margin-bottom: 32px;
+  max-width: 750px;
+  margin-bottom: 48px;
+  line-height: 1.6;
 }
 .hero-actions {
   display: flex;
-  gap: 12px;
+  gap: 20px;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
@@ -881,8 +887,9 @@ footer {
 
 /* RESPONSIVE */
 @media(max-width: 900px) {
-  nav { padding: 0 10px; height: 50px; }
-  .logo-text { font-size: 1.1rem; }
+  nav { padding: 0 15px; height: 50px; }
+  .logo img { height: 32px !important; }
+  .logo-text { font-size: 1rem !important; }
   .nav-right { gap: 6px; }
   .btn { padding: 6px 12px; font-size: 0.8rem; }
   .dropdown-selected { padding: 4px 8px; font-size: 0.8rem; }
@@ -965,7 +972,10 @@ footer {
 </style>
 
 <nav id="navbar">
-  <div class="logo-text" onclick="goHome()" style="cursor:pointer; font-size:1.4rem; font-weight:900; letter-spacing:-1.5px; color:var(--text); white-space:nowrap;">URUN<span class="text-primary">STORE</span></div>
+  <div class="logo" onclick="goHome()" style="display:flex; align-items:center; gap:14px; cursor:pointer;">
+    <img src="./icon2 (1) (1).svg" alt="URUNSTORE" style="height:38px; width:auto;">
+    <div class="logo-text" style="font-size:1.4rem; font-weight:900; letter-spacing:-1.2px; color:var(--text); white-space:nowrap;">URUN<span class="text-primary">STORE</span></div>
+  </div>
 
   <div class="nav-links" id="navLinks">
     <a href="#" onclick="goHome(); toggleMenu();" data-i18n="navHome">Ana Sayfa</a>
