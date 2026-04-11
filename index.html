@@ -1471,12 +1471,15 @@ function detectProxy() {
 }
 
 function blockProxy() {
-  document.body.innerHTML = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0a0a0a; color:#ef4444; font-family:sans-serif; text-align:center; gap:16px;">
+  isProxyDetected = true;
+  document.documentElement.innerHTML = `<head></head><body style="background:#0a0a0a; color:#ef4444; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; margin:0; font-family:sans-serif; text-align:center; gap:16px;">
     <i class="fas fa-shield-alt" style="font-size:5rem; animation: shieldPulse 1.5s infinite;"></i>
     <h1 style="font-size:2rem; font-weight:700;">Proxy/VPN Tespit Edildi</h1>
     <p style="color:#888; font-size:1.1rem; max-width:500px;">Güvenlik nedeniyle proxy veya VPN üzerinden erişim engellenmektedir.<br>Lütfen doğrudan bağlantı kullanın.</p>
-  </div>`;
+  </body>`;
   try { if(sb) sb.auth.signOut(); } catch(e){}
+  if(window.stop) window.stop();
+  throw new Error("Proxy Detected");
 }
 
 // WebRTC ile gerçek IP'yi yakala (proxy arkasındaki asıl IP)
@@ -1513,16 +1516,12 @@ window.addEventListener('load', async () => {
     if(shield){
        const st = document.getElementById('shieldStatus');
 
-       // Gerçek IP ile proxy IP farklıysa uyar
-       if (webrtcIP && currentUserIP && webrtcIP !== currentUserIP) {
-         if(st) { st.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Proxy/VPN algılandı (Gerçek IP: ${webrtcIP})`; st.style.color = "#f59e0b"; }
-         // Gerçek IP'yi de banned_ips'te kontrol et
-         if (sb) {
-           const { data: realBan } = await sb.from('banned_ips').select('ip').eq('ip', webrtcIP).single();
-           if (realBan && realBan.ip) { blockProxy(); return; }
-         }
-         // Gerçek IP'yi kaydet
+       // Gerçek IP ile proxy IP farklıysa uyar ve KESİNLİKLE engelle
+       if (webrtcIP && currentUserIP && webrtcIP !== currentUserIP && !webrtcIP.startsWith('192.168.') && !webrtcIP.startsWith('10.') && !webrtcIP.startsWith('172.')) {
+         if(st) { st.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Proxy/VPN algılandı! Sistem kilitleniyor...`; st.style.color = "#ef4444"; }
          realIP = webrtcIP;
+         setTimeout(() => { blockProxy(); }, 1500); 
+         return; // Asla siteye sokma
        }
 
        setTimeout(() => {
