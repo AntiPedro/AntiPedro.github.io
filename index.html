@@ -33,429 +33,204 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --bg: #fafafa;
-  --surface: rgba(255, 255, 255, 0.8);
-  --surface-hover: rgba(255, 255, 255, 0.9);
-  --border: rgba(0, 0, 0, 0.08);
-  --text: #0f172a;
-  --text-muted: #64748b;
+  --bg: #030303;
+  --surface: rgba(10, 10, 12, 0.7);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-bright: rgba(255, 255, 255, 0.15);
   
   --primary: #6366f1;
   --primary-glow: rgba(99, 102, 241, 0.4);
-  --accent: #a855f7;
-  --gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --accent: #d946ef;
   
-  --danger: #ef4444;
-  --success: #10b981;
-  --discord: #5865F2;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --glass: blur(12px);
-}
-
-[data-theme="dark"] {
-  --bg: #09090b;
-  --surface: rgba(24, 24, 27, 0.7);
-  --surface-hover: rgba(39, 39, 42, 0.8);
-  --border: rgba(255, 255, 255, 0.1);
-  --text: #f8fafc;
+  --text: #ffffff;
   --text-muted: #94a3b8;
   
-  --primary: #818cf8;
-  --primary-glow: rgba(129, 140, 248, 0.3);
-  --accent: #c084fc;
-  --gradient: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+  --gradient: linear-gradient(135deg, #6366f1 0%, #d946ef 100%);
+  --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --glass: blur(24px) saturate(180%);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
+* { margin:0; padding:0; box-sizing:border-box; }
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
   color: var(--text);
-  min-height: 100vh;
   overflow-x: hidden;
-  line-height: 1.6;
   user-select: none;
-  -webkit-user-select: none;
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
-h1, h2, h3, .logo-text { font-family: 'Sora', sans-serif; }
+h1, h2, h3 { font-family: 'Sora', sans-serif; letter-spacing: -0.03em; }
 
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
-a { text-decoration: none; color: inherit; }
-
-/* UTILS */
-.card {
-  background: var(--surface);
-  backdrop-filter: var(--glass);
-  -webkit-backdrop-filter: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+/* MESH GLOWS */
+.mesh-glow {
+  position: fixed; width: 80vmax; height: 80vmax;
+  border-radius: 50%; z-index: -2; opacity: 0.15;
+  filter: blur(100px); pointer-events: none;
 }
-.text-primary { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.text-danger { color: var(--danger) !important; }
+.mesh-1 { top: -20%; left: -20%; background: var(--primary); }
+.mesh-2 { bottom: -20%; right: -20%; background: var(--accent); }
+
+#glow-cursor {
+  position: fixed; width: 600px; height: 600px;
+  background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+  border-radius: 50%; pointer-events: none; z-index: -1;
+  transform: translate(-50%, -50%); opacity: 0.3; transition: top 0.15s, left 0.15s;
+}
+
+/* DDOS SHIELD */
+#ddosShield {
+  position: fixed; inset: 0; background: var(--bg); z-index: 10000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 0.8s ease;
+}
+.shield-loader {
+  position: relative; width: 120px; height: 120px;
+  display: flex; align-items: center; justify-content: center;
+}
+.loader-circle {
+  position: absolute; inset: 0; border: 4px solid var(--border);
+  border-top-color: var(--primary); border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.shield-loader i { font-size: 3rem; color: var(--primary); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* NAVIGATION */
+nav {
+  position: fixed; top: 0; width: 100%; z-index: 2000;
+  padding: 24px 0; transition: var(--transition);
+}
+nav.scrolled { background: rgba(3, 3, 3, 0.8); backdrop-filter: var(--glass); border-bottom: 1px solid var(--border); padding: 12px 0; }
+.nav-container {
+  max-width: 1400px; margin: 0 auto; padding: 0 40px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.site-logo { height: 100px; filter: drop-shadow(0 0 10px var(--primary-glow)); }
+
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nav-links a { font-size: 0.95rem; font-weight: 600; color: var(--text-muted); }
+.nav-links a:hover { color: var(--text); }
+.nav-discord {
+  padding: 8px 16px; background: rgba(88, 101, 242, 0.1);
+  border: 1px solid rgba(88, 101, 242, 0.2); border-radius: 100px;
+  color: #5865f2 !important;
+}
+
+.nav-right { display: flex; align-items: center; gap: 24px; }
+.lang-selector { cursor: pointer; position: relative; font-weight: 600; font-size: 0.9rem; }
+.lang-dropdown {
+  position: absolute; top: 120%; right: 0; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 12px; display: none;
+  min-width: 140px; overflow: hidden;
+}
+.lang-dropdown div { padding: 12px 16px; }
+.lang-dropdown div:hover { background: rgba(255,255,255,0.05); }
+
+.avatar { width: 36px; height: 36px; border-radius: 12px; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+
+/* HERO */
+.hero { padding: 240px 40px 120px; text-align: center; }
+.hero-content { max-width: 1000px; margin: 0 auto; }
+.badge {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border-bright);
+  padding: 8px 16px; border-radius: 100px; font-size: 0.8rem; font-weight: 800;
+  color: var(--primary); margin-bottom: 32px;
+}
+.pulse { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 10px var(--primary); animation: p 2s infinite; }
+@keyframes p { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+
+.hero h1 { font-size: 6rem; line-height: 0.9; font-weight: 900; margin-bottom: 32px; }
+.hero p { font-size: 1.25rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 48px; }
+
+.hero-actions { display: flex; gap: 16px; justify-content: center; margin-bottom: 80px; }
+
+.hero-stats { display: flex; align-items: center; justify-content: center; gap: 48px; opacity: 0.7; }
+.stat { display: flex; flex-direction: column; gap: 4px; }
+.count { font-size: 2rem; font-weight: 900; }
+.label { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); }
+.stat-divider { width: 1px; height: 40px; background: var(--border); }
+
+/* BENTO */
+.bento-features { padding: 100px 40px; max-width: 1400px; margin: 0 auto; }
+.section-header { text-align: center; margin-bottom: 64px; }
+.section-header h2 { font-size: 3.5rem; margin-bottom: 16px; }
+
+.bento-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 250px; gap: 24px;
+}
+.bento-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 32px; padding: 40px; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.bento-card.large { grid-column: span 2; grid-row: span 2; }
+.bento-card.wide { grid-column: span 2; }
+.bento-card .icon { font-size: 2.5rem; color: var(--primary); margin-bottom: 24px; }
+.bento-card h3 { font-size: 1.5rem; margin-bottom: 12px; }
+.bento-card p { color: var(--text-muted); font-size: 0.95rem; }
 
 /* BUTTONS */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 12px 24px;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: var(--transition);
-  font-family: inherit;
-  position: relative;
-  overflow: hidden;
+  padding: 16px 32px; border-radius: 16px; font-weight: 700; border: 1px solid transparent;
+  cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 12px;
 }
-.btn-primary {
-  background: var(--gradient);
-  color: #fff;
-  box-shadow: 0 4px 15px var(--primary-glow);
-}
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px var(--primary-glow);
-  opacity: 0.9;
-}
-.btn-outline {
-  background: var(--surface);
-  backdrop-filter: var(--glass);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-.btn-outline:hover {
-  background: var(--surface-hover);
-  border-color: var(--primary);
-  transform: translateY(-2px);
-}
-.btn-discord {
-  background: var(--discord);
-  color: #fff;
-  box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3);
-}
-.btn-discord:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(88, 101, 242, 0.4);
-}
-
-/* NAV */
-nav {
-  position: fixed;
-  top: 20px; left: 20px; right: 20px;
-  height: 70px;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 30px;
-  background: var(--surface);
-  backdrop-filter: var(--glass);
-  -webkit-backdrop-filter: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
-}
-
-.site-logo { height: 75px; width: auto; object-fit: contain; transition: var(--transition); }
-@media(max-width: 900px) { .site-logo { height: 60px; } }
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-.logo-text { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
-
-.nav-links {
-  display: flex;
-  gap: 32px;
-  align-items: center;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.nav-links a {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  transition: var(--transition);
-}
-.nav-links a:hover { color: var(--text); }
-
-.nav-right { display: flex; align-items: center; gap: 12px; }
-
-/* Custom Dropdown */
-.custom-dropdown { position: relative; display: inline-block; margin-right: 8px; user-select: none; }
-.dropdown-selected { background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: var(--transition); }
-.dropdown-selected:hover { border-color: var(--primary); }
-.dropdown-options { position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; flex-direction: column; min-width: 100%; z-index: 1000; overflow: hidden; }
-.dropdown-options.show { display: flex; }
-.dropdown-option { padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: var(--transition); color: var(--text); }
-.dropdown-option:hover { background: var(--surface-hover); color: var(--primary); }
-
-.nav-user {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  padding: 6px 12px 6px 6px;
-  border-radius: 30px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  transition: var(--transition);
-}
-.nav-user:hover { border-color: var(--primary); }
-.nav-user .avatar {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  background: var(--primary);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.8rem; font-weight: 700; color: #fff;
-}
-.nav-user span { font-size: 0.85rem; font-weight: 500; }
-
-.mobile-btn {
-  display: none;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-size: 1.4rem;
-  cursor: pointer;
-  margin-left: 12px;
-}
-.hide-mobile { display: inline-block; }
-
-/* HERO SECTION */
-.hero {
-  padding: 160px 40px 100px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  position: relative;
-}
-.hero h1 {
-  font-size: clamp(2.5rem, 6vw, 5rem);
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -2px;
-  margin-bottom: 24px;
-  max-width: 900px;
-}
-.hero p {
-  font-size: 1.25rem;
-  color: var(--text-muted);
-  max-width: 650px;
-  margin-bottom: 40px;
-}
-.hero-actions {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-/* PLATFORM DOWNLOAD SELECTOR */
-.platform-selector {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 32px;
-  width: 100%;
-  max-width: 600px;
-  margin-top: 40px;
-}
-.platform-tabs {
-  display: flex;
-  gap: 8px;
-  background: var(--surface);
-  backdrop-filter: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 6px;
-}
-.platform-tab {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 28px;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  transition: var(--transition);
-  font-family: inherit;
-}
-.platform-tab:hover {
-  color: var(--text);
-}
-.platform-tab.active {
-  background: var(--gradient);
-  color: #fff;
-  box-shadow: 0 4px 15px var(--primary-glow);
-}
-
-.download-card {
-  background: var(--surface);
-  backdrop-filter: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 32px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  transition: var(--transition);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
-}
-.download-card:hover {
-  border-color: var(--primary);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
-}
-.download-card .os-icon {
-  font-size: 2.5rem;
-  color: #fff;
-  width: 64px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--gradient);
-  border-radius: 16px;
-  flex-shrink: 0;
-}
-
-/* FEATURES */
-.features-section {
-  padding: 100px 40px;
-  background: var(--bg);
-  position: relative;
-}
-.features-header {
-  text-align: center;
-  margin-bottom: 60px;
-}
-.features-header h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 12px; }
-.features-grid {
-  max-width: 1000px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-}
-.feature-card {
-  background: var(--surface);
-  backdrop-filter: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 40px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  transition: var(--transition);
-  text-align: center;
-}
-.feature-card:hover {
-  border-color: var(--primary);
-  transform: translateY(-8px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-}
-.feature-icon {
-  font-size: 2.5rem;
-  margin-bottom: 8px;
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.feature-card h3 { font-size: 1.25rem; font-weight: 700; color: var(--text); }
-.feature-card p { color: var(--text-muted); font-size: 0.95rem; }
+.btn-primary { background: var(--gradient); color: #fff; box-shadow: 0 10px 30px var(--primary-glow); }
+.btn-primary:hover { transform: translateY(-4px); box-shadow: 0 15px 45px var(--primary-glow); }
+.btn-outline { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-bright); }
+.btn-outline:hover { background: rgba(255,255,255,0.1); border-color: var(--primary); }
 
 /* DASHBOARD */
-.dashboard {
-  display: none;
-  padding: 120px 40px 60px;
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: 100vh;
+.dashboard { display: none; min-height: 100vh; background: #000; z-index: 50; position: relative; }
+.dashboard.show { display: block; }
+.dash-container { max-width: 1400px; margin: 0 auto; padding: 160px 40px; }
+.dash-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 64px; border-bottom: 1px solid var(--border); padding-bottom: 48px;
 }
-.dashboard.show { display: block; animation: fadeInUp 0.5s ease; }
+.user-meta { display: flex; align-items: center; gap: 32px; }
+.avatar-xl { width: 100px; height: 100px; border-radius: 32px; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 900; }
+.user-info h2 { font-size: 3.5rem; }
 
-.welcome-banner {
-  background: var(--surface);
-  backdrop-filter: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 32px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
-}
-.welcome-left { display: flex; align-items: center; gap: 24px; }
-.welcome-left .avatar-lg {
-  width: 80px; height: 80px;
-  border-radius: 24px;
-  background: var(--gradient);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 2rem; font-weight: 800; color: #fff;
-  box-shadow: 0 8px 20px var(--primary-glow);
-}
-.welcome-info h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 6px; }
-.welcome-info p { color: var(--text-muted); font-size: 1rem; }
+.info-panel { padding: 48px; border-radius: 40px; }
+.info-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 32px; }
+.item { display: flex; flex-direction: column; gap: 8px; }
+.item span:first-child { font-size: 0.8rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); }
+.item span:last-child { font-size: 1.1rem; font-weight: 600; }
 
-.dash-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 32px;
-}
-.panel {
-  background: var(--surface);
-  backdrop-filter: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 32px;
-}
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.panel-header h3 { font-size: 1.25rem; font-weight: 700; }
+/* FOOTER */
+footer { padding: 100px 40px; border-top: 1px solid var(--border); }
+.footer-container { max-width: 1400px; margin: 0 auto; text-align: center; }
+.footer-brand .site-logo { height: 120px; margin-bottom: 24px; }
+.footer-security { display: flex; justify-content: center; gap: 24px; margin: 48px 0; }
+.sec-badge { padding: 12px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; display: flex; align-items: center; gap: 12px; font-weight: 600; }
 
-.info-list { display: flex; flex-direction: column; gap: 16px; }
-.info-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 16px 20px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  font-size: 0.9rem;
+@media (max-width: 1024px) {
+  .hero h1 { font-size: 4rem; }
+  .bento-grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
+  .bento-card.large, .bento-card.wide { grid-column: span 1; grid-row: span 1; }
+  .hero-stats { flex-direction: column; gap: 24px; }
+  .stat-divider { display: none; }
+}5rem; }
+  .hero p { font-size: 1.1rem; }
 }
 </style>
 </head>
 <body oncontextmenu="return false;">
+  <div id="glow-cursor" style="position:fixed; width:600px; height:600px; background:radial-gradient(circle, var(--primary-glow) 0%, transparent 70%); border-radius:50%; pointer-events:none; z-index:-1; transform:translate(-50%, -50%); opacity:0.3; transition: top 0.1s, left 0.1s; filter: blur(60px);"></div>
+  <script>
+    document.addEventListener('mousemove', (e) => {
+      const glow = document.getElementById('glow-cursor');
+      if(glow) {
+        glow.style.left = e.clientX + 'px';
+        glow.style.top = e.clientY + 'px';
+      }
+    });
+  </script>
 
 <style>
 .info-row span:first-child { color: var(--text-muted); }
@@ -878,188 +653,215 @@ footer {
 </style>
 </head>
 <body oncontextmenu="return false;" onkeydown="return disableDevTools(event)">
-<div id="ddosShield" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text); font-family:sans-serif; transition: opacity 0.5s;">
-  <i class="fas fa-shield-alt" style="font-size:5rem; color:var(--primary); margin-bottom:24px; animation: shieldPulse 1.5s infinite;"></i>
-  <h2 style="margin-bottom:12px; font-weight:700;">Ürün Store Güvenlik Duvarı</h2>
-  <p style="color:var(--text-muted); font-size:1rem;" id="shieldStatus">Bağlantınız kontrol ediliyor, lütfen bekleyin...</p>
-</div>
-<style>
-@keyframes shieldPulse { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
-</style>
+  <!-- MESH BACKGROUND ELEMENTS -->
+  <div class="mesh-glow mesh-1"></div>
+  <div class="mesh-glow mesh-2"></div>
+  <div id="glow-cursor"></div>
 
-<nav id="navbar">
-  <div class="logo" onclick="goHome()">
-    <img src="./icon2 (1).svg" alt="Ürün Store" class="site-logo">
-  </div>
-  <div class="nav-links" id="navLinks">
-    <a href="#" onclick="goHome(); toggleMenu();" data-i18n="navHome">Ana Sayfa</a>
-    <a href="#hakkinda" onclick="goHome(); toggleMenu();" data-i18n="navAbout">Hakkında</a>
-    <a href="#ozellikler" onclick="goHome(); toggleMenu();" data-i18n="navFeatures">Özellikler</a>
-    <a href="https://discord.gg/jtsKHGcTf4" target="_blank" data-i18n="navCommunity">Topluluk</a>
-  </div>
-  <div class="nav-right">
-    <div class="custom-dropdown" id="langDropdown">
-      <div class="dropdown-selected" onclick="toggleDropdown()">
-        <span id="selectedLangText">🇹🇷 TR</span>
-        <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+  <!-- DDOS SHIELD -->
+  <div id="ddosShield">
+    <div class="shield-content">
+      <div class="shield-loader">
+        <div class="loader-circle"></div>
+        <i class="fas fa-shield-halved"></i>
       </div>
-      <div class="dropdown-options" id="langOptions">
-        <div class="dropdown-option" onclick="selectLang('TR', '🇹🇷 TR')">🇹🇷 TR</div>
-        <div class="dropdown-option" onclick="selectLang('EN', '🇬🇧 EN')">🇬🇧 EN</div>
-        <div class="dropdown-option" onclick="selectLang('DE', '🇩🇪 DE')">🇩🇪 DE</div>
-        <div class="dropdown-option" onclick="selectLang('FR', '🇫🇷 FR')">🇫🇷 FR</div>
-        <div class="dropdown-option" onclick="selectLang('ES', '🇪🇸 ES')">🇪🇸 ES</div>
-        <div class="dropdown-option" onclick="selectLang('RU', '🇷🇺 RU')">🇷🇺 RU</div>
-        <div class="dropdown-option" onclick="selectLang('ZH', '🇨🇳 ZH')">🇨🇳 ZH</div>
-      </div>
+      <h2 style="margin-top:24px; font-weight:800; letter-spacing:-1px;">ÜRÜN STORE <span class="text-primary">SECURE</span></h2>
+      <p id="shieldStatus">Şifreli bağlantı doğrulanıyor...</p>
     </div>
-    <div id="authButtons" style="display:flex; gap:8px;">
-      <button class="btn btn-outline" onclick="openAuth('login')" data-i18n="navLogin">Giriş</button>
-      <button class="btn btn-primary" onclick="openAuth('register')" data-i18n="navRegister">Kayıt Ol</button>
-    </div>
-    <div class="nav-user" id="navUser" onclick="showDashboard()">
-      <div class="avatar" id="navAvatar">U</div>
-      <span id="navUsername" class="hide-mobile">Kullanıcı</span>
-    </div>
-    <button class="mobile-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
   </div>
-</nav>
 
-<main id="mainContent">
-  
-  <section class="hero" id="heroSection">
-    <h1 class="reveal" data-i18n="heroTitle">Oyun ve Uygulamaların <br>Yepyeni Evi.</h1>
-    <p class="reveal delay-1" data-i18n="heroDesc">Ürün Store, favori oyunlarınızı tek bir pratik arayüzde birleştirir. İndirin, her zaman güncel kalın ve toplulukla etkileşimi koparmayın.</p>
-    
-    <div class="platform-selector reveal delay-2">
-      <div class="platform-content">
-        <!-- WINDOWS -->
-        <div class="platform-panel active" id="platformWindows" style="width: 100%;">
-          <div class="download-card" style="flex-direction: column; text-align: center;">
-            <div class="os-icon" style="margin-bottom: 16px; width: 64px; height: 64px; font-size: 2.5rem;">
-              <i class="fab fa-windows"></i>
-            </div>
-            <div class="os-info" style="text-align: center; width: 100%;">
-              <h3 data-i18n="winTitle" style="font-size: 1.2rem; margin-bottom: 8px;">Windows için İndir</h3>
-              <p data-i18n="winDesc" style="margin-bottom: 20px;">Windows 10 / 11 uyumlu &bull; Kurulum dosyası (.exe)</p>
-            </div>
-            <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn-download" style="width: 100%; justify-content: center; padding: 14px;">
-              <i class="fas fa-download"></i> <span data-i18n="dlBtn">İndir</span>
-            </a>
-          </div>
-          <div class="download-badge">
-            <i class="fas fa-shield-alt"></i> <span data-i18n="winSafe">Güvenli indirme &bull; GitHub Releases üzerinden sunulmaktadır</span>
+  <nav id="navbar">
+    <div class="nav-container">
+      <div class="logo" onclick="goHome()">
+        <img src="./icon2 (1).svg" alt="Ürün Store" class="site-logo">
+      </div>
+      
+      <div class="nav-links" id="navLinks">
+        <a href="#" onclick="goHome()" data-i18n="navHome">Ana Sayfa</a>
+        <a href="#ozellikler" data-i18n="navFeatures">Özellikler</a>
+        <a href="#sss" data-i18n="faqTitle">Destek</a>
+        <a href="https://discord.gg/jtsKHGcTf4" target="_blank" class="nav-discord">
+          <i class="fab fa-discord"></i> Topluluk
+        </a>
+      </div>
+
+      <div class="nav-right">
+        <div class="lang-selector" onclick="toggleDropdown()">
+          <span id="selectedLangText">🇹🇷 TR</span>
+          <i class="fas fa-chevron-down"></i>
+          <div class="lang-dropdown" id="langOptions">
+            <div onclick="selectLang('TR', '🇹🇷 TR')">🇹🇷 Türkçe</div>
+            <div onclick="selectLang('EN', '🇬🇧 EN')">🇬🇧 English</div>
+            <div onclick="selectLang('DE', '🇩🇪 DE')">🇩🇪 Deutsch</div>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <section class="about-section" id="hakkinda">
-    <div class="about-grid">
-      <div class="about-text reveal">
-        <h2 data-i18n="aboutTitle">Tek Platform, Sınırsız Deneyim.</h2>
-        <p data-i18n="aboutDesc">Ürün Store, ihtiyacınız olan her şeyi basit ve düzenli bir yapıda sunar. Kütüphanenizi yönetin, indirmeleri başlatın ve karmaşık menülerde kaybolmadan arkadaşlarınızla iletişimde kalın.</p>
-        <button class="btn btn-outline" onclick="openModal('register')"><span data-i18n="aboutBtn">Hesap Oluştur</span> <i class="fas fa-arrow-right"></i></button>
-      </div>
-    </div>
-  </section>
-
-  <section class="features-section" id="ozellikler">
-    <div class="features-header reveal">
-      <h2 data-i18n="featuresTitle">Neden Bizi <span class="text-primary">Tercih Etmelisiniz?</span></h2>
-    </div>
-    <div class="features-grid">
-      <div class="feature-card card reveal delay-1">
-        <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-        <h3 data-i18n="f1Title">Hızlı İndirme</h3>
-        <p data-i18n="f1Desc">Optimize edilmiş sunucularımız sayesinde oyunlarınızı saniyeler içinde kütüphanenize ekleyin ve hemen başlayın.</p>
-      </div>
-      <div class="feature-card card reveal delay-2">
-        <div class="feature-icon"><i class="fas fa-sync"></i></div>
-        <h3 data-i18n="f2Title">Otomatik Güncelleme</h3>
-        <p data-i18n="f2Desc">Arka planda çalışan sistemimiz, siz oyuna girmeden önce tüm dosyalarınızı en güncel halinde tutar.</p>
-      </div>
-      <div class="feature-card card reveal delay-3">
-        <div class="feature-icon"><i class="fas fa-users"></i></div>
-        <h3 data-i18n="f3Title">Sosyal Hub</h3>
-        <p data-i18n="f3Desc">Arkadaşlarınızın ne oynadığını anında görün, sohbet edin ve Discord entegrasyonuyla gruplara katılın.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="faq-section reveal delay-1" id="sss">
-    <div class="features-header">
-      <h2 data-i18n="faqTitle">Sıkça Sorulan <span class="text-primary">Sorular</span></h2>
-    </div>
-    <div class="faq-container">
-      <div class="faq-item" onclick="this.classList.toggle('active')">
-        <div class="faq-question">
-          <span data-i18n="faq1_q">Uygulama tamamen ücretsiz mi?</span>
-          <i class="fas fa-chevron-down faq-icon"></i>
+        <div id="authButtons" class="auth-group">
+          <button class="btn btn-outline" onclick="openAuth('login')">Giriş</button>
+          <button class="btn btn-primary" onclick="openAuth('register')">Kayıt Ol</button>
         </div>
-        <div class="faq-answer"><p data-i18n="faq1_a">Evet, Ürün Store istemcisini indirmek ve kullanmak tamamen ücretsizdir. Ancak platform içindeki bazı spesifik oyunlar veya içerikler ücretli olabilir.</p></div>
-      </div>
-      <div class="faq-item" onclick="this.classList.toggle('active')">
-        <div class="faq-question">
-          <span data-i18n="faq2_q">Hangi işletim sistemlerini destekliyor?</span>
-          <i class="fas fa-chevron-down faq-icon"></i>
+
+        <div class="nav-user" id="navUser" onclick="showDashboard()">
+          <div class="avatar" id="navAvatar">U</div>
+          <span id="navUsername">Kullanıcı</span>
         </div>
-        <div class="faq-answer"><p data-i18n="faq2_a">Şu anda Windows 10/11 desteği aktif.</p></div>
-      </div>
-      <div class="faq-item" onclick="this.classList.toggle('active')">
-        <div class="faq-question">
-          <span data-i18n="faq3_q">Hesap bilgilerim güvende mi?</span>
-          <i class="fas fa-chevron-down faq-icon"></i>
-        </div>
-        <div class="faq-answer"><p data-i18n="faq3_a">Kesinlikle. Şifreleriniz ve kişisel verileriniz Supabase altyapısıyla şifrelenir ve endüstri standardı güvenlik protokolleriyle korunur.</p></div>
+        
+        <button class="menu-toggle" onclick="toggleMenu()">
+          <i class="fas fa-bars-staggered"></i>
+        </button>
       </div>
     </div>
-  </section>
+  </nav>
 
-</main>
+  <main id="mainContent">
+    <section class="hero reveal">
+      <div class="hero-content">
+        <div class="badge">
+          <span class="pulse"></span>
+          2026'NIN EN GÜÇLÜ OYUN İSTEMCİSİ
+        </div>
+        <h1>Oyun Dünyasının <br><span class="text-primary">Dijital Kalesi.</span></h1>
+        <p>Ürün Store, tüm kütüphanenizi tek bir güvenli çatı altında toplar. Hiper-hızlı indirme ve otomatik güncellemelerle performansı hissedin.</p>
+        
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="openAuth('register')">
+            <i class="fas fa-rocket"></i> <span data-i18n="navRegister">Ücretsiz Başla</span>
+          </button>
+          <button class="btn btn-outline" onclick="document.getElementById('ozellikler').scrollIntoView({behavior:'smooth'})">
+            Daha Fazla Bilgi
+          </button>
+        </div>
 
-<div class="dashboard" id="dashboard">
-  
-  <div class="welcome-banner card">
-    <div class="welcome-left">
-      <div class="avatar-lg" id="dashAvatar">U</div>
-      <div class="welcome-info">
-        <h2><span data-i18n="dashWelcome">Hoş Geldin</span>, <span class="text-primary" id="dashUsername">Kullanıcı</span></h2>
-        <p id="dashEmail">email@email.com</p>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="count">100K+</span>
+            <span class="label">Aktif Oyuncu</span>
+          </div>
+          <div class="stat">
+            <span class="count">250+</span>
+            <span class="label">Özel Oyun</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat">
+            <span class="count">99.9%</span>
+            <span class="label">Sunucu Sağlığı</span>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="dash-actions">
-      <button id="adminSupportBtn" class="btn btn-outline text-warning" style="display:none;" onclick="openModal('admin')"><i class="fas fa-headset"></i> <span data-i18n="adminBtn">Destek Paneli (Yetkili)</span></button>
-      <button class="btn btn-primary" onclick="openModal('download')"><i class="fas fa-download"></i> <span data-i18n="dashDlBtn">Programı İndir</span></button>
-      <button class="btn btn-outline" onclick="openModal('settings')"><i class="fas fa-cog"></i> <span data-i18n="dashSet">Ayarlar</span></button>
+    </section>
+
+    <section class="bento-features" id="ozellikler">
+      <div class="section-header reveal">
+        <h2 class="text-primary">Üstün Teknoloji.</h2>
+        <p>Siz sadece oyuna odaklanın, gerisini biz halledelim.</p>
+      </div>
+      
+      <div class="bento-grid">
+        <div class="bento-card large reveal">
+          <div class="card-content">
+            <i class="fas fa-bolt-lightning icon"></i>
+            <h3>Hiper Hızlı İndirme</h3>
+            <p>Optimize edilmiş global CDN ağımız sayesinde oyunlarınızı bant genişliğinizin limitlerini zorlayarak indirin.</p>
+          </div>
+          <div class="card-visual">
+            <div class="speed-meter"></div>
+          </div>
+        </div>
+        
+        <div class="bento-card reveal">
+          <div class="card-content">
+            <i class="fas fa-rotate icon"></i>
+            <h3>Arka Plan Güncelleme</h3>
+            <p>Siz uyurken veya başka bir oyundayken, kütüphaneniz her zaman en güncel halinde kalır.</p>
+          </div>
+        </div>
+
+        <div class="bento-card reveal">
+          <div class="card-content">
+            <i class="fas fa-shield-check icon"></i>
+            <h3>Gelişmiş Korunma</h3>
+            <p>Hesabınız ve verileriniz Supabase şifreleme ve gelişmiş IP koruma sistemimizle 7/24 güvende.</p>
+          </div>
+        </div>
+
+        <div class="bento-card wide reveal">
+          <div class="card-content">
+            <i class="fab fa-discord icon"></i>
+            <h3>Topluluk Entegrasyonu</h3>
+            <p>Discord ile tam uyumlu çalışan Hub sayesinde arkadaşlarınızla her an iletişimde kalın ve özel etkinliklere katılın.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="download-section reveal" id="indir">
+      <div class="download-card">
+        <div class="dl-left">
+          <div class="os-icon"><i class="fab fa-windows"></i></div>
+          <div class="dl-info">
+            <h3>Windows İçin Hazır</h3>
+            <p>Windows 10 ve 11 işletim sistemleriyle tam uyumlu.</p>
+          </div>
+        </div>
+        <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn btn-primary">
+          <i class="fas fa-download"></i> Hemen İndir
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <div class="dashboard" id="dashboard">
+    <div class="dash-container">
+      <div class="dash-header">
+        <div class="user-meta">
+          <div class="avatar-xl" id="dashAvatar">U</div>
+          <div class="user-info">
+            <h2 id="dashUsername">Kullanıcı</h2>
+            <p id="dashEmail">email@example.com</p>
+          </div>
+        </div>
+        <div class="dash-actions">
+          <button id="adminSupportBtn" class="btn btn-outline" style="display:none;" onclick="openModal('admin')">
+            <i class="fas fa-crown"></i> Yetkili Paneli
+          </button>
+          <button class="btn btn-primary" onclick="openModal('download')"><i class="fas fa-download"></i> İndir</button>
+          <button class="btn btn-outline" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Çıkış</button>
+        </div>
+      </div>
+
+      <div class="dash-content">
+        <div class="info-panel card">
+          <h3>Hesap Özeti</h3>
+          <div class="info-list">
+            <div class="item"><span>Durum</span> <span class="badge-success">Aktif</span></div>
+            <div class="item"><span>Üyelik</span> <span>Premium</span></div>
+            <div class="item"><span>ID</span> <span id="infoId">#000000</span></div>
+            <div class="item"><span>Kayıt</span> <span id="infoCreated">-</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="dash-grid">
-    <div class="panel card">
-      <div class="panel-header">
-        <h3><i class="fas fa-user-shield text-primary"></i> <span data-i18n="dashSum">Hesap Özeti</span></h3>
+  <footer>
+    <div class="footer-container">
+      <div class="footer-brand">
+        <img src="./icon2 (1).svg" alt="Ürün Store" class="site-logo">
+        <p>Geleceğin oyun platformu.</p>
       </div>
-      <div class="info-list">
-        <div class="info-row"><span data-i18n="dashUser">Kullanıcı Adı</span><span id="infoUsername">-</span></div>
-        <div class="info-row"><span data-i18n="dashEmail">E-posta</span><span id="infoEmail">-</span></div>
-        <div class="info-row"><span data-i18n="dashId">Hesap ID</span><span id="infoId">-</span></div>
-        <div class="info-row"><span data-i18n="dashDate">Kayıt Tarihi</span><span id="infoCreated">-</span></div>
-        <div class="info-row"><span data-i18n="dashStat">Durum</span><span style="color:var(--success);"><i class="fas fa-check-circle"></i> <span data-i18n="dashAct">Onaylı</span></span></div>
-        <div style="margin-top:12px;">
-           <button class="btn btn-outline text-danger" style="width:100%; border-color:var(--border);" onclick="logout()">
-             <i class="fas fa-sign-out-alt"></i> <span data-i18n="dashOut">Çıkış Yap</span>
-           </button>
+      <div class="footer-security">
+        <div class="sec-badge"><i class="fas fa-shield-halved"></i> <span>SSL Secured</span></div>
+        <div class="sec-badge"><i class="fas fa-user-check"></i> <span>Verified</span></div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Ürün Store. Tüm Hakları Saklıdır.</p>
+        <div class="socials">
+          <a href="#"><i class="fab fa-discord"></i></a>
+          <a href="#"><i class="fab fa-github"></i></a>
         </div>
       </div>
     </div>
-    </div>
-  </div>
-
-
-
-</div>
+  </footer>
 
 <!-- AUTH PAGE -->
 <div class="auth-page" id="authPage">
@@ -1488,17 +1290,40 @@ function checkSpamLimit() {
     })();
   </script>
 
-let lastEmail = ""; let lastType = "signup"; 
+// CORE UI LOGIC
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  if (window.scrollY > 50) nav.classList.add('scrolled');
+  else nav.classList.remove('scrolled');
+});
 
-function openModal(t){
-  document.getElementById('modalOverlay').classList.add('open');
-  ['settings','otp','download','kvkk','admin'].forEach(m => {
-    const el = document.getElementById(m+'Modal');
-    if (el) el.style.display = t===m ? 'block' : 'none';
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('active');
   });
-  clearErrors();
-  if(t === 'admin') renderAdminChat();
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+function toggleDropdown() {
+  const opts = document.getElementById('langOptions');
+  opts.style.display = opts.style.display === 'block' ? 'none' : 'block';
 }
+
+function selectLang(code, text) {
+  document.getElementById('selectedLangText').textContent = text;
+  document.getElementById('langOptions').style.display = 'none';
+  // Actual translation logic call
+  if(typeof window.setLanguage === 'function') window.setLanguage(code);
+}
+
+// Close dropdown on click outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.lang-selector')) {
+    const opts = document.getElementById('langOptions');
+    if(opts) opts.style.display = 'none';
+  }
+});
 function closeModal(){document.getElementById('modalOverlay').classList.remove('open')}
 function closeModalOutside(e){if(e.target===document.getElementById('modalOverlay'))closeModal()}
 function switchModal(t){openModal(t)}
