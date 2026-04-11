@@ -1452,12 +1452,81 @@ function checkSQLi(str) {
   }
   return true;
 }
-window.addEventListener('load', () => {
+// === PROXY / VPN / CROXYPROXY TESPİT SİSTEMİ ===
+const proxyDomains = ['croxyproxy','proxysite','hide.me','kproxy','filterbypass','unblocksite','vpnbook','hidemyass','webproxy','anonymouse','proxyfly','blockaway','unblockit','4everproxy','megaproxy'];
+let isProxyDetected = false;
+
+function detectProxy() {
+  // 1) iframe içinde mi? (CroxyProxy siteleri iframe'e sarar)
+  if (window.self !== window.top) { isProxyDetected = true; return true; }
+  // 2) Location domain proxy mi?
+  const host = window.location.hostname.toLowerCase();
+  if (proxyDomains.some(p => host.includes(p))) { isProxyDetected = true; return true; }
+  // 3) Referrer proxy mi?
+  const ref = (document.referrer || '').toLowerCase();
+  if (proxyDomains.some(p => ref.includes(p))) { isProxyDetected = true; return true; }
+  // 4) window.name trick (bazı proxyler bunu set eder)
+  if (window.name && window.name.length > 100) { isProxyDetected = true; return true; }
+  return false;
+}
+
+function blockProxy() {
+  document.body.innerHTML = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0a0a0a; color:#ef4444; font-family:sans-serif; text-align:center; gap:16px;">
+    <i class="fas fa-shield-alt" style="font-size:5rem; animation: shieldPulse 1.5s infinite;"></i>
+    <h1 style="font-size:2rem; font-weight:700;">Proxy/VPN Tespit Edildi</h1>
+    <p style="color:#888; font-size:1.1rem; max-width:500px;">Güvenlik nedeniyle proxy veya VPN üzerinden erişim engellenmektedir.<br>Lütfen doğrudan bağlantı kullanın.</p>
+  </div>`;
+  try { if(sb) sb.auth.signOut(); } catch(e){}
+}
+
+// WebRTC ile gerçek IP'yi yakala (proxy arkasındaki asıl IP)
+let realIP = '';
+function getWebRTCIP() {
+  return new Promise((resolve) => {
+    try {
+      const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+      pc.createDataChannel('');
+      pc.createOffer().then(offer => pc.setLocalDescription(offer));
+      pc.onicecandidate = (e) => {
+        if (!e || !e.candidate || !e.candidate.candidate) return;
+        const parts = e.candidate.candidate.split(' ');
+        const ip = parts[4];
+        if (ip && !ip.includes(':') && !ip.startsWith('0.') && ip !== '0.0.0.0') {
+          realIP = ip;
+          pc.close();
+          resolve(ip);
+        }
+      };
+      setTimeout(() => { pc.close(); resolve(''); }, 3000);
+    } catch(e) { resolve(''); }
+  });
+}
+
+window.addEventListener('load', async () => {
+    // Proxy kontrolü
+    if (detectProxy()) { blockProxy(); return; }
+
+    // WebRTC ile gerçek IP'yi al
+    const webrtcIP = await getWebRTCIP();
+
     const shield = document.getElementById('ddosShield');
     if(shield){
+       const st = document.getElementById('shieldStatus');
+
+       // Gerçek IP ile proxy IP farklıysa uyar
+       if (webrtcIP && currentUserIP && webrtcIP !== currentUserIP) {
+         if(st) { st.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Proxy/VPN algılandı (Gerçek IP: ${webrtcIP})`; st.style.color = "#f59e0b"; }
+         // Gerçek IP'yi de banned_ips'te kontrol et
+         if (sb) {
+           const { data: realBan } = await sb.from('banned_ips').select('ip').eq('ip', webrtcIP).single();
+           if (realBan && realBan.ip) { blockProxy(); return; }
+         }
+         // Gerçek IP'yi kaydet
+         realIP = webrtcIP;
+       }
+
        setTimeout(() => {
-           const st = document.getElementById('shieldStatus');
-           if(st) { st.textContent = "Bağlantı güvenli, yönlendiriliyor..."; st.style.color = "var(--success)"; }
+           if(st && !isProxyDetected) { st.textContent = "Bağlantı güvenli, yönlendiriliyor..."; st.style.color = "var(--success)"; }
            setTimeout(() => { shield.style.opacity = '0'; shield.style.pointerEvents = 'none'; setTimeout(() => shield.remove(), 500); }, 800);
        }, 2000);
     }
@@ -1480,7 +1549,8 @@ async function checkIPBan() {
       if (!ipUpdatedThisSession) {
         sb.auth.getSession().then(({data:{session}}) => {
           if (session?.user?.email) {
-            sb.from('user_profiles').update({ last_ip: currentUserIP }).eq('email', session.user.email).then();
+            const ipToSave = realIP || currentUserIP;
+            sb.from('user_profiles').update({ last_ip: ipToSave }).eq('email', session.user.email).then();
             ipUpdatedThisSession = true;
           }
         });
