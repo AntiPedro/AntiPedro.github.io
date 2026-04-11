@@ -1173,6 +1173,7 @@ footer {
             <label data-i18n="authPass">Şifre</label>
             <input type="password" id="loginPassword" placeholder="Şifreniz" required onfocus="document.getElementById('charContainer').classList.remove('focused-away')">
             <i class="fas fa-eye password-toggle" onclick="togglePassword('loginPassword', this)"></i>
+            <div class="form-error" id="loginPasswordErr" style="color:var(--danger); font-size:0.8rem; margin-top:4px; display:none;"></div>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:28px; color:var(--text-muted);">
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox"> <span data-i18n="authRem">30 gün hatırla</span></label>
@@ -1419,6 +1420,24 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 let sb = null;
 try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.error(e); }
 
+let currentUserIP = '';
+async function checkIPBan() {
+  try {
+    const res = await fetch('https://api64.ipify.org?format=json');
+    const data = await res.json();
+    currentUserIP = data.ip;
+    if (sb) {
+      const { data: bData } = await sb.from('banned_ips').select('ip').eq('ip', currentUserIP).single();
+      if (bData && bData.ip) {
+        document.body.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#111; color:#ef4444; font-size:2rem; font-family:sans-serif; text-align:center;">Erişim Engellendi<br>(IP Ban)</div>';
+        try { await sb.auth.signOut(); } catch(e){}
+        throw new Error("IP Banned");
+      }
+    }
+  } catch(e) {}
+}
+checkIPBan();
+
 let lastEmail = ""; let lastType = "signup"; 
 
 function openModal(t){
@@ -1519,7 +1538,7 @@ async function handleRegister(e){
       throw error;
     }
     if(data.user && data.session){
-      if(sb) await sb.from('user_profiles').insert([{username, email}]);
+      if(sb) await sb.from('user_profiles').insert([{username, email, last_ip: currentUserIP}]);
       closeAuth();
       showToast('Kayıt başarılı! Hoş geldin.'); showDashboard(); updateUI();
     } else if(data.user) {
@@ -1531,11 +1550,11 @@ async function handleRegister(e){
       }
       const{data:d2,error:e2}=await sb.auth.signInWithPassword({email,password:pass});
       if(!e2){
-        if(sb) await sb.from('user_profiles').insert([{username, email}]);
+        if(sb) await sb.from('user_profiles').insert([{username, email, last_ip: currentUserIP}]);
         closeAuth();showToast('Kayıt başarılı!'); showDashboard(); updateUI();
       }
       else{
-        if(sb) await sb.from('user_profiles').insert([{username, email}]);
+        if(sb) await sb.from('user_profiles').insert([{username, email, last_ip: currentUserIP}]);
         showToast('Kayıt olundu, giriş yapabilirsiniz.');closeAuth();
       }
     }
@@ -1566,6 +1585,7 @@ async function handleLogin(e){
 
     const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
     if(error) throw error;
+    if(sb && currentUserIP) sb.from('user_profiles').update({ last_ip: currentUserIP }).eq('email', email).then();
     closeAuth();
     showToast('Giriş başarılı.'); showDashboard(); updateUI();
   }catch(err){
@@ -2338,7 +2358,7 @@ async function loadAdminUsers() {
   const list = document.getElementById('adminAllUsersList');
   list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);"><span class="spinner" style="border-top-color:var(--primary); margin-bottom:10px;"></span><br>Kullanıcılar yükleniyor...</div>';
   try {
-    const { data, error } = await sb.from('user_profiles').select('*').order('created_at', { ascending: false });
+    const { data, error } = await sb.from('user_profiles').select('*');
     if (error) throw error;
     allUsersCache = data || [];
     document.getElementById('adminTotalUsers').textContent = allUsersCache.length;
@@ -2371,14 +2391,15 @@ function renderAdminAllUsers(users) {
         <div class="user-avatar">${(user.username || 'U')[0].toUpperCase()}</div>
         <div class="user-details">
           <h4>${user.username || 'İsimsiz'} ${badgeHtml}</h4>
-          <p>${user.email}</p>
+          <p>${user.email} <span style="margin-left:8px; font-size:0.75rem; padding: 2px 6px; background:var(--surface); border-radius:4px; border:1px solid var(--border);"><i class="fas fa-network-wired"></i> ${user.last_ip || 'IP Yok'}</span></p>
         </div>
       </div>
       <div class="user-actions">
         ${(isBanned || isTimeout) 
-          ? `<button class="btn-unban" onclick="unbanUser('${user.id}', '${user.email}')"><i class="fas fa-check-circle"></i> Kullanıma Aç</button>`
+          ? `<button class="btn-unban" onclick="unbanUser('${user.id}', '${user.email}', '${user.last_ip || ''}')"><i class="fas fa-check-circle"></i> Engel/Timeout Kaldır</button>`
           : `<button class="btn-timeout" onclick="timeoutUser('${user.id}', '${user.email}')"><i class="fas fa-clock"></i> Timeout</button>
-             <button class="btn-ban" onclick="banUser('${user.id}', '${user.email}')"><i class="fas fa-ban"></i> Banla</button>`
+             <button class="btn-ban" onclick="banUser('${user.id}', '${user.email}')"><i class="fas fa-ban"></i> Banla</button>
+             ${user.last_ip ? `<button onclick="ipBanUser('${user.id}', '${user.email}', '${user.last_ip}')" style="color:#a855f7; border: 1px solid rgba(168,85,247,0.3); padding: 6px 10px; border-radius: 6px; background: var(--surface); cursor: pointer; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-network-wired"></i> IP Ban</button>` : ''}`
         }
       </div>
     `;
@@ -2418,13 +2439,32 @@ async function timeoutUser(id, email) {
   } catch (err) { showToast('Hata: ' + err.message, true); }
 }
 
-async function unbanUser(id, email) {
-  if (!confirm(`${email} hesabının engelini kaldırmak istediğinize emin misiniz?`)) return;
+async function unbanUser(id, email, ip) {
+  if (!confirm(`${email} hesabının (ve varsa IP) engelini kaldırmak istediğinize emin misiniz?`)) return;
   try {
     const { error } = await sb.from('user_profiles').update({ is_banned: false, banned_until: null }).eq('id', id);
     if (error) throw error;
+    if (ip && ip !== 'undefined' && ip !== 'null') {
+      await sb.from('banned_ips').delete().eq('ip', ip);
+    }
     showToast('Engel kaldırıldı!');
     loadAdminUsers();
+  } catch (err) { showToast('Hata: ' + err.message, true); }
+}
+
+async function ipBanUser(id, email, ip) {
+  if (!ip) return showToast('Bu kullanıcının IP adresi bulunmuyor.', true);
+  if (!confirm(`${email} hesabının IP adresini (${ip}) kalıcı olarak banlamak istediğinize emin misiniz?`)) return;
+  try {
+    const { error } = await sb.from('banned_ips').insert([{ ip: ip }]);
+    if (error) {
+      if(error.message.includes('duplicate')) showToast('Bu IP zaten banlı!');
+      else throw error;
+    } else {
+      await sb.from('user_profiles').update({ is_banned: true, banned_until: null }).eq('id', id);
+      showToast('Kullanıcı IP bazlı olarak banlandı!');
+      loadAdminUsers();
+    }
   } catch (err) { showToast('Hata: ' + err.message, true); }
 }
 
