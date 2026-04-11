@@ -1454,81 +1454,46 @@ function checkSQLi(str) {
 }
 // === PROXY / VPN / CROXYPROXY TESPİT SİSTEMİ ===
 const proxyDomains = ['croxyproxy','proxysite','hide.me','kproxy','filterbypass','unblocksite','vpnbook','hidemyass','webproxy','anonymouse','proxyfly','blockaway','unblockit','4everproxy','megaproxy'];
-let isProxyDetected = false;
 
 function detectProxy() {
   // 1) iframe içinde mi? (CroxyProxy siteleri iframe'e sarar)
-  if (window.self !== window.top) { isProxyDetected = true; return true; }
-  // 2) Location domain proxy mi?
+  if (window.self !== window.top) return true;
+  // 2) Domain proxy mi?
   const host = window.location.hostname.toLowerCase();
-  if (proxyDomains.some(p => host.includes(p))) { isProxyDetected = true; return true; }
+  if (proxyDomains.some(p => host.includes(p))) return true;
   // 3) Referrer proxy mi?
   const ref = (document.referrer || '').toLowerCase();
-  if (proxyDomains.some(p => ref.includes(p))) { isProxyDetected = true; return true; }
-  // 4) window.name trick (bazı proxyler bunu set eder)
-  if (window.name && window.name.length > 100) { isProxyDetected = true; return true; }
+  if (proxyDomains.some(p => ref.includes(p))) return true;
   return false;
 }
 
 function blockProxy() {
-  isProxyDetected = true;
-  document.documentElement.innerHTML = `<head></head><body style="background:#0a0a0a; color:#ef4444; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; margin:0; font-family:sans-serif; text-align:center; gap:16px;">
-    <i class="fas fa-shield-alt" style="font-size:5rem; animation: shieldPulse 1.5s infinite;"></i>
+  document.body.innerHTML = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0a0a0a; color:#ef4444; font-family:sans-serif; text-align:center; gap:16px;">
+    <div style="font-size:5rem;">🛡️</div>
     <h1 style="font-size:2rem; font-weight:700;">Proxy/VPN Tespit Edildi</h1>
     <p style="color:#888; font-size:1.1rem; max-width:500px;">Güvenlik nedeniyle proxy veya VPN üzerinden erişim engellenmektedir.<br>Lütfen doğrudan bağlantı kullanın.</p>
-  </body>`;
+  </div>`;
   try { if(sb) sb.auth.signOut(); } catch(e){}
-  if(window.stop) window.stop();
-  throw new Error("Proxy Detected");
 }
 
-// WebRTC ile gerçek IP'yi yakala (proxy arkasındaki asıl IP)
-let realIP = '';
-function getWebRTCIP() {
-  return new Promise((resolve) => {
-    try {
-      const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
-      pc.createDataChannel('');
-      pc.createOffer().then(offer => pc.setLocalDescription(offer));
-      pc.onicecandidate = (e) => {
-        if (!e || !e.candidate || !e.candidate.candidate) return;
-        const parts = e.candidate.candidate.split(' ');
-        const ip = parts[4];
-        if (ip && !ip.includes(':') && !ip.startsWith('0.') && ip !== '0.0.0.0') {
-          realIP = ip;
-          pc.close();
-          resolve(ip);
-        }
-      };
-      setTimeout(() => { pc.close(); resolve(''); }, 3000);
-    } catch(e) { resolve(''); }
-  });
+// Proxy kontrolü (anında çalışır)
+if (detectProxy()) { 
+  window.addEventListener('DOMContentLoaded', () => blockProxy());
 }
 
-window.addEventListener('load', async () => {
-    // Proxy kontrolü
-    if (detectProxy()) { blockProxy(); return; }
-
-    // WebRTC ile gerçek IP'yi al
-    const webrtcIP = await getWebRTCIP();
-
-    const shield = document.getElementById('ddosShield');
-    if(shield){
-       const st = document.getElementById('shieldStatus');
-
-       // Gerçek IP ile proxy IP farklıysa uyar ve KESİNLİKLE engelle
-       if (webrtcIP && currentUserIP && webrtcIP !== currentUserIP && !webrtcIP.startsWith('192.168.') && !webrtcIP.startsWith('10.') && !webrtcIP.startsWith('172.')) {
-         if(st) { st.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Proxy/VPN algılandı! Sistem kilitleniyor...`; st.style.color = "#ef4444"; }
-         realIP = webrtcIP;
-         setTimeout(() => { blockProxy(); }, 1500); 
-         return; // Asla siteye sokma
-       }
-
-       setTimeout(() => {
-           if(st && !isProxyDetected) { st.textContent = "Bağlantı güvenli, yönlendiriliyor..."; st.style.color = "var(--success)"; }
-           setTimeout(() => { shield.style.opacity = '0'; shield.style.pointerEvents = 'none'; setTimeout(() => shield.remove(), 500); }, 800);
-       }, 2000);
-    }
+// Shield kaldırma (HER ZAMAN çalışacak, takılmayacak)
+window.addEventListener('DOMContentLoaded', () => {
+  const shield = document.getElementById('ddosShield');
+  if (!shield) return;
+  setTimeout(() => {
+    const st = document.getElementById('shieldStatus');
+    if (st) { st.textContent = "Bağlantı güvenli, yönlendiriliyor..."; st.style.color = "var(--success)"; }
+    setTimeout(() => {
+      shield.style.opacity = '0';
+      shield.style.pointerEvents = 'none';
+      setTimeout(() => shield.remove(), 500);
+    }, 800);
+  }, 1500);
 });
 
 let currentUserIP = '';
@@ -1538,6 +1503,15 @@ async function checkIPBan() {
     const res = await fetch('https://api64.ipify.org?format=json');
     const data = await res.json();
     currentUserIP = data.ip;
+    
+    // Acil durum IP ban kaldırma (kendini kurtarmak için)
+    if (window.location.search.includes('emergency_unban=1') && sb) {
+        await sb.from('banned_ips').delete().eq('ip', currentUserIP);
+        alert('IP engeliniz acil durum koduyla kaldırıldı! Sayfa yenileniyor...');
+        window.location.href = window.location.pathname;
+        return;
+    }
+
     if (sb) {
       const { data: bData } = await sb.from('banned_ips').select('ip').eq('ip', currentUserIP).single();
       if (bData && bData.ip) {
@@ -2528,13 +2502,15 @@ function renderAdminAllUsers(users) {
           <p>${user.email} <span style="margin-left:8px; font-size:0.75rem; padding: 2px 6px; background:var(--surface); border-radius:4px; border:1px solid var(--border);"><i class="fas fa-network-wired"></i> ${user.last_ip || 'IP Yok'}</span></p>
         </div>
       </div>
-      <div class="user-actions">
-        ${(isBanned || isTimeout) 
-          ? `<button class="btn-unban" onclick="unbanUser('${user.id}', '${user.email}', '${user.last_ip || ''}')"><i class="fas fa-check-circle"></i> Engel/Timeout Kaldır</button>`
-          : `<button class="btn-timeout" onclick="timeoutUser('${user.id}', '${user.email}')"><i class="fas fa-clock"></i> Timeout</button>
-             <button class="btn-ban" onclick="banUser('${user.id}', '${user.email}')"><i class="fas fa-ban"></i> Banla</button>
-             ${user.last_ip ? `<button onclick="ipBanUser('${user.id}', '${user.email}', '${user.last_ip}')" style="color:#a855f7; border: 1px solid rgba(168,85,247,0.3); padding: 6px 10px; border-radius: 6px; background: var(--surface); cursor: pointer; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-network-wired"></i> IP Ban</button>` : ''}`
-        }
+      <div class="user-actions" style="flex-wrap:wrap;">
+        ${isBanned ? `<button class="btn-unban" onclick="unbanUser('${user.id}', '${user.email}')"><i class="fas fa-check-circle"></i> Ban Kaldır</button>` : ''}
+        ${isTimeout ? `<button class="btn-unban" onclick="removeTimeout('${user.id}', '${user.email}')"><i class="fas fa-check-circle"></i> Timeout Kaldır</button>` : ''}
+        ${!isBanned && !isTimeout ? `
+          <button class="btn-timeout" onclick="timeoutUser('${user.id}', '${user.email}')"><i class="fas fa-clock"></i> Timeout</button>
+          <button class="btn-ban" onclick="banUser('${user.id}', '${user.email}')"><i class="fas fa-ban"></i> Banla</button>
+        ` : ''}
+        ${user.last_ip ? `<button onclick="ipBanUser('${user.id}', '${user.email}', '${user.last_ip}')" style="color:#a855f7; border: 1px solid rgba(168,85,247,0.3); padding: 6px 10px; border-radius: 6px; background: var(--surface); cursor: pointer; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-network-wired"></i> IP Ban</button>` : ''}
+        ${user.last_ip ? `<button onclick="ipUnbanUser('${user.last_ip}')" style="color:#22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 6px 10px; border-radius: 6px; background: var(--surface); cursor: pointer; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-unlock"></i> IP Ban Kaldır</button>` : ''}
       </div>
     `;
     list.appendChild(div);
@@ -2573,15 +2549,22 @@ async function timeoutUser(id, email) {
   } catch (err) { showToast('Hata: ' + err.message, true); }
 }
 
-async function unbanUser(id, email, ip) {
-  if (!confirm(`${email} hesabının (ve varsa IP) engelini kaldırmak istediğinize emin misiniz?`)) return;
+async function unbanUser(id, email) {
+  if (!confirm(`${email} hesabının banını kaldırmak istediğinize emin misiniz?`)) return;
   try {
     const { error } = await sb.from('user_profiles').update({ is_banned: false, banned_until: null }).eq('id', id);
     if (error) throw error;
-    if (ip && ip !== 'undefined' && ip !== 'null') {
-      await sb.from('banned_ips').delete().eq('ip', ip);
-    }
-    showToast('Engel kaldırıldı!');
+    showToast('Ban kaldırıldı!');
+    loadAdminUsers();
+  } catch (err) { showToast('Hata: ' + err.message, true); }
+}
+
+async function removeTimeout(id, email) {
+  if (!confirm(`${email} hesabının timeout'unu kaldırmak istediğinize emin misiniz?`)) return;
+  try {
+    const { error } = await sb.from('user_profiles').update({ banned_until: null }).eq('id', id);
+    if (error) throw error;
+    showToast('Timeout kaldırıldı!');
     loadAdminUsers();
   } catch (err) { showToast('Hata: ' + err.message, true); }
 }
@@ -2599,6 +2582,17 @@ async function ipBanUser(id, email, ip) {
       showToast('Kullanıcı IP bazlı olarak banlandı!');
       loadAdminUsers();
     }
+  } catch (err) { showToast('Hata: ' + err.message, true); }
+}
+
+async function ipUnbanUser(ip) {
+  if (!ip) return showToast('IP adresi bulunamadı.', true);
+  if (!confirm(`${ip} adresinin IP banını kaldırmak istediğinize emin misiniz?`)) return;
+  try {
+    const { error } = await sb.from('banned_ips').delete().eq('ip', ip);
+    if (error) throw error;
+    showToast(`${ip} adresinin IP banı kaldırıldı!`);
+    loadAdminUsers();
   } catch (err) { showToast('Hata: ' + err.message, true); }
 }
 
