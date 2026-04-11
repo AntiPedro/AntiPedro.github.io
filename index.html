@@ -707,7 +707,7 @@ footer {
 .password-toggle:hover { color: var(--text); }
 
 /* CHARACTERS */
-.char-container { position: relative; width: 300px; height: 250px; display: flex; align-items: flex-end; justify-content: center; }
+.char-container { position: relative; width: 300px; height: 250px; display: flex; align-items: flex-end; justify-content: center; transform: scale(1.3); transform-origin: bottom center; }
 .char { position: absolute; bottom: 0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; transition: transform 0.3s; }
 .char .eyes { display: flex; gap: 8px; margin-top: 20px; }
 .char .eye { width: 12px; height: 12px; background: #fff; border-radius: 50%; position: relative; overflow: hidden; }
@@ -885,21 +885,27 @@ footer {
 
 /* RESPONSIVE */
 @media(max-width: 900px) {
-  nav { padding: 0 20px; height: 80px; }
+  nav { padding: 0 10px; height: 75px; }
+  .logo-text { font-size: 1.1rem; }
+  .nav-right { gap: 6px; }
+  .btn { padding: 6px 12px; font-size: 0.8rem; }
+  .dropdown-selected { padding: 4px 8px; font-size: 0.8rem; }
+  .mobile-btn { margin-left: 6px; font-size: 1.2rem; }
+  
   .dash-grid { grid-template-columns: 1fr; gap: 24px;}
   .welcome-banner { flex-direction: column; text-align: center; gap: 20px; }
   .dash-actions { width: 100%; justify-content: center; flex-wrap: wrap;}
   footer { flex-direction: column; gap: 16px; text-align: center; }
   
-  .hero { padding: 120px 20px 60px; }
-  .about-section, .features-section, .dashboard { padding-left: 20px; padding-right: 20px; }
+  .hero { padding: 100px 15px 50px; }
+  .about-section, .features-section, .dashboard { padding-left: 15px; padding-right: 15px; }
 
   .nav-links {
     position: absolute;
-    top: 80px; left: 0; width: 100%;
+    top: 75px; left: 0; width: 100%;
     background: var(--surface);
     flex-direction: column;
-    padding: 24px; gap: 16px;
+    padding: 20px; gap: 16px;
     border-bottom: 1px solid var(--border);
     transform: translateY(-150%);
     opacity: 0; pointer-events: none;
@@ -1402,9 +1408,10 @@ footer {
     <div class="ai-chat-messages" id="aiChatMessages">
       <div class="ai-msg bot" data-i18n="aiWelcome">Merhaba! Ürün Store hakkında sormak istediğiniz bir şey var mı?</div>
     </div>
-    <div class="ai-chat-input">
-      <input type="text" id="aiInput" data-i18n-placeholder="aiPlace" placeholder="Mesajınızı yazın..." onkeypress="if(event.key === 'Enter') sendAIMessage()">
-      <button onclick="sendAIMessage()"><i class="fas fa-paper-plane"></i></button>
+    <div class="ai-chat-input" style="position:relative;">
+      <div id="aiChatBlocker" style="position:absolute; inset:0; z-index:10; cursor:pointer;" onclick="showChatLoginWarning()"></div>
+      <input type="text" id="aiInput" data-i18n-placeholder="aiPlace" placeholder="Mesajınızı yazın..." disabled style="cursor:not-allowed;" onkeypress="if(event.key === 'Enter') sendAIMessage()">
+      <button id="aiSendBtn" disabled style="cursor:not-allowed; opacity:0.5;" onclick="sendAIMessage()"><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
 </div>
@@ -1765,10 +1772,28 @@ async function updateUI(){
       window.initialLayoutSet = true;
       showDashboard();
     }
+    
+    // Enable AI Chat Input
+    document.getElementById('aiChatBlocker').style.display = 'none';
+    document.getElementById('aiInput').disabled = false;
+    document.getElementById('aiInput').style.cursor = 'text';
+    document.getElementById('aiSendBtn').disabled = false;
+    document.getElementById('aiSendBtn').style.cursor = 'pointer';
+    document.getElementById('aiSendBtn').style.opacity = '1';
+    
   }else{
     window.initialLayoutSet = true;
     document.getElementById('authButtons').style.display='flex';
     document.getElementById('navUser').style.display='none';
+    
+    // Disable AI Chat Input
+    document.getElementById('aiChatBlocker').style.display = 'block';
+    document.getElementById('aiInput').disabled = true;
+    document.getElementById('aiInput').style.cursor = 'not-allowed';
+    document.getElementById('aiSendBtn').disabled = true;
+    document.getElementById('aiSendBtn').style.cursor = 'not-allowed';
+    document.getElementById('aiSendBtn').style.opacity = '0.5';
+    
     goHome();
   }
 }
@@ -2297,10 +2322,14 @@ function renderAdminUserList() {
   });
 }
 
+function showChatLoginWarning() {
+  showToast(currentLang === 'TR' ? "Canlı desteğe yazabilmek için lütfen giriş yapın veya kayıt olun." : "Please login or register to write to live support.", true);
+}
+
 function sendAIMessage() {
   const username = getChatUsername();
   if(!username) {
-    alert(currentLang === 'TR' ? "Canlı desteğe yazabilmek için lütfen giriş yapın veya kayıt olun." : "Please login or register to write to live support.");
+    showChatLoginWarning();
     return;
   }
   
