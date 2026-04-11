@@ -137,7 +137,7 @@ a { text-decoration: none; color: inherit; }
 nav {
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 90px;
+  height: 60px;
   z-index: 100;
   display: flex;
   align-items: center;
@@ -219,7 +219,7 @@ nav {
 
 /* HERO SECTION */
 .hero {
-  padding: 140px 40px 80px;
+  padding: 110px 40px 80px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -885,7 +885,7 @@ footer {
 
 /* RESPONSIVE */
 @media(max-width: 900px) {
-  nav { padding: 0 10px; height: 75px; }
+  nav { padding: 0 10px; height: 50px; }
   .logo-text { font-size: 1.1rem; }
   .nav-right { gap: 6px; }
   .btn { padding: 6px 12px; font-size: 0.8rem; }
@@ -897,12 +897,12 @@ footer {
   .dash-actions { width: 100%; justify-content: center; flex-wrap: wrap;}
   footer { flex-direction: column; gap: 16px; text-align: center; }
   
-  .hero { padding: 100px 15px 50px; }
+  .hero { padding: 75px 15px 50px; }
   .about-section, .features-section, .dashboard { padding-left: 15px; padding-right: 15px; }
 
   .nav-links {
     position: absolute;
-    top: 75px; left: 0; width: 100%;
+    top: 50px; left: 0; width: 100%;
     background: var(--surface);
     flex-direction: column;
     padding: 20px; gap: 16px;
@@ -969,9 +969,7 @@ footer {
 </style>
 
 <nav id="navbar">
-  <div class="logo" onclick="goHome()">
-    <img src="./icon2 (1).svg" alt="Ürün Store" class="site-logo">
-  </div>
+
   <div class="nav-links" id="navLinks">
     <a href="#" onclick="goHome(); toggleMenu();" data-i18n="navHome">Ana Sayfa</a>
     <a href="#hakkinda" onclick="goHome(); toggleMenu();" data-i18n="navAbout">Hakkında</a>
