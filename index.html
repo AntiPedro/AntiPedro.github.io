@@ -456,34 +456,7 @@ nav {
 </style>
 </head>
 <body oncontextmenu="return false;">
-  <!-- Ürün Store Security Suite V2 -->
-  <script>
-    (function() {
-      const isProxy = () => {
-        const signals = [
-          window.location.hostname.includes('croxy'),
-          window.location.hostname.includes('proxy'),
-          window.location.pathname.startsWith('/_proxied/'),
-          !!window.__uproxy_configured,
-          !!window.RTCPeerConnection && !navigator.onLine
-        ];
-        return signals.some(s => s === true);
-      };
 
-      if (isProxy()) {
-        document.body.innerHTML = `
-          <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#09090b; color:#fff; font-family:sans-serif; text-align:center; padding:20px;">
-            <div style="font-size:4rem; margin-bottom:20px;">🛡️</div>
-            <h1 style="font-size:2rem; margin-bottom:10px;">Erişim Engellendi</h1>
-            <p style="color:#94a3b8; max-width:400px; line-height:1.6;">Ürün Store'a bir proxy veya VPN üzerinden erişmeye çalıştığınız tespit edildi. Güvenlik nedeniyle bu tür erişimler kısıtlanmıştır.</p>
-            <a href="${window.location.href}" style="margin-top:20px; color:#6366f1; text-decoration:none; font-weight:600;">Tekrar Dene</a>
-          </div>
-        `;
-        throw new Error("Proxy access blocked.");
-      }
-      window.RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
-    })();
-  </script>
 <style>
 .info-row span:first-child { color: var(--text-muted); }
 .info-row span:last-child { font-weight: 500; }
@@ -1423,8 +1396,19 @@ function checkSpamLimit() {
   }
   return true;
 }
+  </script>
+
   <!-- Ürün Store Security Suite V2 & Analytics -->
   <script>
+    let currentUserIP = '';
+    (async function fetchIP() {
+      try {
+        const res = await fetch('https://api64.ipify.org?format=json');
+        const data = await res.json();
+        currentUserIP = data.ip;
+      } catch(e) { console.error("IP Fetch Error:", e); }
+    })();
+
     (function() {
       // 1. ADVANCED PROXY & VPN BLOCKER (V2)
       const blockReason = {
@@ -1486,6 +1470,21 @@ function checkSpamLimit() {
         if (e.ctrlKey && e.keyCode == 85) return false;
         return true;
       };
+
+      // 4. DDOS SHIELD REMOVAL
+      document.addEventListener('DOMContentLoaded', () => {
+        const shield = document.getElementById('ddosShield');
+        if (!shield) return;
+        setTimeout(() => {
+          const st = document.getElementById('shieldStatus');
+          if (st) { st.textContent = "Bağlantı güvenli, yönlendiriliyor..."; st.style.color = "var(--success)"; }
+          setTimeout(() => {
+            shield.style.opacity = '0';
+            shield.style.pointerEvents = 'none';
+            setTimeout(() => shield.remove(), 500);
+          }, 800);
+        }, 1500);
+      });
     })();
   </script>
 
@@ -2783,4 +2782,3 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
-  
