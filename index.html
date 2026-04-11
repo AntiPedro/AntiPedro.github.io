@@ -1434,6 +1434,9 @@ function checkSpamLimit() {
       };
 
       const doBlock = (reason) => {
+        // Emergency Bypass check
+        if (window.location.search.includes('owner_bypass=1')) return;
+
         document.body.innerHTML = `
           <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#09090b; color:#fff; font-family:'Sora',sans-serif; text-align:center; padding:40px; animation: fadeIn 0.5s ease;">
             <div style="font-size:5rem; margin-bottom:30px; filter: drop-shadow(0 0 20px rgba(239,68,68,0.3));">🛡️</div>
@@ -1451,8 +1454,14 @@ function checkSpamLimit() {
 
       // Detect common web proxies (CroxyProxy, BlockAway, etc.)
       const isProxied = () => {
-        const query = window.location.search;
         const host = window.location.hostname;
+        
+        // EXCEPTION: Always allow local development
+        if (host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.')) {
+          return false;
+        }
+
+        const query = window.location.search;
         const sigs = [
           query.includes('__cpo='), // CroxyProxy
           query.includes('__cpa='), // BlockAway
