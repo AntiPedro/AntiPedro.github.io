@@ -587,7 +587,7 @@ nav {
 }
 .form-group input:focus { border-color: var(--primary); }
 .form-error { color: var(--danger); font-size: 0.8rem; margin-top: 6px; display: none; }
-.form-error.show { display: block; }
+.form-error.show { display: block !important; }
 .btn-submit { width: 100%; margin-top: 8px; padding: 12px;}
 .modal-switch { text-align: center; margin-top: 20px; font-size: 0.85rem; color: var(--text-muted); }
 .modal-switch a { color: var(--primary); cursor: pointer; font-weight: 600; }
@@ -1185,13 +1185,13 @@ footer {
           <div class="form-group custom-input" style="margin-bottom:24px;">
             <label data-i18n="loginUserEmail">E-posta veya Kullanıcı Adı</label>
             <input type="text" id="loginEmail" data-i18n-placeholder="loginUserEmail" placeholder="ornek@email.com veya kullanıcı" required>
-            <div class="form-error" id="loginEmailErr" style="color:var(--danger); font-size:0.8rem; margin-top:4px; display:none;"></div>
+            <div class="form-error" id="loginEmailErr" style="color:var(--danger); font-size:0.8rem; margin-top:4px;"></div>
           </div>
           <div class="form-group custom-input password-wrapper" style="margin-bottom:24px;">
             <label data-i18n="authPass">Şifre</label>
             <input type="password" id="loginPassword" placeholder="Şifreniz" required onfocus="document.getElementById('charContainer').classList.remove('focused-away')">
             <i class="fas fa-eye password-toggle" onclick="togglePassword('loginPassword', this)"></i>
-            <div class="form-error" id="loginPasswordErr" style="color:var(--danger); font-size:0.8rem; margin-top:4px; display:none;"></div>
+            <div class="form-error" id="loginPasswordErr" style="color:var(--danger); font-size:0.8rem; margin-top:4px;"></div>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:28px; color:var(--text-muted);">
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox"> <span data-i18n="authRem">30 gün hatırla</span></label>
@@ -1216,10 +1216,12 @@ footer {
           <div class="form-group custom-input">
             <label data-i18n="dashUser">Kullanıcı Adı</label>
             <input type="text" id="regUsername" data-i18n-placeholder="dashUser" placeholder="Kullanıcı adınız" required minlength="3">
+            <div class="form-error" id="regUsernameErr"></div>
           </div>
           <div class="form-group custom-input">
             <label data-i18n="dashEmail">E-posta</label>
             <input type="email" id="regEmail" placeholder="ornek@email.com" required>
+            <div class="form-error" id="regEmailErr"></div>
           </div>
           <div class="form-group custom-input password-wrapper">
             <label data-i18n="authPass">Şifre</label>
@@ -1240,6 +1242,7 @@ footer {
           <div class="form-group custom-input password-wrapper" style="margin-bottom:20px;">
             <label data-i18n="authPass2">Şifre tekrar</label>
             <input type="password" id="regPassword2" data-i18n-placeholder="authPass2P" placeholder="Şifrenizi doğrulayın" required onfocus="document.getElementById('charContainer').classList.remove('focused-away')">
+            <div class="form-error" id="regPassword2Err"></div>
           </div>
           <div style="display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; color:var(--text-muted); margin-bottom:24px;">
             <input type="checkbox" id="kvkkCheck" required style="margin-top:4px; cursor:pointer;">
@@ -1634,100 +1637,117 @@ document.addEventListener('mousemove', (e) => {
 function clearErrors(){document.querySelectorAll('.form-error').forEach(e=>{e.textContent='';e.classList.remove('show')})}
 function showError(id,msg){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.classList.add('show')}
 
+async function insertUserProfileRow(username,email){
+  if(!sb)return;
+  const{error}=await sb.from('user_profiles').insert([{username,email,last_ip:currentUserIP||null}]);
+  if(error){
+    const msg=formatSupabaseErr(error);
+    notifyAuthProblem('regEmailErr',msg);
+    throw error;
+  }
+}
+
 async function handleRegister(e){
   e.preventDefault();clearErrors();
-  if(!checkSpamLimit()) return;
+  if(!sb){notifyAuthProblem('regEmailErr',(typeof currentLang!=='undefined'&&currentLang!=='TR')?'Cannot connect. Refresh the page.':'Bağlantı yok. Sayfayı yenileyin.');return;}
+  if(!checkSpamLimit())return;
   const username=document.getElementById('regUsername').value.trim();
   const email=document.getElementById('regEmail').value.trim();
   const pass=document.getElementById('regPassword').value;
   const pass2=document.getElementById('regPassword2').value;
-  
-  if(!checkSQLi(username) || !checkSQLi(email)){
-    showError('regUsernameErr', 'Sistem Koruması: Yasaklı veya zararlı karakter kullanımı engellendi!');
+
+  if(!checkSQLi(username)){
+    notifyAuthProblem('regUsernameErr','Sistem koruması: kullanıcı adında engellenen ifade var.');
     return;
   }
-  
-  if(pass!==pass2){showError('regPassword2Err','Şifreler eşleşmiyor.');return}
-  
+  if(!checkSQLi(email)){
+    notifyAuthProblem('regEmailErr','Sistem koruması: e-postada engellenen ifade var.');
+    return;
+  }
+
+  if(pass!==pass2){notifyAuthProblem('regPassword2Err','Şifreler eşleşmiyor.');return}
+
   const btn=document.getElementById('regBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> İşleniyor...';
 
   try{
-    if (sb) {
-      const { data: uData } = await sb.from('user_profiles').select('username').ilike('username', username).single();
-      if (uData && uData.username) {
-        showError('regUsernameErr', 'Bu kullanıcı adı alınmış. Lütfen başka bir tane seçin.');
-        document.getElementById('regUsername').focus();
-        throw new Error('Bu kullanıcı adı kullanımda.');
-      }
+    const{data:taken,error:rpcErr}=await sb.rpc('is_username_taken',{check_username:username});
+    if(rpcErr){
+      notifyAuthProblem('regUsernameErr',formatSupabaseErr(rpcErr));
+      throw rpcErr;
+    }
+    if(taken===true){
+      notifyAuthProblem('regUsernameErr','Bu kullanıcı adı alınmış. Lütfen başka bir tane seçin.');
+      document.getElementById('regUsername').focus();
+      return;
     }
 
     const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{username}}});
-    if(error) {
-      if(error.status === 429) throw new Error("Çok fazla istek attınız, lütfen bir süre bekleyin.");
+    if(error){
+      if(error.status===429)throw new Error((typeof currentLang!=='undefined'&&currentLang!=='TR')?'Too many requests. Wait and try again.':'Çok fazla istek; bir süre sonra tekrar deneyin.');
       throw error;
     }
-    if(data.user && data.session){
-      if(sb) await sb.from('user_profiles').insert([{username, email, last_ip: currentUserIP}]);
+    if(data.user&&data.session){
+      await insertUserProfileRow(username,email);
       closeAuth();
-      showToast('Kayıt başarılı! Hoş geldin.'); showDashboard(); updateUI();
-    } else if(data.user) {
-      if(data.user.identities && data.user.identities.length === 0) {
-        showError('regEmailErr', 'Bu e-posta kayıtlı. Lütfen giriş yapın.');
-        document.getElementById('regBtn').disabled=false;
-        document.getElementById('regBtn').textContent='Kayıt Ol';
+      showToast('Kayıt başarılı! Hoş geldin.');showDashboard();updateUI();
+    }else if(data.user){
+      if(data.user.identities&&data.user.identities.length===0){
+        notifyAuthProblem('regEmailErr','Bu e-posta kayıtlı. Lütfen giriş yapın.');
         return;
       }
-      const{data:d2,error:e2}=await sb.auth.signInWithPassword({email,password:pass});
+      const{error:e2}=await sb.auth.signInWithPassword({email,password:pass});
       if(!e2){
-        if(sb) await sb.from('user_profiles').insert([{username, email, last_ip: currentUserIP}]);
-        closeAuth();showToast('Kayıt başarılı!'); showDashboard(); updateUI();
-      }
-      else{
-        if(sb) await sb.from('user_profiles').insert([{username, email, last_ip: currentUserIP}]);
-        showToast('Kayıt olundu, giriş yapabilirsiniz.');closeAuth();
+        await insertUserProfileRow(username,email);
+        closeAuth();showToast('Kayıt başarılı!');showDashboard();updateUI();
+      }else{
+        const tr=typeof currentLang==='undefined'||currentLang==='TR';
+        notifyAuthProblem('regEmailErr',tr?'Kayıt alındı. Önce e-postanızdaki doğrulama bağlantısına tıklayın, sonra giriş yapın.':'Please confirm your email, then sign in.');
       }
     }
   }catch(err){
-    showError('regEmailErr', err.message || 'Kayıt sırasında bir hata oluştu.');
-  } finally {
+    notifyAuthProblem('regEmailErr',formatSupabaseErr(err));
+  }finally{
     btn.disabled=false;btn.textContent='Kayıt Ol';
   }
 }
 
 async function handleLogin(e){
   e.preventDefault();clearErrors();
-  if(!checkSpamLimit()) return;
+  if(!sb){notifyAuthProblem('loginEmailErr',(typeof currentLang!=='undefined'&&currentLang!=='TR')?'Cannot connect. Refresh the page.':'Bağlantı yok. Sayfayı yenileyin.');return;}
+  if(!checkSpamLimit())return;
   let email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPassword').value;
   const btn=document.getElementById('loginBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> İşleniyor...';
 
   if(!checkSQLi(email)){
-    showError('loginEmailErr', 'Sistem Koruması: Yasaklı veya zararlı karakter kullanımı engellendi!');
+    notifyAuthProblem('loginEmailErr','Sistem koruması: giriş bilgisinde engellenen ifade var.');
     btn.disabled=false;btn.textContent='Giriş Yap';
     return;
   }
 
   try{
-    if (sb && !email.includes('@')) {
-      const { data: uData } = await sb.from('user_profiles').select('email').ilike('username', email).single();
-      if (uData && uData.email) {
-        email = uData.email;
-      } else {
-        showError('loginEmailErr', 'Bu kullanıcı adı sistemde bulunamadı.');
-        throw new Error('Kullanıcı bulunamadı');
+    if(sb&&!email.includes('@')){
+      const{data:resolvedEmail,error:rpcE}=await sb.rpc('profile_email_by_username',{login:email});
+      if(rpcE||!resolvedEmail){
+        const tr=typeof currentLang==='undefined'||currentLang==='TR';
+        const msg=rpcE?formatSupabaseErr(rpcE):(tr?'Bu kullanıcı adı sistemde bulunamadı.':'Username not found.');
+        notifyAuthProblem('loginEmailErr',msg);
+        throw new Error(msg);
       }
+      email=resolvedEmail;
     }
 
-    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
-    if(error) throw error;
-    if(sb && currentUserIP) sb.from('user_profiles').update({ last_ip: currentUserIP }).eq('email', email).then();
+    const{error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error)throw error;
+    if(sb&&currentUserIP)sb.from('user_profiles').update({last_ip:currentUserIP}).eq('email',email).then(({error:upErr})=>{if(upErr)console.warn('last_ip update',upErr);});
     closeAuth();
-    showToast('Giriş başarılı.'); showDashboard(); updateUI();
+    showToast('Giriş başarılı.');showDashboard();updateUI();
   }catch(err){
-    showError('loginPasswordErr', err.message === 'Invalid login credentials' ? 'Hatalı e-posta veya şifre.' : err.message);
-  } finally {
+    const msg=formatSupabaseErr(err);
+    notifyAuthProblem('loginPasswordErr',msg);
+  }finally{
     btn.disabled=false;btn.textContent='Giriş Yap';
   }
 }
@@ -1942,21 +1962,40 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-function showToast(msg,isError){
+function showToast(msg,isError,customMs){
   const t=document.getElementById('toast');
-  t.className = 'toast show ' + (isError?'error':'');
-  document.getElementById('toastMsg').textContent=msg;
-  setTimeout(()=>t.classList.remove('show'),3000);
+  const m=document.getElementById('toastMsg');
+  if(!t||!m)return;
+  t.className='toast show '+(isError?'error':'');
+  m.textContent=msg;
+  const ms=customMs!=null?customMs:(isError?6000:3200);
+  setTimeout(()=>t.classList.remove('show'),ms);
+}
+
+function formatSupabaseErr(err){
+  if(!err)return typeof currentLang!=='undefined'&&currentLang!=='TR'?'Unknown error.':'Bilinmeyen hata oluştu.';
+  const raw=String(err.message||err.error_description||err);
+  const m=raw.toLowerCase();
+  const tr=typeof currentLang==='undefined'||currentLang==='TR';
+  if(raw.includes('Invalid login credentials')||m.includes('invalid login'))return tr?'Hatalı e-posta veya şifre.':'Wrong email or password.';
+  if(m.includes('email not confirmed')||m.includes('email_not_confirmed'))return tr?'Önce e-postanızdaki doğrulama bağlantısına tıklayın.':'Please confirm your email first.';
+  if(m.includes('user already registered')||m.includes('already registered'))return tr?'Bu e-posta zaten kayıtlı; giriş yapın.':'This email is already registered.';
+  if(m.includes('duplicate')||m.includes('unique')||err.code==='23505')return tr?'Bu kullanıcı adı veya e-posta zaten kullanımda.':'Username or email already in use.';
+  if(m.includes('row-level security')||err.code==='42501')return tr?'Sunucu güvenlik kuralı bu işlemi reddetti.':'This action was blocked by security rules.';
+  if(m.includes('jwt expired'))return tr?'Oturum süresi doldu; tekrar giriş yapın.':'Session expired; please sign in again.';
+  if(err.code==='PGRST116')return tr?'Kayıt bulunamadı.':'Not found.';
+  return raw||(tr?'İşlem başarısız.':'Something went wrong.');
+}
+
+function notifyAuthProblem(fieldId,msg){
+  if(fieldId)showError(fieldId,msg);
+  showToast(msg,true);
 }
 
 if(sb){ 
   try {
     sb.auth.onAuthStateChange((event, session) => {
       updateUI();
-      if(session?.user) {
-         // Online durumu güncelle (Basit bir çözüm)
-         sb.from('profiles').update({status:'online', last_seen: new Date()}).eq('id', session.user.id).then(()=>{});
-      }
     })
   }catch(e){} 
 }
