@@ -1,1550 +1,1296 @@
-﻿/* Anon anahtar ./config.js içinde (index.html kaynakta yok). service_role asla tarayıcıya koyma. Asıl koruma: Postgres RLS (supabase-security.sql). config.js yine Network’ten indirilebilir — bu, Supabase public anon modelidir; gizli veri RLS ile durur. */
-const _cfg = typeof window.__URUNSTORE_CFG === 'object' && window.__URUNSTORE_CFG ? window.__URUNSTORE_CFG : null;
-const SUPABASE_URL = _cfg && String(_cfg.supabaseUrl || '').trim();
-const SUPABASE_KEY = _cfg && String(_cfg.supabaseAnonKey || '').trim();
-let sb = null;
-if (SUPABASE_URL && SUPABASE_KEY && window.supabase) {
-  try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) { console.error(e); }
-} else {
-  console.warn('[UrunStore] ./config.js eksik veya hatali — config.sample.js dosyasini config.js yapip doldurun.');
-}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 
-/** user_profiles.is_admin ile senkron */
-let currentUserIsAdmin = false;
+<!-- SEO Meta Tags -->
+<title>Ürün Store — Oyun ve Uygulamaların Yepyeni Evi</title>
+<meta name="description" content="Ürün Store - Oyun ve uygulamaların tek merkezde buluştuğu platform. Ücretsiz indir, kolayca yönet.">
+<meta name="keywords" content="ürün store, oyun mağazası, ücretsiz oyun indirme, game store, uygulama mağazası">
+<meta name="author" content="Ürün Store">
+<meta name="robots" content="index, follow">
 
-let reqCount = 0;
-let lastAdminTamperToast = 0;
-/** Konsoldan admin modal açılırsa yetkisiz kullanıcıda anında kapat (RLS gerçek koruma; bu sadece UI). */
-function enforceAdminUiLock() {
-  if (currentUserIsAdmin) return;
-  const adminModal = document.getElementById('adminModal');
-  const overlay = document.getElementById('modalOverlay');
-  if (!adminModal) return;
-  const shown = adminModal.style.display === 'block';
-  if (!shown) return;
-  adminModal.style.display = 'none';
-  if (overlay) overlay.classList.remove('open');
-  const list = document.getElementById('adminAllUsersList');
-  if (list) list.innerHTML = '';
-  const ulist = document.getElementById('adminUserList');
-  if (ulist) ulist.innerHTML = '';
-  const msgs = document.getElementById('adminChatMessages');
-  if (msgs) msgs.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding-top:20px;">Lütfen soldan bir konuşma seçin</div>';
-  try { allUsersCache = []; } catch (e) {}
-  try { activeAdminSession = null; } catch (e) {}
-  const now = Date.now();
-  if (now - lastAdminTamperToast > 4000) {
-    lastAdminTamperToast = now;
-    const tr = typeof currentLang === 'undefined' || currentLang === 'TR';
-    showToast(tr ? 'Yetkisiz: yönetim paneli kapatıldı.' : 'Unauthorized: admin panel closed.', true);
-  }
-}
-setInterval(enforceAdminUiLock, 350);
-let adminModalObserver = null;
-document.addEventListener('DOMContentLoaded', () => {
-  const adm = document.getElementById('adminModal');
-  if (adm && typeof MutationObserver !== 'undefined') {
-    adminModalObserver = new MutationObserver(() => enforceAdminUiLock());
-    adminModalObserver.observe(adm, { attributes: true, attributeFilter: ['style'] });
-  }
-});
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ürün Store — Oyun ve Uygulamaların Yepyeni Evi">
+<meta property="og:description" content="Favori oyunlarınızı tek platformda yönetin. Hızlı indirme, otomatik güncelleme.">
+<meta property="og:image" content="./icon.png">
+<meta property="og:url" content="https://urunstore.com">
 
-setInterval(() => { reqCount = Math.max(0, reqCount - 2); }, 2000);
-function checkSpamLimit() {
-  reqCount++;
-  if(reqCount > 8) {
-    showToast('Sistem koruması: Çok hızlı işlem yapıyorsunuz. Lütfen bekleyin!', true);
-    return false;
-  }
-  return true;
-}
-function checkSQLi(str) {
-  if (!str) return true;
-  const badPatterns = [/(--)/, /(;)/, /(' OR '1'='1)/i, /(\b(select|union|insert|update|delete|drop|alter)\b.*?(from|into|table|database))/i];
-  for (let p of badPatterns) {
-    if (p.test(str)) return false;
-  }
-  return true;
-}
-// === PROXY / VPN / CROXYPROXY TESPİT SİSTEMİ ===
-const proxyDomains = ['croxyproxy','proxysite','hide.me','kproxy','filterbypass','unblocksite','vpnbook','hidemyass','webproxy','anonymouse','proxyfly','blockaway','unblockit','4everproxy','megaproxy'];
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ürün Store — Oyun ve Uygulamaların Yepyeni Evi">
+<meta name="twitter:description" content="Favori oyunlarınızı tek platformda yönetin.">
 
-function detectProxy() {
-  // 1) iframe içinde mi?
-  if (window.self !== window.top) return true;
-  // 2) Domain proxy mi?
-  const host = window.location.hostname.toLowerCase();
-  if (proxyDomains.some(p => host.includes(p))) return true;
-  // 3) Referrer proxy mi?
-  const ref = (document.referrer || '').toLowerCase();
-  if (proxyDomains.some(p => ref.includes(p))) return true;
-  // 4) CroxyProxy __cpo parametresi var mı? (CroxyProxy imzası)
-  if (window.location.search.includes('__cpo=') || window.location.search.includes('__cpo%3D')) return true;
-  // 5) Hostname ham IP adresi mi? (Proxy sunucuları IP ile servis eder)
-  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
-  // 6) Yalnızca kendi sitenizde çalışsın (kopya/phishing sayfalarını zayıflatır; tam güvenlik sunucu tarafındadır)
-  const allowedDomains = ['urunstore.com', 'www.urunstore.com', 'urunstore.dev.tc', 'localhost', '127.0.0.1'];
-  if (host && !allowedDomains.some(d => host === d || host.endsWith('.' + d))) return true;
-  return false;
-}
-
-function blockProxy() {
-  document.body.innerHTML = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#0a0a0a; color:#ef4444; font-family:sans-serif; text-align:center; gap:16px;">
-    <div style="font-size:5rem;">🛡️</div>
-    <h1 style="font-size:2rem; font-weight:700;">Proxy/VPN Tespit Edildi</h1>
-    <p style="color:#888; font-size:1.1rem; max-width:500px;">Güvenlik nedeniyle proxy veya VPN üzerinden erişim engellenmektedir.<br>Lütfen doğrudan bağlantı kullanın.</p>
-  </div>`;
-  try { if(sb) sb.auth.signOut(); } catch(e){}
-}
-
-// Proxy kontrolü (anında çalışır)
-if (detectProxy()) { 
-  window.addEventListener('DOMContentLoaded', () => blockProxy());
-}
-
-// Shield kaldırma (HER ZAMAN çalışacak, takılmayacak)
-window.addEventListener('DOMContentLoaded', () => {
-  const shield = document.getElementById('ddosShield');
-  if (!shield) return;
-  setTimeout(() => {
-    const st = document.getElementById('shieldStatus');
-    if (st) { st.textContent = "Bağlantı güvenli, yönlendiriliyor..."; st.style.color = "var(--success)"; }
-    setTimeout(() => {
-      shield.style.opacity = '0';
-      shield.style.pointerEvents = 'none';
-      setTimeout(() => shield.remove(), 500);
-    }, 800);
-  }, 1500);
-});
-
-let currentUserIP = '';
-let ipUpdatedThisSession = false;
-async function checkIPBan() {
-  try {
-    const res = await fetch('https://api64.ipify.org?format=json');
-    const data = await res.json();
-    currentUserIP = data.ip;
-
-    if (sb) {
-      const { data: bData } = await sb.from('banned_ips').select('ip').eq('ip', currentUserIP).single();
-      if (bData && bData.ip) {
-        document.body.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#111; color:#ef4444; font-size:2rem; font-family:sans-serif; text-align:center;">Erişim Engellendi<br>(IP Ban)</div>';
-        try { await sb.auth.signOut(); } catch(e){}
-        throw new Error("IP Banned");
-      }
-      if (!ipUpdatedThisSession) {
-        sb.auth.getSession().then(({data:{session}}) => {
-          if (session?.user?.email) {
-            const ipToSave = currentUserIP;
-            sb.from('user_profiles').update({ last_ip: ipToSave }).eq('email', session.user.email).then();
-            ipUpdatedThisSession = true;
-          }
-        });
-      }
-    }
-  } catch(e) {}
-}
-checkIPBan();
-
-let lastEmail = ""; let lastType = "signup"; 
-
-async function canAccessAdminPanel() {
-  if (!sb) return false;
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session?.user?.email) return false;
-  const { data: profile } = await sb.from('user_profiles').select('is_admin').eq('email', session.user.email).single();
-  const ok = profile?.is_admin === true;
-  currentUserIsAdmin = ok;
-  return ok;
-}
-
-async function openModal(t){
-  if (t === 'admin') {
-    const allowed = await canAccessAdminPanel();
-    if (!allowed) {
-      showToast(currentLang === 'TR' ? 'Bu alana erişim yetkiniz yok.' : 'You do not have access to this area.', true);
-      return;
-    }
-  }
-  document.getElementById('modalOverlay').classList.add('open');
-  ['settings','otp','download','kvkk','admin'].forEach(m => {
-    const el = document.getElementById(m+'Modal');
-    if (el) el.style.display = t===m ? 'block' : 'none';
-  });
-  clearErrors();
-  if(t === 'admin') renderAdminChat();
-}
-function closeModal(){document.getElementById('modalOverlay').classList.remove('open')}
-function closeModalOutside(e){if(e.target===document.getElementById('modalOverlay'))closeModal()}
-function switchModal(t){openModal(t)}
-
-function openAuth(type) {
-  // Dropdown açıksa kapat
-  const langOpts = document.getElementById('langOptions');
-  if (langOpts) langOpts.classList.remove('show');
+<!-- Canonical -->
+<link rel="canonical" href="https://urunstore.com">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#18181b">
+<link rel="apple-touch-icon" href="./icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root {
+  --bg: #ffffff;
+  --surface: #f8fafc;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
   
-  document.getElementById('mainContent').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('navbar').style.display = 'none';
-  document.getElementById('authPage').classList.add('show');
-  switchAuth(type);
-  clearErrors();
-}
-function closeAuth() {
-  document.getElementById('authPage').classList.remove('show');
-  document.getElementById('navbar').style.display = 'flex';
-  if (sb) {
-    sb.auth.getSession().then(({data:{session}}) => {
-      if(session?.user) showDashboard();
-      else goHome();
-    }).catch(() => goHome());
-  } else goHome();
-}
-function switchAuth(type) {
-  document.getElementById('authLoginPanel').style.display = type === 'login' ? 'block' : 'none';
-  document.getElementById('authRegisterPanel').style.display = type === 'register' ? 'block' : 'none';
-}
-function togglePassword(inputId, iconElement) {
-  const input = document.getElementById(inputId);
-  if (input.type === 'password') {
-    input.type = 'text';
-    iconElement.classList.replace('fa-eye', 'fa-eye-slash');
-    document.getElementById('charContainer').classList.add('focused-away');
-  } else {
-    input.type = 'password';
-    iconElement.classList.replace('fa-eye-slash', 'fa-eye');
-    document.getElementById('charContainer').classList.remove('focused-away');
-  }
-}
-document.addEventListener('mousemove', (e) => {
-  const container = document.getElementById('charContainer');
-  if (!container || !document.getElementById('authPage').classList.contains('show')) return;
-  if (container.classList.contains('focused-away')) return;
-  document.querySelectorAll('.pupil').forEach(pupil => {
-    const rect = pupil.parentElement.getBoundingClientRect();
-    const eyeCenterX = rect.left + rect.width / 2;
-    const eyeCenterY = rect.top + rect.height / 2;
-    const angle = Math.atan2(e.clientY - eyeCenterY, e.clientX - eyeCenterX);
-    const maxMove = 3; 
-    const dx = Math.cos(angle) * maxMove;
-    const dy = Math.sin(angle) * maxMove;
-    pupil.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-  });
-});
-
-function clearErrors(){document.querySelectorAll('.form-error').forEach(e=>{e.textContent='';e.classList.remove('show')})}
-function showError(id,msg){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.classList.add('show')}
-
-async function insertUserProfileRow(username,email){
-  if(!sb)return;
-  const{error}=await sb.from('user_profiles').insert([{username,email,last_ip:currentUserIP||null}]);
-  if(error){
-    const msg=formatSupabaseErr(error);
-    notifyAuthProblem('regEmailErr',msg);
-    throw error;
-  }
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --accent: #3b82f6;
+  
+  --danger: #ef4444;
+  --success: #22c55e;
+  --discord: #5865F2;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --primary-text: #ffffff;
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
-async function handleRegister(e){
-  e.preventDefault();clearErrors();
-  if(!sb){notifyAuthProblem('regEmailErr',(typeof currentLang!=='undefined'&&currentLang!=='TR')?'Cannot connect. Refresh the page.':'Bağlantı yok. Sayfayı yenileyin.');return;}
-  if(!checkSpamLimit())return;
-  const username=document.getElementById('regUsername').value.trim();
-  const email=document.getElementById('regEmail').value.trim();
-  const pass=document.getElementById('regPassword').value;
-  const pass2=document.getElementById('regPassword2').value;
-
-  if(!checkSQLi(username)){
-    notifyAuthProblem('regUsernameErr','Sistem koruması: kullanıcı adında engellenen ifade var.');
-    return;
-  }
-  if(!checkSQLi(email)){
-    notifyAuthProblem('regEmailErr','Sistem koruması: e-postada engellenen ifade var.');
-    return;
-  }
-
-  if(pass!==pass2){notifyAuthProblem('regPassword2Err','Şifreler eşleşmiyor.');return}
-
-  const btn=document.getElementById('regBtn');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> İşleniyor...';
-
-  try{
-    const unameRpc=await sb.rpc('is_username_taken',{check_username:username});
-    if(unameRpc.error&&!isRpcFnMissing(unameRpc.error)){
-      notifyAuthProblem('regUsernameErr',formatSupabaseErr(unameRpc.error));
-      throw unameRpc.error;
-    }
-    if(!unameRpc.error&&rpcBoolTrue(unameRpc.data)){
-      notifyAuthProblem('regUsernameErr','Bu kullanıcı adı başka bir hesapta (başka bir e-posta ile) kayıtlı. Farklı bir kullanıcı adı seç veya o hesabın e-postasıyla giriş yap.');
-      document.getElementById('regUsername').focus();
-      return;
-    }
-    if(unameRpc.error&&isRpcFnMissing(unameRpc.error)){
-      const tr=typeof currentLang==='undefined'||currentLang==='TR';
-      showToast(tr?'İpucu: supabase-rpc-auth.sql dosyasını Supabase’te çalıştırırsanız kullanıcı adı kontrolü de aktif olur.':'Tip: run supabase-rpc-auth.sql in Supabase for username checks.',false,4500);
-    }
-
-    const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{username}}});
-    if(error){
-      if(error.status===429)throw new Error((typeof currentLang!=='undefined'&&currentLang!=='TR')?'Too many requests. Wait and try again.':'Çok fazla istek; bir süre sonra tekrar deneyin.');
-      throw error;
-    }
-    const trReg=typeof currentLang==='undefined'||currentLang==='TR';
-    async function finishSignupSession(){
-      closeAuth();
-      showToast(trReg?'Kayıt başarılı! Hoş geldin.':'Welcome! Account ready.');
-      showDashboard();
-      await updateUI();
-    }
-    if(data.user&&data.session){
-      try{await insertUserProfileRow(username,email);}
-      catch(_){showToast(trReg?'Hesap açıldı; profil satırı eklenemedi (sunucu). Ayarlardan tekrar dene veya destek.':'Account created but profile row failed.',true);}
-      await finishSignupSession();
-    }else if(data.user){
-      if(data.user.identities&&data.user.identities.length===0){
-        const{data:siDup,error:dupErr}=await sb.auth.signInWithPassword({email,password:pass});
-        if(!dupErr&&siDup.session){
-          try{await insertUserProfileRow(username,email);}catch(_){}
-          try{await sb.from('user_profiles').update({username}).eq('email',email);}catch(_){}
-          showToast(trReg?'Bu e-posta zaten kayıtlıydı; şifre doğru, hesabına giriş yaptık.':'That email was already registered; signed you in.',false,4200);
-          await finishSignupSession();
-        }else{
-          notifyAuthProblem('regEmailErr',dupErr&&String(dupErr.message||'').includes('Invalid')?trReg?'Bu e-posta kayıtlı; şifre yanlış. Aşağıdan giriş dene.':'Wrong password for this email.':(dupErr?formatSupabaseErr(dupErr):(trReg?'Bu e-posta kayıtlı; giriş yap.':'Please sign in.')));
-          switchAuth('login');
-          const le=document.getElementById('loginEmail');if(le)le.value=email;
-          const lp=document.getElementById('loginPassword');if(lp)lp.value='';
-          validateLoginForm();
-        }
-        return;
-      }
-      const{data:signInData,error:e2}=await sb.auth.signInWithPassword({email,password:pass});
-      if(!e2&&signInData.session){
-        try{await insertUserProfileRow(username,email);}
-        catch(_){showToast(trReg?'Giriş yapıldı; profil eklenemedi. Ayarlar veya destek.':'Signed in; profile insert failed.',true);}
-        await finishSignupSession();
-      }else{
-        const needMail=(e2&&String(e2.message||'').toLowerCase().includes('confirm'))||(!e2&&!signInData?.session);
-        switchAuth('login');
-        const le=document.getElementById('loginEmail');if(le)le.value=email;
-        if(needMail){
-          notifyAuthProblem('regEmailErr',trReg?'Hesap oluştu. Gelen kutundaki doğrulama linkine tıkla; ardından "Giriş Yap" ile devam et.':'Confirm your email, then use Sign in.');
-          const lp=document.getElementById('loginPassword');if(lp)lp.value=pass;
-          showToast(trReg?'Giriş sekmesi açıldı; maili onayladıktan sonra aynı şifreyle giriş yap.':'Login tab opened; after email confirm, sign in with the same password.',false,5500);
-        }else{
-          notifyAuthProblem('regEmailErr',e2?formatSupabaseErr(e2):trReg?'Oturum açılamadı; tekrar dene.':'Could not sign in.');
-        }
-        validateLoginForm();
-      }
-    }
-  }catch(err){
-    notifyAuthProblem('regEmailErr',formatSupabaseErr(err));
-  }finally{
-    btn.disabled=false;btn.textContent='Kayıt Ol';
-  }
+[data-theme="dark"] {
+  --bg: #09090b;
+  --surface: #18181b;
+  --surface-hover: #27272a;
+  --border: #3f3f46;
+  --text: #ffffff;
+  --text-muted: #a1a1aa;
+  
+  --primary: #ffffff;
+  --primary-dark: #e4e4e7;
+  --accent: #3b82f6;
+  --primary-text: #09090b;
 }
 
-async function handleLogin(e){
-  e.preventDefault();clearErrors();
-  if(!sb){notifyAuthProblem('loginEmailErr',(typeof currentLang!=='undefined'&&currentLang!=='TR')?'Cannot connect. Refresh the page.':'Bağlantı yok. Sayfayı yenileyin.');return;}
-  if(!checkSpamLimit())return;
-  let email=document.getElementById('loginEmail').value.trim();
-  const pass=document.getElementById('loginPassword').value;
-  const btn=document.getElementById('loginBtn');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> İşleniyor...';
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-  if(!checkSQLi(email)){
-    notifyAuthProblem('loginEmailErr','Sistem koruması: giriş bilgisinde engellenen ifade var.');
-    btn.disabled=false;btn.textContent='Giriş Yap';
-    return;
-  }
-
-  try{
-    if(sb&&!email.includes('@')){
-      const{data:resolvedEmail,error:rpcE}=await sb.rpc('profile_email_by_username',{login:email});
-      if(rpcE&&isRpcFnMissing(rpcE)){
-        const tr=typeof currentLang==='undefined'||currentLang==='TR';
-        notifyAuthProblem('loginEmailErr',tr?'Kullanıcı adı ile giriş için Supabase’te `supabase-rpc-auth.sql` çalıştırılmalı. Şimdilik tam e-posta adresinizle giriş yapın.':'Run supabase-rpc-auth.sql for username login; use full email for now.');
-        return;
-      }
-      if(rpcE||!resolvedEmail){
-        const tr=typeof currentLang==='undefined'||currentLang==='TR';
-        const msg=rpcE?formatSupabaseErr(rpcE):(tr?'Bu kullanıcı adı sistemde bulunamadı.':'Username not found.');
-        notifyAuthProblem('loginEmailErr',msg);
-        throw new Error(msg);
-      }
-      email=resolvedEmail;
-    }
-
-    const{error}=await sb.auth.signInWithPassword({email,password:pass});
-    if(error)throw error;
-    if(sb&&currentUserIP)sb.from('user_profiles').update({last_ip:currentUserIP}).eq('email',email).then(({error:upErr})=>{if(upErr)console.warn('last_ip update',upErr);});
-    closeAuth();
-    showToast('Giriş başarılı.');showDashboard();updateUI();
-  }catch(err){
-    const msg=formatSupabaseErr(err);
-    notifyAuthProblem('loginPasswordErr',msg);
-  }finally{
-    btn.disabled=false;btn.textContent='Giriş Yap';
-  }
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
-async function logout(){
-  if(sb){try{await sb.auth.signOut()}catch(e){}}
-  currentUserIsAdmin = false;
-  window._adminChatSynced = false;
-  try { localStorage.removeItem('urun_admin_chats'); } catch (e) {}
-  localStorage.removeItem('urun_client_chat');
-  localStorage.removeItem('urun_session_id');
-  showToast('Çıkış yapıldı.'); updateUI();
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface-hover); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border); }
+
+a { text-decoration: none; color: inherit; }
+
+/* UTILS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.text-primary { color: var(--accent); }
+.text-danger { color: var(--danger) !important; }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: var(--transition);
+  font-family: inherit;
+}
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-text);
+}
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+.btn-outline:hover {
+  background: var(--surface-hover);
+  border-color: var(--text-muted);
+}
+.btn-discord {
+  background: var(--discord);
+  color: #fff;
+}
+.btn-discord:hover {
+  opacity: 0.9;
 }
 
-async function refreshAdminStatus(session) {
-  currentUserIsAdmin = false;
-  if (!sb || !session?.user?.email) {
-    try { localStorage.removeItem('urun_admin_chats'); } catch (e) {}
-    return;
-  }
-  try {
-    const { data: profile } = await sb.from('user_profiles').select('is_admin').eq('email', session.user.email).single();
-    if (profile?.is_admin === true) {
-      currentUserIsAdmin = true;
-    } else {
-      try { localStorage.removeItem('urun_admin_chats'); } catch (e) {}
-    }
-  } catch (e) {
-    try { localStorage.removeItem('urun_admin_chats'); } catch (e2) {}
-  }
+/* NAV */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 70px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 60px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
-async function updateUI(){
-  let user=null;
-  if(sb){
-    try{
-      const{data:{session}}=await sb.auth.getSession();
-      if(session?.user) {
-        user={
-          username:session.user.user_metadata?.username || session.user.email.split('@')[0],
-          email:session.user.email,
-          created: new Date(session.user.created_at).toLocaleDateString('tr-TR'),
-          id: session.user.id
-        };
-        await refreshAdminStatus(session);
-      }
-    }catch(e){}
-  }
+.site-logo { height: 75px; width: auto; object-fit: contain; transition: var(--transition); }
+@media(max-width: 900px) { .site-logo { height: 60px; } }
 
-  if(user){
-    document.getElementById('authButtons').style.display='none';
-    document.getElementById('navUser').style.display='flex';
-    document.getElementById('navAvatar').textContent=user.username[0].toUpperCase();
-    document.getElementById('navUsername').textContent=user.username;
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.logo-text { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
+
+  display: flex;
+  gap: 40px;
+  align-items: center;
+}
+.nav-links a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+.nav-links a:hover { color: var(--text); }
+
+.nav-right { display: flex; align-items: center; gap: 20px; }
+
+/* Custom Dropdown */
+.custom-dropdown { position: relative; display: inline-block; margin-right: 8px; user-select: none; }
+.dropdown-selected { background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: var(--transition); }
+.dropdown-selected:hover { border-color: var(--primary); }
+.dropdown-options { position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; flex-direction: column; min-width: 100%; z-index: 1000; overflow: hidden; }
+.dropdown-options.show { display: flex; }
+.dropdown-option { padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: var(--transition); color: var(--text); }
+.dropdown-option:hover { background: var(--surface-hover); color: var(--primary); }
+
+.nav-user {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 12px 6px 6px;
+  border-radius: 30px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+.nav-user:hover { border-color: var(--primary); }
+.nav-user .avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700; color: #fff;
+}
+.nav-user span { font-size: 0.85rem; font-weight: 500; }
+
+.mobile-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 1.4rem;
+  cursor: pointer;
+  margin-left: 12px;
+}
+.hide-mobile { display: inline-block; }
+
+/* HERO SECTION */
+.hero {
+  padding: 160px 40px 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.03), transparent);
+}
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+  margin-bottom: 24px;
+  max-width: 900px;
+  color: var(--text);
+}
+.hero p {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  max-width: 750px;
+  margin-bottom: 48px;
+  line-height: 1.6;
+}
+.hero-actions {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.download-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 32px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.download-badge i { color: var(--primary); }
+
+/* PLATFORM DOWNLOAD SELECTOR */
+.platform-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 520px;
+}
+.platform-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+}
+.platform-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  transition: var(--transition);
+  font-family: inherit;
+}
+.platform-tab:hover {
+  color: var(--text);
+}
+.platform-tab.active {
+  background: var(--primary);
+  color: var(--primary-text);
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.35);
+}
+.platform-tab i {
+  font-size: 1.1rem;
+}
+.platform-content {
+  width: 100%;
+  min-height: 140px;
+}
+.platform-panel {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: fadeInUp 0.3s ease;
+}
+.platform-panel.active {
+  display: flex;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.download-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: var(--transition);
+}
+.download-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+}
+.download-card .os-icon {
+  font-size: 2.2rem;
+  color: var(--primary);
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.download-card .os-info {
+  flex: 1;
+  text-align: left;
+}
+.download-card .os-info h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.download-card .os-info p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+.btn-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  background: var(--primary);
+  color: var(--primary-text);
+  transition: var(--transition);
+  font-family: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-download:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+  transform: translateY(-1px);
+}
+.btn-download.disabled {
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  border: 1px solid var(--border);
+}
+.btn-download.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+.coming-soon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.coming-soon-badge i {
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ABOUT SECTION */
+.about-section {
+  padding: 80px 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  text-align: center;
+  gap: 24px;
+}
+.about-text h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.about-text p {
+  color: var(--text-muted);
+  max-width: 700px;
+  margin: 0 auto 24px;
+}
+
+/* FEATURES */
+.features-section {
+  padding: 80px 40px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.features-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.features-header h2 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+.features-grid {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+.feature-card {
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: var(--transition);
+}
+.feature-card:hover {
+  border-color: var(--text-muted);
+}
+.feature-icon {
+  font-size: 1.5rem;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+.feature-card h3 { font-size: 1.1rem; font-weight: 600; }
+.feature-card p { color: var(--text-muted); font-size: 0.9rem; }
+
+/* ANIMATIONS */
+.reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.5, 0, 0, 1); }
+.reveal.active { opacity: 1; transform: translateY(0); }
+.reveal.delay-1 { transition-delay: 0.1s; }
+.reveal.delay-2 { transition-delay: 0.2s; }
+.reveal.delay-3 { transition-delay: 0.3s; }
+#mainContent, #dashboard { transition: opacity 0.4s ease; }
+
+/* DASHBOARD */
+.dashboard {
+  display: none;
+  padding: 100px 40px 60px;
+  max-width: 1000px;
+  margin: 0 auto;
+  min-height: calc(100vh - 80px);
+}
+.dashboard.show { display: block; }
+
+.welcome-banner {
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.welcome-left { display: flex; align-items: center; gap: 20px; }
+.welcome-left .avatar-lg {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; font-weight: 700; color: #fff;
+}
+.welcome-info h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.welcome-info p { color: var(--text-muted); font-size: 0.9rem; }
+.dash-actions { display: flex; gap: 12px; }
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+.panel {
+  padding: 24px;
+}
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.panel-header h3 { font-size: 1.1rem; font-weight: 600; }
+.library-empty {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--text-dark);
+}
+.library-empty i { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5; }
+.library-empty p { font-size: 0.9rem; margin-bottom: 20px; }
+
+.info-list { display: flex; flex-direction: column; gap: 12px; }
+.info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.info-row span:first-child { color: var(--text-muted); }
+.info-row span:last-child { font-weight: 500; }
+
+/* MODALS */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 1100;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  width: 400px;
+  max-width: 90vw;
+  position: relative;
+}
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: transparent; border: none;
+  color: var(--text-muted); font-size: 1.2rem;
+  cursor: pointer;
+}
+.modal-close:hover { color: var(--text); }
+
+.modal h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; text-align: center; }
+.modal .subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; text-align: center; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+.form-group input {
+  width: 100%; padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text);
+  font-size: 0.9rem; outline: none; transition: var(--transition);
+  font-family: inherit;
+}
+.form-group input:focus { border-color: var(--primary); }
+.form-error { color: var(--danger); font-size: 0.8rem; margin-top: 6px; display: none; }
+.form-error.show { display: block !important; }
+.btn-submit { width: 100%; margin-top: 8px; padding: 12px;}
+.modal-switch { text-align: center; margin-top: 20px; font-size: 0.85rem; color: var(--text-muted); }
+.modal-switch a { color: var(--primary); cursor: pointer; font-weight: 600; }
+.modal-switch a:hover { text-decoration: underline; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); padding: 12px 20px; border-radius: 8px;
+  font-size: 0.9rem; font-weight: 500; z-index: 300;
+  transform: translateY(50px); opacity: 0;
+  transition: all 0.3s;
+  display: flex; align-items: center; gap: 10px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast i { color: var(--success); }
+.toast.error i { color: var(--danger); }
+
+/* FOOTER */
+footer {
+  padding: 32px 40px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-text { color: var(--text-muted); font-size: 0.85rem; }
+
+/* SPINNER */
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid rgba(0,0,0,0.1); border-top-color: currentColor;
+  border-radius: 50%; animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* AUTH PAGE */
+.auth-page { display: none; position: fixed; inset: 0; z-index: 1000; background: var(--surface); flex-direction: column; overflow-y: auto; opacity: 0; }
+.auth-page.show { display: flex; animation: authFadeIn 0.5s ease forwards; }
+@keyframes authFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.auth-close { position: absolute; top: 24px; left: 24px; background: transparent; border: none; font-size: 1rem; font-weight: 600; color: var(--text); cursor: pointer; display: flex; gap: 8px; align-items: center; z-index: 10; padding: 8px 16px; border-radius: 20px; transition: background 0.2s; opacity: 0; animation: authSlideDown 0.6s 0.4s ease forwards; }
+@keyframes authSlideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+.auth-close:hover { background: var(--surface-hover); }
+.auth-split { display: flex; width: 100%; min-height: 100vh; }
+.auth-visual { flex: 1.2; background-color: var(--surface-hover); background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 20px 20px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.auth-page.show .auth-visual { animation: authSlideInLeft 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@keyframes authSlideInLeft { from { opacity: 0; transform: translateX(-60px); } to { opacity: 1; transform: translateX(0); } }
+.auth-form-container { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--surface); padding: 40px; box-shadow: -10px 0 30px rgba(0,0,0,0.02); z-index: 5; }
+.auth-page.show .auth-form-container { animation: authSlideInRight 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@keyframes authSlideInRight { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+.auth-form-box { width: 100%; max-width: 420px; display: flex; flex-direction: column; }
+.auth-logo-icon { font-size: 2.2rem; color: var(--text); text-align: center; margin-bottom: 16px; animation: float 6s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.auth-page.show .auth-logo-icon { animation: authBounceIn 0.8s 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both, float 6s 1.1s ease-in-out infinite; }
+@keyframes authBounceIn { from { opacity: 0; transform: scale(0) rotate(-30deg); } to { opacity: 1; transform: scale(1) rotate(0deg); } }
+.auth-form-box h2 { font-size: 2.6rem; font-weight: 800; margin-bottom: 8px; text-align: center; color: var(--text); letter-spacing: -1px; opacity: 0; }
+.auth-page.show .auth-form-box h2 { animation: authFadeUp 0.6s 0.4s ease forwards; }
+.auth-form-box .subtitle { color: var(--text-muted); text-align: center; margin-bottom: 40px; font-size: 1rem; font-weight: 400; opacity: 0; }
+.auth-page.show .auth-form-box .subtitle { animation: authFadeUp 0.6s 0.5s ease forwards; }
+@keyframes authFadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.auth-page.show .custom-input { opacity: 0; animation: authFadeUp 0.6s ease forwards; }
+.auth-page.show .custom-input:nth-child(1) { animation-delay: 0.5s; }
+.auth-page.show .custom-input:nth-child(2) { animation-delay: 0.6s; }
+.auth-page.show .custom-input:nth-child(3) { animation-delay: 0.7s; }
+.auth-page.show .custom-input:nth-child(4) { animation-delay: 0.8s; }
+.auth-page.show .btn-submit { opacity: 0; animation: authFadeUp 0.6s 0.8s ease forwards; }
+.auth-page.show .modal-switch { opacity: 0; animation: authFadeUp 0.6s 0.9s ease forwards; }
+.auth-page.show .char-container { overflow: visible; }
+.auth-page.show .char { transition: none; will-change: transform, opacity; }
+
+/* Mor: Aşağıdan takla atarak */
+.auth-page.show .purple-rect { opacity: 0; animation: purpleAnim 1s 0.2s ease-out forwards; }
+@keyframes purpleAnim {
+  0% { opacity: 0; transform: translateY(300px) rotate(0deg); }
+  50% { opacity: 1; transform: translateY(-40px) rotate(360deg); }
+  70% { transform: translateY(10px) rotate(360deg); }
+  85% { transform: translateY(-5px) rotate(360deg); }
+  100% { opacity: 1; transform: translateY(0) rotate(360deg); }
+}
+
+/* Turuncu: Soldan kayarak */
+.auth-page.show .orange-semi { opacity: 0; animation: orangeAnim 0.9s 0.4s ease-out forwards; }
+@keyframes orangeAnim {
+  0% { opacity: 0; transform: translateX(-250px); }
+  55% { opacity: 1; transform: translateX(15px); }
+  75% { transform: translateX(-6px); }
+  90% { transform: translateX(3px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* Siyah: Yukarıdan düşüyor */
+.auth-page.show .black-rect { opacity: 0; animation: blackAnim 0.8s 0.55s ease-out forwards; }
+@keyframes blackAnim {
+  0% { opacity: 0; transform: translateY(-400px); }
+  55% { opacity: 1; transform: translateY(10px); }
+  75% { transform: translateY(-8px); }
+  90% { transform: translateY(3px); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* Sarı: Sağdan zıplaya zıplaya */
+.auth-page.show .yellow-semi { opacity: 0; animation: yellowAnim 1.2s 0.65s ease-out forwards; }
+@keyframes yellowAnim {
+  0% { opacity: 0; transform: translateX(250px); }
+  20% { opacity: 1; transform: translateX(120px) translateY(-40px); }
+  35% { transform: translateX(70px) translateY(0); }
+  50% { transform: translateX(30px) translateY(-20px); }
+  65% { transform: translateX(8px) translateY(0); }
+  80% { transform: translateX(0) translateY(-6px); }
+  100% { opacity: 1; transform: translateX(0) translateY(0); }
+}
+.custom-input { margin-bottom: 24px !important; }
+.custom-input label { display: block; font-size: 0.95rem !important; font-weight: 600 !important; color: var(--text) !important; margin-bottom: 6px; }
+.custom-input input { border: none !important; border-bottom: 2px solid var(--border) !important; border-radius: 0 !important; background: transparent !important; padding: 12px 0 !important; font-size: 1.05rem !important; color: var(--text) !important; font-weight: 500; transition: border-color 0.2s; }
+.custom-input input::placeholder { color: var(--text-muted); font-weight: 400; opacity: 0.6; }
+.custom-input input:focus { border-bottom-color: var(--text) !important; }
+.password-wrapper { position: relative; }
+.password-toggle { position: absolute; right: 4px; bottom: 14px; cursor: pointer; color: var(--text-muted); transition: color 0.2s; font-size: 1.1rem; }
+.password-toggle:hover { color: var(--text); }
+
+/* CHARACTERS */
+.char-container { position: relative; width: 300px; height: 250px; display: flex; align-items: flex-end; justify-content: center; transform: scale(1.3); transform-origin: bottom center; }
+.char { position: absolute; bottom: 0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; transition: transform 0.3s; }
+.char .eyes { display: flex; gap: 8px; margin-top: 20px; }
+.char .eye { width: 12px; height: 12px; background: #fff; border-radius: 50%; position: relative; overflow: hidden; }
+.char .pupil { width: 6px; height: 6px; background: #000; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: transform 0.1s ease-out; }
+.purple-rect { width: 80px; height: 180px; background: #613dc1; left: 40px; border-radius: 8px 8px 0 0; }
+.purple-rect .mouth { width: 14px; height: 4px; background: #3b2075; border-radius: 4px; margin-top: 10px; }
+.black-rect { width: 60px; height: 130px; background: #1f1f24; left: 110px; border-radius: 8px 8px 0 0; z-index: 2; }
+.black-rect .eyes { margin-top: 30px; }
+.orange-semi { width: 140px; height: 80px; background: #f97316; border-radius: 70px 70px 0 0; left: -20px; z-index: 3; }
+.orange-semi .eyes { margin-top: 35px; gap: 16px; margin-left: -20px; }
+.orange-semi .mouth { width: 14px; height: 8px; background: #9a3412; border-radius: 0 0 14px 14px; margin-top: 8px; margin-left: -35px; }
+.yellow-semi { width: 70px; height: 110px; background: #eab308; border-radius: 35px 35px 0 0; left: 160px; z-index: 1; }
+.yellow-semi .eyes { margin-top: 50px; gap: 8px; margin-left: 10px; }
+.yellow-semi .eye { width: 8px; height: 8px; }
+.yellow-semi .pupil { width: 4px; height: 4px; }
+.yellow-semi .mouth-line { width: 18px; height: 3px; background: #a16207; border-radius: 3px; margin-top: 8px; margin-left: 8px; }
+.focused-away .pupil { transform: translate(calc(-50% - 6px), calc(-50% - 2px)) !important; }
+
+/* GOOGLE SIGN-IN BUTTON */
+.btn-google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.btn-google:hover {
+  border-color: var(--text-muted);
+  background: var(--surface-hover);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+.btn-google:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.btn-google svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.auth-page.show .btn-google { opacity: 0; animation: authFadeUp 0.6s 0.45s ease forwards; }
+.auth-page.show .auth-divider { opacity: 0; animation: authFadeUp 0.6s 0.5s ease forwards; }
+
+/* PASSWORD STRENGTH METER */
+.password-strength { margin-top: 8px; }
+.strength-bar-container { display: flex; gap: 4px; margin-bottom: 6px; }
+.strength-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: all 0.4s ease; }
+.strength-bar.active.weak { background: #ef4444; }
+.strength-bar.active.medium { background: #f59e0b; }
+.strength-bar.active.strong { background: #10b981; }
+.strength-bar.active.very-strong { background: #06b6d4; }
+.strength-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); transition: color 0.3s; margin-bottom: 6px; }
+.strength-label.weak { color: #ef4444; }
+.strength-label.medium { color: #f59e0b; }
+.strength-label.strong { color: #10b981; }
+.strength-label.very-strong { color: #06b6d4; }
+.strength-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.strength-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 14px; font-size: 0.72rem; font-weight: 500; background: rgba(59, 130, 246, 0.08); color: var(--text-muted); border: 1px solid transparent; transition: all 0.3s ease; }
+.strength-chip.met { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
+.strength-chip.met i { color: #10b981; }
+.strength-chip.unmet { background: rgba(239, 68, 68, 0.06); color: var(--text-muted); border-color: rgba(239, 68, 68, 0.12); }
+.strength-chip i { font-size: 0.65rem; }
+
+/* DISABLED AUTH BUTTON */
+.btn-submit:disabled, .btn-submit[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.3);
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+}
+.btn-submit:not(:disabled) {
+  transition: all 0.3s ease;
+}
+
+/* GALLERY */
+.gallery-section { padding: 80px 40px; background: var(--bg); border-top: 1px solid var(--border); }
+.gallery-container { max-width: 1000px; margin: 0 auto; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 24px; }
+.gallery-container::-webkit-scrollbar { height: 8px; }
+.gallery-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.gallery-track { display: flex; gap: 24px; width: max-content; }
+.gallery-item { scroll-snap-align: start; width: 600px; height: 340px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: var(--transition); }
+.gallery-item:hover { border-color: var(--primary); transform: translateY(-4px); }
+.gallery-placeholder { text-align: center; color: var(--text-muted); font-size: 1.2rem; font-weight: 600; }
+.gallery-placeholder i { font-size: 4rem; color: var(--border); margin-bottom: 20px; transition: var(--transition); display:block; }
+.gallery-item:hover i { color: var(--primary); }
+@media (max-width: 768px) { .gallery-item { width: 85vw; height: 260px; } }
+
+/* FAQ */
+.faq-section { padding: 80px 40px; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.faq-container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.faq-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer; transition: var(--transition); }
+.faq-item:hover { border-color: var(--text-muted); }
+.faq-question { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1.05rem; }
+.faq-icon { transition: transform 0.3s ease; color: var(--text-muted); }
+.faq-answer { max-height: 0; padding: 0 24px; color: var(--text-muted); font-size: 0.95rem; overflow: hidden; transition: all 0.3s ease; opacity: 0; }
+.faq-item.active .faq-answer { max-height: 200px; padding: 0 24px 20px; opacity: 1; }
+.faq-item.active .faq-icon { transform: rotate(180deg); color: var(--primary); }
+
+@media(max-width: 768px) {
+  .auth-split { flex-direction: column; }
+  .auth-visual { display: none; }
+  .auth-form-container { padding: 80px 24px; min-height: 100vh; align-items: flex-start; }
+}
+
+/* RESPONSIVE */
+@media(max-width: 900px) {
+  nav { padding: 0 15px; height: 50px; }
+  .logo img { height: 32px !important; }
+  .logo-text { font-size: 1rem !important; }
+  .nav-right { gap: 6px; }
+  .btn { padding: 6px 12px; font-size: 0.8rem; }
+  .dropdown-selected { padding: 4px 8px; font-size: 0.8rem; }
+  .mobile-btn { margin-left: 6px; font-size: 1.2rem; }
+  
+  .dash-grid { grid-template-columns: 1fr; gap: 24px;}
+  .welcome-banner { flex-direction: column; text-align: center; gap: 20px; }
+  .dash-actions { width: 100%; justify-content: center; flex-wrap: wrap;}
+  footer { flex-direction: column; gap: 16px; text-align: center; }
+  
+  .hero { padding: 75px 15px 50px; }
+  .about-section, .features-section, .dashboard { padding-left: 15px; padding-right: 15px; }
+
+  .nav-links {
+    position: absolute;
+    top: 50px; left: 0; width: 100%;
+    background: var(--surface);
+    flex-direction: column;
+    padding: 20px; gap: 16px;
+    border-bottom: 1px solid var(--border);
+    transform: translateY(-150%);
+    opacity: 0; pointer-events: none;
+  }
+  .nav-links.active { transform: translateY(0); opacity: 1; pointer-events: all; }
+  .mobile-btn { display: block; }
+  .hide-mobile { display: none; }
+  
+  .download-card { flex-direction: column; text-align: center; }
+  .download-card .os-info { text-align: center; }
+}
+
+@media(max-width: 480px) {
+  .hero-actions, .hero-actions button, .hero-actions a { width: 100%; }
+  .modal { padding: 24px; }
+  .dash-actions button { width: 100%; }
+  .welcome-left { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div id="ddosShield" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text); font-family:sans-serif; transition: opacity 0.5s;">
+  <i class="fas fa-shield-alt" style="font-size:5rem; color:var(--primary); margin-bottom:24px; animation: shieldPulse 1.5s infinite;"></i>
+  <h2 style="margin-bottom:12px; font-weight:700;">Ürün Store Güvenlik Duvarı</h2>
+  <p style="color:var(--text-muted); font-size:1rem;" id="shieldStatus">Bağlantınız kontrol ediliyor, lütfen bekleyin...</p>
+</div>
+<style>
+@keyframes shieldPulse { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
+</style>
+
+<nav id="navbar">
+  <div class="logo" onclick="goHome()" style="display:flex; align-items:center; cursor:pointer;">
+    <img src="./logo.svg" alt="URUNSTORE" style="height:42px; width:auto;">
+  </div>
+
+  <div class="nav-links" id="navLinks">
+    <a href="#" onclick="goHome(); toggleMenu();" data-i18n="navHome">Ana Sayfa</a>
+    <a href="#hakkinda" onclick="goHome(); toggleMenu();" data-i18n="navAbout">Hakkında</a>
+    <a href="#ozellikler" onclick="goHome(); toggleMenu();" data-i18n="navFeatures">Özellikler</a>
+    <a href="https://discord.gg/jtsKHGcTf4" target="_blank" data-i18n="navCommunity">Topluluk</a>
+  </div>
+  <div class="nav-right">
+    <div class="custom-dropdown" id="langDropdown">
+      <div class="dropdown-selected" onclick="toggleDropdown()">
+        <span id="selectedLangText">🇹🇷 TR</span>
+        <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+      </div>
+      <div class="dropdown-options" id="langOptions">
+        <div class="dropdown-option" onclick="selectLang('TR', '🇹🇷 TR')">🇹🇷 TR</div>
+        <div class="dropdown-option" onclick="selectLang('EN', '🇬🇧 EN')">🇬🇧 EN</div>
+        <div class="dropdown-option" onclick="selectLang('DE', '🇩🇪 DE')">🇩🇪 DE</div>
+        <div class="dropdown-option" onclick="selectLang('FR', '🇫🇷 FR')">🇫🇷 FR</div>
+        <div class="dropdown-option" onclick="selectLang('ES', '🇪🇸 ES')">🇪🇸 ES</div>
+        <div class="dropdown-option" onclick="selectLang('RU', '🇷🇺 RU')">🇷🇺 RU</div>
+        <div class="dropdown-option" onclick="selectLang('ZH', '🇨🇳 ZH')">🇨🇳 ZH</div>
+      </div>
+    </div>
+    <div id="authButtons" style="display:flex; gap:8px;">
+      <button class="btn btn-outline" onclick="openAuth('login')" data-i18n="navLogin">Giriş</button>
+      <button class="btn btn-primary" onclick="openAuth('register')" data-i18n="navRegister">Kayıt Ol</button>
+    </div>
+    <div class="nav-user" id="navUser" onclick="showDashboard()">
+      <div class="avatar" id="navAvatar">U</div>
+      <span id="navUsername" class="hide-mobile">Kullanıcı</span>
+    </div>
+    <button class="mobile-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+  </div>
+</nav>
+
+<main id="mainContent">
+  
+  <section class="hero" id="heroSection">
+    <h1 class="reveal" data-i18n="heroTitle">Oyun ve Uygulamaların <br>Yepyeni Evi.</h1>
+    <p class="reveal delay-1" data-i18n="heroDesc">Ürün Store, favori oyunlarınızı tek bir pratik arayüzde birleştirir. İndirin, her zaman güncel kalın ve toplulukla etkileşimi koparmayın.</p>
     
-    document.getElementById('dashAvatar').textContent=user.username[0].toUpperCase();
-    document.getElementById('dashUsername').textContent=user.username;
-    document.getElementById('dashEmail').textContent=user.email;
-    
-    document.getElementById('infoUsername').textContent=user.username;
-    document.getElementById('infoEmail').textContent=user.email;
-    document.getElementById('infoId').textContent=user.id;
-    document.getElementById('infoCreated').textContent=user.created;
-    
-    document.getElementById('updateUsername').value = user.username;
-    document.getElementById('updateEmail').value = user.email;
-
-    const adminBtn = document.getElementById('adminSupportBtn');
-    if (adminBtn) {
-      adminBtn.style.display = currentUserIsAdmin ? 'inline-block' : 'none';
-    }
-    if (currentUserIsAdmin && !window._adminChatSynced) {
-      window._adminChatSynced = true;
-      loadChatHistory();
-    }
-
-    if (!window.initialLayoutSet) {
-      window.initialLayoutSet = true;
-      showDashboard();
-    }
-    
-    // Enable AI Chat Input
-    document.getElementById('aiChatBlocker').style.display = 'none';
-    document.getElementById('aiInput').disabled = false;
-    document.getElementById('aiInput').style.cursor = 'text';
-    document.getElementById('aiSendBtn').disabled = false;
-    document.getElementById('aiSendBtn').style.cursor = 'pointer';
-    document.getElementById('aiSendBtn').style.opacity = '1';
-    
-  }else{
-    currentUserIsAdmin = false;
-    window._adminChatSynced = false;
-    try { localStorage.removeItem('urun_admin_chats'); } catch (e) {}
-    window.initialLayoutSet = true;
-    document.getElementById('authButtons').style.display='flex';
-    document.getElementById('navUser').style.display='none';
-    
-    // Disable AI Chat Input
-    document.getElementById('aiChatBlocker').style.display = 'block';
-    document.getElementById('aiInput').disabled = true;
-    document.getElementById('aiInput').style.cursor = 'not-allowed';
-    document.getElementById('aiSendBtn').disabled = true;
-    document.getElementById('aiSendBtn').style.cursor = 'not-allowed';
-    document.getElementById('aiSendBtn').style.opacity = '0.5';
-    
-    goHome();
-  }
-}
-
-async function handleUpdateProfile(e) {
-  e.preventDefault();
-  const username = document.getElementById('updateUsername').value.trim();
-  const email = document.getElementById('updateEmail').value.trim();
-  const btn = document.getElementById('btnUpdateProfile');
-  btn.disabled = true;
-
-  if (sb) {
-    try {
-      const { error } = await sb.auth.updateUser({ email, data: { username } });
-      if (error) throw error;
-      showToast('Profil güncellendi!'); updateUI();
-    } catch (err) { showToast('Hata: ' + err.message, true); }
-  }
-  btn.disabled = false;
-}
-
-async function handleSendPasswordReset(e) {
-  e.preventDefault();
-  let currentEmail = document.getElementById('infoEmail').textContent;
-  if (!currentEmail || currentEmail === '-') return;
-  
-  if (sb) {
-    try { await sb.auth.resetPasswordForEmail(currentEmail); showToast('Bağlantı gönderildi!'); }
-    catch (err) { showToast('Hata oluştu.', true); }
-  }
-}
-
-async function handleVerifyOTP(e) {
-  e.preventDefault();
-  const code = document.getElementById('otpCode').value.trim();
-  const err = document.getElementById('otpError'); err.classList.remove('show');
-  if (code.length !== 6) return;
-
-  try {
-    const { error } = await sb.auth.verifyOtp({ email: lastEmail, token: code, type: lastType });
-    if (error) throw error;
-    closeModal(); showToast('E-posta başarıyla doğrulandı.'); showDashboard(); updateUI();
-  } catch (err) { showError('otpError', 'Geçersiz veya süresi dolmuş kod.'); }
-}
-
-async function resendOTP() {
-  if (!lastEmail) return;
-  try { await sb.auth.resend({ type: lastType, email: lastEmail }); showToast('Yeni kod gönderildi.'); }
-  catch (e) { showToast('Hata oluştu.', true); }
-}
-
-
-
-function goHome() {
-  const main = document.getElementById('mainContent');
-  const dash = document.getElementById('dashboard');
-  main.style.display = 'block';
-  main.style.opacity = '0';
-  setTimeout(() => main.style.opacity = '1', 10);
-  dash.style.opacity = '0';
-  setTimeout(() => {
-    dash.style.display = 'none';
-    dash.classList.remove('show');
-  }, 400);
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-function showDashboard() {
-  const main = document.getElementById('mainContent');
-  const dash = document.getElementById('dashboard');
-  main.style.opacity = '0';
-  window.scrollTo({top:0, behavior:'smooth'});
-  setTimeout(() => {
-    main.style.display = 'none';
-    dash.style.display = 'block';
-    dash.classList.add('show');
-    dash.style.opacity = '0';
-    setTimeout(() => dash.style.opacity = '1', 10);
-  }, 400);
-}
-function toggleMenu() {
-  const menu = document.getElementById('navLinks');
-  menu.classList.toggle('active');
-}
-
-
-
-function toggleTheme() {
-  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
-  
-  const icon = document.querySelector('#themeToggleBtn i');
-  if (icon) {
-    icon.className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme') || 'light';
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  const icon = document.querySelector('#themeToggleBtn i');
-  if (icon) {
-    icon.className = savedTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
-  }
-});
-
-
-function showToast(msg,isError,customMs){
-  const t=document.getElementById('toast');
-  const m=document.getElementById('toastMsg');
-  if(!t||!m)return;
-  t.className='toast show '+(isError?'error':'');
-  m.textContent=msg;
-  const ms=customMs!=null?customMs:(isError?6000:3200);
-  setTimeout(()=>t.classList.remove('show'),ms);
-}
-
-function isRpcFnMissing(err){
-  if(!err)return false;
-  const m=String(err.message||'')+String(err.details||'')+String(err.hint||'');
-  return /could not find the function|schema cache|function public\.is_username_taken|function public\.profile_email_by_username/i.test(m);
-}
-
-function rpcBoolTrue(v){
-  return v===true||v==='true'||v==='t'||v===1;
-}
-
-function formatSupabaseErr(err){
-  if(!err)return typeof currentLang!=='undefined'&&currentLang!=='TR'?'Unknown error.':'Bilinmeyen hata oluştu.';
-  const raw=String(err.message||err.error_description||err);
-  const m=raw.toLowerCase();
-  const tr=typeof currentLang==='undefined'||currentLang==='TR';
-  if(m.includes('could not find the function')||m.includes('schema cache'))return tr?'Veritabanı fonksiyonu henüz yok veya önbellek güncellenmedi. Supabase → SQL Editor’da `supabase-rpc-auth.sql` dosyasını çalıştırın; 1–2 dk bekleyip sayfayı yenileyin.':'Run `supabase-rpc-auth.sql` in Supabase SQL Editor, wait 1–2 min, refresh.';
-  if(raw.includes('Invalid login credentials')||m.includes('invalid login'))return tr?'Hatalı e-posta veya şifre.':'Wrong email or password.';
-  if(m.includes('email not confirmed')||m.includes('email_not_confirmed'))return tr?'Önce e-postanızdaki doğrulama bağlantısına tıklayın.':'Please confirm your email first.';
-  if(m.includes('user already registered')||m.includes('already registered'))return tr?'Bu e-posta zaten kayıtlı; giriş yapın.':'This email is already registered.';
-  if(m.includes('duplicate')||m.includes('unique')||err.code==='23505')return tr?'Bu kullanıcı adı veya e-posta zaten kullanımda.':'Username or email already in use.';
-  if(m.includes('row-level security')||err.code==='42501')return tr?'Sunucu güvenlik kuralı bu işlemi reddetti.':'This action was blocked by security rules.';
-  if(m.includes('jwt expired'))return tr?'Oturum süresi doldu; tekrar giriş yapın.':'Session expired; please sign in again.';
-  if(err.code==='PGRST116')return tr?'Kayıt bulunamadı.':'Not found.';
-  return raw||(tr?'İşlem başarısız.':'Something went wrong.');
-}
-
-function notifyAuthProblem(fieldId,msg){
-  if(fieldId)showError(fieldId,msg);
-  showToast(msg,true);
-}
-
-if(sb){ 
-  try {
-    sb.auth.onAuthStateChange((event, session) => {
-      updateUI();
-    })
-  }catch(e){} 
-}
-
-updateUI();
-
-// ANIMATIONS LOGIC
-document.addEventListener('DOMContentLoaded', () => {
-  const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if(entry.isIntersecting) {
-        entry.target.classList.add('active');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, observerOptions);
-
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-});
-
-/* MULTI-LANGUAGE */
-const translations = {
-  TR: {
-    brandName: "ÜRÜN <span class='text-primary'>STORE</span>",
-    navHome: "Ana Sayfa", navAbout: "Hakkında", navFeatures: "Özellikler", navCommunity: "Topluluk", navLogin: "Giriş", navRegister: "Kayıt Ol",
-    galleryTitle: "Arayüz <span class='text-primary'>Görselleri</span>", gal1: "Kütüphane Görünümü", gal2: "İndirme Yöneticisi", gal3: "Mağaza Sekmesi",
-    heroTitle: "Oyun ve Uygulamaların <br>Yepyeni Evi.", heroDesc: "Ürün Store, favori oyunlarınızı tek bir pratik arayüzde birleştirir. İndirin, her zaman güncel kalın ve toplulukla etkileşimi koparmayın.",
-    aboutTitle: "Tek Platform, Sınırsız Deneyim.", aboutDesc: "Ürün Store, ihtiyacınız olan her şeyi basit ve düzenli bir yapıda sunar. Kütüphanenizi yönetin, indirmeleri başlatın ve karmaşık menülerde kaybolmadan arkadaşlarınızla iletişimde kalın.", aboutBtn: "Hesap Oluştur",
-    featuresTitle: "Neden Bizi <span class='text-primary'>Tercih Etmelisiniz?</span>",
-    f1Title: "Hızlı İndirme", f1Desc: "Optimize edilmiş sunucularımız sayesinde oyunlarınızı saniyeler içinde kütüphanenize ekleyin ve hemen başlayın.",
-    f2Title: "Otomatik Güncelleme", f2Desc: "Arka planda çalışan sistemimiz, siz oyuna girmeden önce tüm dosyalarınızı en güncel halinde tutar.",
-    f3Title: "Sosyal Hub", f3Desc: "Arkadaşlarınızın ne oynadığını anında görün, sohbet edin ve Discord entegrasyonuyla gruplara katılın.",
-    winTitle: "Windows İçin İndir", winDesc: "Windows 10 / 11 uyumlu • Kurulum dosyası (.exe)", dlBtn: "İndir",
-    faqTitle: "Sıkça Sorulan <span class='text-primary'>Sorular</span>", faq1_q: "Uygulama tamamen ücretsiz mi?", faq1_a: "Evet, Ürün Store istemcisini indirmek ve kullanmak tamamen ücretsizdir. Ancak platform içindeki bazı oyunlar ücretli olabilir.",
-    faq2_q: "Hangi işletim sistemlerini destekliyor?", faq2_a: "Şu anda Windows 10/11 desteği aktif. Linux versiyonumuz geliştirme aşamasındadır.", faq3_q: "Hesap bilgilerim güvende mi?", faq3_a: "Kesinlikle. Şifreleriniz ve kişisel verileriniz Supabase altyapısıyla korunur.",
-    aiTitle: "Canlı Destek", aiWelcome: "Canlı Destek sistemine hoş geldiniz! Sizi müsait bir temsilciye bağlamadan önce, sorununuzu veya talebinizi kısaca yazar mısınız?",
-    aiPrompt: "Sen Ürün Store isimli bir uygulamanın asistanısın. Kullanıcıya net, samimi ve TÜRKÇE cevaplar ver.",
-    winTab: "Windows", comingSoon: "Yakında", discordPla: "Gelişmelerden haberdar olmak için Discord'a katıl",
-    winSafe: "Güvenli indirme • GitHub Releases üzerinden sunulmaktadır",
-    dashWelcome: "Hoş Geldin", dashUser: "Kullanıcı Adı", dashEmail: "E-posta", dashId: "Hesap ID", dashDate: "Kayıt Tarihi", dashStat: "Durum", dashAct: "Onaylı", dashOut: "Çıkış Yap", dashDlBtn: "Programı İndir", dashSet: "Ayarlar", dashSum: "Hesap Özeti",
-    authBack: "Geri Dön", authW: "Hoş Geldin!", authWD: "Lütfen detaylarını gir.", authPass: "Şifre", authRem: "30 gün hatırla", authFor: "Şifremi unuttum", authLog: "Giriş Yap", authNoAcc: "Hesabın yok mu? ", authJoin: "Aramıza Katıl", authJoinD: "Platforma giriş yapmak için ücretsiz kayıt ol.", authPass2: "Şifre tekrar", authPass2P: "Şifrenizi doğrulayın", authTerms: "Kullanım Koşulları ve KVKK Aydınlatma Metni'ni", authTerms2: " okudum, anladım ve kabul ediyorum.", authReg: "Hesap Oluştur", authHasAcc: "Hesabın var mı? ",
-    aiPlace: "Mesajınızı yazın...", footerAllRights: "Tüm Hakları Saklıdır.",
-    authGoogle: "Google ile Giriş Yap", authGoogleReg: "Google ile Kayıt Ol", authOr: "veya"
-  },
-  EN: {
-    brandName: "PRODUCT <span class='text-primary'>STORE</span>",
-    navHome: "Home", navAbout: "About Us", navFeatures: "Features", navCommunity: "Community", navLogin: "Login", navRegister: "Sign Up",
-    galleryTitle: "Interface <span class='text-primary'>Showcase</span>", gal1: "Library View", gal2: "Download Manager", gal3: "Store Tab",
-    heroTitle: "A Brand New Home <br>for Games & Apps.", heroDesc: "Product Store combines your favorite games in a single practical interface. Download, stay up to date, and never lose touch with the community.",
-    aboutTitle: "One Platform, Limitless Experience.", aboutDesc: "Product Store provides everything you need in a simple and organized structure. Manage your library, start downloads, and communicate with friends without getting lost in complex menus.", aboutBtn: "Create Account",
-    featuresTitle: "Why Should You <span class='text-primary'>Choose Us?</span>",
-    f1Title: "Fast Downloading", f1Desc: "Adding games to your library takes seconds thanks to our optimized servers. Start playing right away.",
-    f2Title: "Auto Updates", f2Desc: "Our background system keeps all your files up-to-date before you even enter the game.",
-    f3Title: "Social Hub", f3Desc: "Instantly see what your friends are playing, chat, and join groups with Discord integration.",
-    winTitle: "Download for Windows", winDesc: "Windows 10 / 11 compatible • Installer file (.exe)", dlBtn: "Download",
-    faqTitle: "Frequently Asked <span class='text-primary'>Questions</span>", faq1_q: "Is the app completely free?", faq1_a: "Yes, downloading and using the Product Store client is completely free. However, specific games might be paid.",
-    faq2_q: "Which operating systems are supported?", faq2_a: "Currently, Windows 10/11 support is active.", faq3_q: "Are my account details safe?", faq3_a: "Absolutely. Passwords and personal data are protected by Supabase.",
-    aiTitle: "Live Support", aiWelcome: "Welcome to Live Support! Before connecting you to an available representative, please briefly state your issue.",
-    aiPrompt: "You are the smart support assistant for a platform named Product Store. Give concise, friendly, and ENGLISH answers.",
-    winTab: "Windows", comingSoon: "Coming Soon", discordPla: "Join Discord to stay updated",
-    winSafe: "Secure download • Provided via GitHub Releases",
-    dashWelcome: "Welcome", dashUser: "Username", dashEmail: "Email", dashId: "Account ID", dashDate: "Registration Date", dashStat: "Status", dashAct: "Verified", dashOut: "Log Out", dashDlBtn: "Download App", dashSet: "Settings", dashSum: "Account Summary",
-    authBack: "Go Back", authW: "Welcome Back!", authWD: "Please enter your details.", authPass: "Password", authRem: "Remember 30 days", authFor: "Forgot password", authLog: "Login", authNoAcc: "Don't have an account? ", authJoin: "Join Us", authJoinD: "Sign up for free to access the platform.", authPass2: "Repeat password", authPass2P: "Verify your password", authTerms: "Terms of Service and Privacy Policy", authTerms2: " I have read and agree.", authReg: "Create Account", authHasAcc: "Already have an account? ",
-    aiPlace: "Type your message...", footerAllRights: "All Rights Reserved.",
-    authGoogle: "Sign in with Google", authGoogleReg: "Sign up with Google", authOr: "or"
-  },
-  DE: {
-    brandName: "PRODUKT <span class='text-primary'>STORE</span>",
-    navHome: "Startseite", navAbout: "Über Uns", navFeatures: "Funktionen", navCommunity: "Gemeinschaft", navLogin: "Anmelden", navRegister: "Registrieren",
-    galleryTitle: "Schnittstellen <span class='text-primary'>Galerie</span>", gal1: "Bibliotheksansicht", gal2: "Download-Manager", gal3: "Store-Tab",
-    heroTitle: "Ein ganz neues Zuhause <br>für Spiele & Apps.", heroDesc: "Produkt Store vereint Ihre Lieblingsspiele in einer einzigen praktischen Benutzeroberfläche. Laden Sie herunter, bleiben Sie auf dem Laufenden.",
-    aboutTitle: "Eine Plattform, grenzenlose Erfahrung.", aboutDesc: "Produkt Store bietet alles, was Sie brauchen, in einer einfachen und organisierten Struktur.", aboutBtn: "Konto erstellen",
-    featuresTitle: "Warum sollten Sie <span class='text-primary'>uns wählen?</span>",
-    f1Title: "Schnelles Herunterladen", f1Desc: "Das Hinzufügen von Spielen zu Ihrer Bibliothek dauert dank unserer optimierten Server nur Sekunden.",
-    f2Title: "Automatische Updates", f2Desc: "Unser Hintergrundsystem hält alle Ihre Dateien auf dem neuesten Stand.",
-    f3Title: "Sozialer Hub", f3Desc: "Sehen Sie sofort, was Ihre Freunde spielen, chatten Sie und treten Sie Gruppen bei.",
-    winTitle: "Download für Windows", winDesc: "Windows 10 / 11 kompatibel • Installationsdatei (.exe)", dlBtn: "Herunterladen",
-    faqTitle: "Häufig gestellte <span class='text-primary'>Fragen</span>", faq1_q: "Ist die App völlig kostenlos?", faq1_a: "Ja, der Download und die Nutzung sind völlig kostenlos.",
-    faq2_q: "Welche Betriebssysteme werden unterstützt?", faq2_a: "Derzeit wird Windows 10/11 unterstützt. Unsere Linux-Version ist in Entwicklung.", faq3_q: "Sind meine Kontodaten sicher?", faq3_a: "Absolut. Alle Daten sind geschützt.",
-    aiTitle: "Support-Assistent", aiWelcome: "Hallo! Haben Sie Fragen zum Produkt Store?",
-    aiPrompt: "Du bist der intelligente Support-Assistent für eine Plattform namens Produkt Store. Gib prägnante, freundliche und DEUTSCHE Antworten."
-  },
-  FR: {
-    brandName: "PRODUIT <span class='text-primary'>STORE</span>",
-    navHome: "Accueil", navAbout: "À Propos", navFeatures: "Fonctionnalités", navCommunity: "Communauté", navLogin: "Connexion", navRegister: "S'inscrire",
-    galleryTitle: "Vitrine <span class='text-primary'>Interface</span>", gal1: "Vue Bibliothèque", gal2: "Gestionnaire de Téléchargement", gal3: "Onglet Magasin",
-    heroTitle: "Une toute nouvelle maison <br>pour Jeux & Apps.", heroDesc: "Le Produit Store combine vos jeux préférés dans une seule interface pratique.",
-    aboutTitle: "Une Plateforme, Expérience Illimitée.", aboutDesc: "Produit Store fournit tout ce dont vous avez besoin dans une structure simple et organisée.", aboutBtn: "Créer un Compte",
-    featuresTitle: "Pourquoi devriez-vous <span class='text-primary'>nous choisir?</span>",
-    f1Title: "Téléchargement Rapide", f1Desc: "Ajouter des jeux à votre bibliothèque prend quelques secondes.",
-    f2Title: "Mises à jour Automatiques", f2Desc: "Notre système en arrière-plan maintient tous vos fichiers à jour.",
-    f3Title: "Hub Social", f3Desc: "Voyez instantanément ce à quoi vos amis jouent.",
-    winTitle: "Télécharger pour Windows", winDesc: "Compatible Windows 10 / 11 • Fichier d'installation (.exe)", dlBtn: "Télécharger",
-    faqTitle: "Questions <span class='text-primary'>Fréquentes</span>", faq1_q: "L'application est-elle gratuite ?", faq1_a: "Oui, c'est totalement gratuit.",
-    faq2_q: "Quels systèmes d'exploitation ?", faq2_a: "Windows 10/11 est pris en charge. Linux est en développement.", faq3_q: "Mes données sont-elles en sécurité ?", faq3_a: "Absolument.",
-    aiTitle: "Assistant Support", aiWelcome: "Bonjour ! Avez-vous des questions sur Produit Store ?",
-    aiPrompt: "Vous êtes l'assistant de support intelligent du Produit Store. Donnez des réponses concises, amicales et en FRANÇAIS."
-  },
-  ES: {
-    brandName: "PRODUCTO <span class='text-primary'>STORE</span>",
-    navHome: "Inicio", navAbout: "Sobre Nosotros", navFeatures: "Características", navCommunity: "Comunidad", navLogin: "Iniciar sesión", navRegister: "Registrarse",
-    galleryTitle: "Galería de <span class='text-primary'>Interfaz</span>", gal1: "Vista de Biblioteca", gal2: "Gestor de Descargas", gal3: "Pestaña de Tienda",
-    heroTitle: "Un Nuevo Hogar <br>para Juegos y Apps.", heroDesc: "Producto Store combina tus juegos favoritos en una única interfaz práctica.",
-    aboutTitle: "Una Plataforma, Experiencia Ilimitada.", aboutDesc: "Producto Store proporciona todo lo que necesitas en una estructura simple.", aboutBtn: "Crear Cuenta",
-    featuresTitle: "¿Por qué <span class='text-primary'>elegirnos?</span>",
-    f1Title: "Descarga Rápida", f1Desc: "Añadir juegos a tu biblioteca lleva segundos gracias a nuestros servidores optimizados.",
-    f2Title: "Actualizaciones Automáticas", f2Desc: "Nuestro sistema mantiene todos tus archivos actualizados.",
-    f3Title: "Centro Social", f3Desc: "Ve instantáneamente a qué juegan tus amigos y chatea con ellos.",
-    winTitle: "Descargar para Windows", winDesc: "Compatible con Windows 10 / 11 • Archivo de instalación (.exe)", dlBtn: "Descargar",
-    faqTitle: "Preguntas <span class='text-primary'>Frecuentes</span>", faq1_q: "¿Es totalmente gratis?", faq1_a: "Sí, es completamente gratis para descargar y usar.",
-    faq2_q: "¿Qué sistemas operativos soporta?", faq2_a: "Windows 10/11. Linux en desarrollo.", faq3_q: "¿Están seguros mis datos?", faq3_a: "Absolutamente.",
-    aiTitle: "Asistente de Soporte", aiWelcome: "¡Hola! ¿Tienes alguna pregunta sobre Producto Store?",
-    aiPrompt: "Eres el asistente de soporte inteligente para Producto Store. Da respuestas concisas, amigables y en ESPAÑOL."
-  },
-  RU: {
-    brandName: "ПРОДУКТ <span class='text-primary'>STORE</span>",
-    navHome: "Главная", navAbout: "О Нас", navFeatures: "Функции", navCommunity: "Сообщество", navLogin: "Войти", navRegister: "Регистрация",
-    galleryTitle: "Галерея <span class='text-primary'>Интерфейса</span>", gal1: "Библиотека", gal2: "Менеджер Загрузок", gal3: "Магазин",
-    heroTitle: "Новый Дом <br>для Игр и Приложений.", heroDesc: "Продукт Store объединяет ваши любимые игры в одном удобном интерфейсе.",
-    aboutTitle: "Одна Платформа, Безграничный Опыт.", aboutDesc: "Продукт Store предоставляет все необходимое в простой и понятной структуре.", aboutBtn: "Создать Аккаунт",
-    featuresTitle: "Почему <span class='text-primary'>Выбирают Нас?</span>",
-    f1Title: "Быстрая Загрузка", f1Desc: "Добавление игр в библиотеку занимает секунды благодаря нашим серверам.",
-    f2Title: "Автообновления", f2Desc: "Наша система автоматически обновляет ваши файлы.",
-    f3Title: "Социальный Центр", f3Desc: "Общайтесь с друзьями и присоединяйтесь к группам.",
-    winTitle: "Скачать для Windows", winDesc: "Совместимо с Windows 10 / 11 • Файл установки (.exe)", dlBtn: "Скачать",
-    faqTitle: "Частые <span class='text-primary'>Вопросы</span>", faq1_q: "Это приложение полностью бесплатное?", faq1_a: "Да, загрузка и использование абсолютно бесплатны.",
-    faq2_q: "Какие ОС поддерживаются?", faq2_a: "Windows 10/11. Linux в разработке.", faq3_q: "Мои данные в безопасности?", faq3_a: "Абсолютно.",
-    aiTitle: "Служба Поддержки", aiWelcome: "Здравствуйте! У вас есть вопросы о Продукт Store?",
-    aiPrompt: "Вы — умный помощник службы поддержки платформы Продукт Store. Давайте краткие, дружелюбные ответы на РУССКОМ языке."
-  },
-  ZH: {
-    brandName: "产品 <span class='text-primary'>商店</span>",
-    navHome: "首页", navAbout: "关于我们", navFeatures: "特点", navCommunity: "社区", navLogin: "登录", navRegister: "注册",
-    galleryTitle: "界面 <span class='text-primary'>展示</span>", gal1: "图书馆视图", gal2: "下载管理器", gal3: "商店标签",
-    heroTitle: "游戏和应用的新家。", heroDesc: "产品商店在一个使用的界面中结合了你最喜欢的游戏。下载，了解最新动态。",
-    aboutTitle: "一个平台，无限体验。", aboutDesc: "产品商店以简单和有组织的结构提供您需要的一切。", aboutBtn: "创建帐户",
-    featuresTitle: "为什么 <span class='text-primary'>选择我们？</span>",
-    f1Title: "快速下载", f1Desc: "感谢优化的服务器，将游戏添加到您的图书馆只需数秒。",
-    f2Title: "自动更新", f2Desc: "我们的后台系统会不断更新您的所有文件。",
-    f3Title: "社交中心", f3Desc: "不仅是在玩游戏，还能马上看到你的朋友在玩什么，进行聊天。",
-    winTitle: "Windows 下载", winDesc: "Windows 10 / 11 兼容 • 安装程序文件 (.exe)", dlBtn: "下载",
-    faqTitle: "常见 <span class='text-primary'>问题</span>", faq1_q: "该应用完全免费吗？", faq1_a: "是的，下载和使用产品商店客户端是完全免费的。",
-    faq2_q: "支持哪些操作系统？", faq2_a: "目前支持 Windows 10/11。我们的 Linux 版本正在开发中。", faq3_q: "我的帐户详细信息安全吗？", faq3_a: "绝对安全。",
-    aiTitle: "支持助手", aiWelcome: "你好！你有关于产品商店的问题吗？",
-    aiPrompt: "你是产品商店的智能支持助手。请简明、友好地用中文给出回答。"
-  }
-};
-
-translations['TR'].aiWaitTime = "Uzman destek ekibimiz taleplerinize en geç 24 saat içerisinde dönüş sağlayacaktır.";
-translations['EN'].aiWaitTime = "Our expert support team will respond to your queries within 24 hours at the latest.";
-translations['DE'].aiWaitTime = "Unser Experten-Supportteam wird Ihre Anfragen spätestens innerhalb von 24 Stunden beantworten.";
-translations['FR'].aiWaitTime = "Notre équipe d'assistance experte répondra à vos demandes dans un délai maximum de 24 heures.";
-translations['ES'].aiWaitTime = "Nuestro equipo de soporte experto responderá a sus consultas en un plazo máximo de 24 horas.";
-translations['RU'].aiWaitTime = "Наша служба поддержки ответит на ваши запросы не позднее, чем через 24 часа.";
-translations['ZH'].aiWaitTime = "我们的专家支持团队最迟将在 24 小时内回复您的查询。";
-
-translations['TR'].loginUserEmail = "E-posta veya Kullanıcı Adı";
-translations['EN'].loginUserEmail = "Email or Username";
-translations['DE'].loginUserEmail = "E-Mail oder Benutzername";
-translations['FR'].loginUserEmail = "E-mail ou Nom d'utilisateur";
-translations['ES'].loginUserEmail = "Correo o Nombre de usuario";
-translations['RU'].loginUserEmail = "Почта или Имя пользователя";
-translations['ZH'].loginUserEmail = "电子邮件或用户名";
-
-let currentLang = 'TR';
-function changeLanguage(langKey) {
-  currentLang = langKey;
-  const t = translations[currentLang] || translations['EN'];
-  const fb = translations['EN'];
-  const trk = translations['TR'];
-  
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    let text = t[key] || fb[key] || trk[key];
-    if (text) el.innerHTML = text;
-  });
-  
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-i18n-placeholder');
-    let text = t[key] || fb[key] || trk[key];
-    if (text) el.setAttribute('placeholder', text);
-  });
-  
-  if(typeof renderUserChat === 'function') renderUserChat();
-  if(typeof renderAdminChat === 'function') renderAdminChat();
-}
-
-function toggleDropdown() {
-  document.getElementById('langOptions').classList.toggle('show');
-}
-function selectLang(langKey, displayText) {
-  document.getElementById('selectedLangText').textContent = displayText;
-  document.getElementById('langOptions').classList.remove('show');
-  changeLanguage(langKey);
-}
-
-// Close dropdown if clicked outside
-document.addEventListener('click', function(e) {
-  const dropdown = document.getElementById('langDropdown');
-  if (dropdown && !dropdown.contains(e.target)) {
-    document.getElementById('langOptions').classList.remove('show');
-  }
-});
-
-/* AI CHAT WIDGET */
-function toggleChat() {
-  document.getElementById('aiChatWindow').classList.toggle('show');
-}
-function appendMessage(text, className) {
-  const msgs = document.getElementById('aiChatMessages');
-  const div = document.createElement('div');
-  div.className = 'ai-msg ' + className;
-  div.textContent = text;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-  return div;
-}
-function showTyping() {
-  const msgs = document.getElementById('aiChatMessages');
-  const div = document.createElement('div');
-  div.className = 'ai-typing show';
-  div.id = 'aiTypingIndicator';
-  div.innerHTML = '<div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>';
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-function removeTyping() {
-  const el = document.getElementById('aiTypingIndicator');
-  if(el) el.remove();
-}
-
-/* CANLI DESTEK SIMULASYONU / GELİŞMİŞ ÇOKLU KULLANICI SOHBET ALTYAPISI */
-let mySessionId = localStorage.getItem('urun_session_id');
-if(!mySessionId) {
-  mySessionId = 'u_' + Math.random().toString(36).substr(2, 6);
-  localStorage.setItem('urun_session_id', mySessionId);
-}
-
-let activeAdminSession = null;
-
-function getChatUsername() {
-  let uiName = document.getElementById('dashUsername')?.innerText;
-  if(uiName && !['Kullanıcı', 'Username', 'Kullanıcı Adı', 'Benutzername'].includes(uiName)) return uiName;
-  
-  let navName = document.getElementById('navUsername')?.innerText;
-  if(navName && !['Kullanıcı', 'Username', 'Kullanıcı Adı', 'Benutzername'].includes(navName)) return navName;
-  
-  return null;
-}
-
-// ÇEVİRİ ALTYAPISI (Tam Otomatik & Çift Yönlü & Anlık)
-const tlCache = JSON.parse(localStorage.getItem('urun_tl_cache') || '{}');
-
-async function getTranslation(text, targetLang) {
-  return text;
-}
-
-const supportChannel = sb ? sb.channel('urun-live-support', { config: { broadcast: { ack: false } } }) : null;
-
-async function sendAIMessage() {
-  const username = getChatUsername();
-  if(!username) {
-    alert(currentLang === 'TR' ? "Canlı desteğe yazabilmek için lütfen giriş yapın." : "Please login to write to live support.");
-    return;
-  }
-  
-  if (sb) {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) {
-      alert("Oturumunuz geçersiz veya sonlanmış, lütfen tekrar giriş yapın.");
-      logout();
-      return;
-    }
-    const { data: profile } = await sb.from('user_profiles').select('is_banned, banned_until').eq('email', session.user.email).single();
-    if (profile && profile.is_banned) {
-      alert("Hesabınız kalıcı olarak destek hizmetinden uzaklaştırıldı.");
-      return;
-    }
-    if (profile && profile.banned_until) {
-      if (new Date(profile.banned_until) > new Date()) {
-        alert("Destek sistemini kullanmanız geçici olarak durduruldu. Bitiş: " + new Date(profile.banned_until).toLocaleString('tr-TR'));
-        return;
-      }
-    }
-  }
-  
-  const input = document.getElementById('aiInput');
-  const text = input.value.trim();
-  if(!text) return;
-  
-  let msg = {id: Math.random().toString(36).substr(2, 9), sessionId: mySessionId, username: username, sender: 'user', text: text, ts: Date.now()};
-  
-  let uHist = JSON.parse(localStorage.getItem('urun_client_chat') || '[]');
-  uHist.push(msg);
-  localStorage.setItem('urun_client_chat', JSON.stringify(uHist));
-  input.value = '';
-
-  if (currentUserIsAdmin) {
-    let aHist = JSON.parse(localStorage.getItem('urun_admin_chats') || '{}');
-    if(!aHist[msg.sessionId]) aHist[msg.sessionId] = [];
-    aHist[msg.sessionId].push(msg);
-    localStorage.setItem('urun_admin_chats', JSON.stringify(aHist));
-  }
-  
-  if (supportChannel) supportChannel.send({ type: 'broadcast', event: 'chat_message', payload: msg });
-  
-  if (sb) {
-    sb.from('support_messages').insert([{
-      session_id: mySessionId,
-      sender: 'user',
-      username: username,
-      message: text
-    }]).then();
-  }
-  
-  renderUserChat();
-  if (currentUserIsAdmin) {
-    renderAdminUserList();
-    if(activeAdminSession === msg.sessionId) renderAdminChat();
-  }
-}
-
-if (supportChannel) {
-  supportChannel.on('broadcast', { event: 'chat_message' }, async (payload) => {
-    const msg = payload.payload;
-    
-    // Sadece kendi oturumunu ilgilendiren mesajları al (Müşteri için)
-    if (msg.sessionId === mySessionId) {
-      let uHist = JSON.parse(localStorage.getItem('urun_client_chat') || '[]');
-      if (!uHist.some(h => h.id === msg.id)) {
-        uHist.push(msg);
-        localStorage.setItem('urun_client_chat', JSON.stringify(uHist));
-        renderUserChat();
-      }
-    }
-    
-    if (currentUserIsAdmin) {
-      let aHist = JSON.parse(localStorage.getItem('urun_admin_chats') || '{}');
-      if (!aHist[msg.sessionId]) aHist[msg.sessionId] = [];
-      if (!aHist[msg.sessionId].some(h => h.id === msg.id)) {
-        aHist[msg.sessionId].push(msg);
-        localStorage.setItem('urun_admin_chats', JSON.stringify(aHist));
-        renderAdminUserList();
-        if(activeAdminSession === msg.sessionId) renderAdminChat();
-      }
-    }
-  }).subscribe();
-}
-
-function selectAdminUser(sId) {
-  if (!currentUserIsAdmin) return;
-  activeAdminSession = sId;
-  const inp = document.getElementById('adminChatInput');
-  const btn = document.getElementById('adminChatBtn');
-  if(inp && btn) { inp.disabled = false; btn.disabled = false; }
-  renderAdminUserList();
-  renderAdminChat();
-}
-
-function renderAdminUserList() {
-  const list = document.getElementById('adminUserList');
-  if(!list) return;
-  if (!currentUserIsAdmin) {
-    list.innerHTML = '';
-    return;
-  }
-  let aHist = JSON.parse(localStorage.getItem('urun_admin_chats') || '{}');
-  list.innerHTML = '';
-  
-  const sessions = Object.keys(aHist);
-  if (sessions.length === 0) {
-    list.innerHTML = '<div style="padding:16px; color:var(--text-muted); font-size:0.8rem; text-align:center;">Talep Yok</div>';
-    return;
-  }
-  
-  sessions.forEach(sId => {
-    let msgs = aHist[sId];
-    if(msgs.length === 0) return;
-    let username = msgs[0].username || 'Kullanıcı';
-    let div = document.createElement('div');
-    div.style.padding = '12px';
-    div.style.borderBottom = '1px solid var(--border)';
-    div.style.cursor = 'pointer';
-    div.style.transition = '0.2s';
-    if(sId === activeAdminSession) div.style.background = 'rgba(255,255,255,0.08)';
-    div.onmouseenter = () => div.style.background = 'rgba(255,255,255,0.12)';
-    div.onmouseleave = () => div.style.background = (sId === activeAdminSession) ? 'rgba(255,255,255,0.08)' : '';
-    
-    div.innerHTML = `<strong>${username}</strong><div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">${msgs[msgs.length-1].text.substring(0, 20)}...</div>`;
-    div.onclick = () => selectAdminUser(sId);
-    list.appendChild(div);
-  });
-}
-
-function showChatLoginWarning() {
-  showToast(currentLang === 'TR' ? "Canlı desteğe yazabilmek için lütfen giriş yapın veya kayıt olun." : "Please login or register to write to live support.", true);
-}
-
-async function sendAdminMessage() {
-  if (!(await canAccessAdminPanel())) {
-    showToast(currentLang === 'TR' ? 'Bunu yalnızca yetkili hesaplar yanıtlayabilir.' : 'Only staff can reply.', true);
-    return;
-  }
-
-  if(!activeAdminSession) return;
-  const adminName = getChatUsername() || "Yetkili";
-  
-  const input = document.getElementById('adminChatInput');
-  const text = input.value.trim();
-  if(!text) return;
-  
-  let msg = {id: Math.random().toString(36).substr(2, 9), sessionId: activeAdminSession, username: adminName, sender: 'admin', text: text, ts: Date.now()};
-  
-  let aHist = JSON.parse(localStorage.getItem('urun_admin_chats') || '{}');
-  aHist[activeAdminSession].push(msg);
-  localStorage.setItem('urun_admin_chats', JSON.stringify(aHist));
-  input.value = '';
-  
-  if(mySessionId === activeAdminSession) {
-    let uHist = JSON.parse(localStorage.getItem('urun_client_chat') || '[]');
-    uHist.push(msg);
-    localStorage.setItem('urun_client_chat', JSON.stringify(uHist));
-    renderUserChat();
-  }
-  
-  if (supportChannel) supportChannel.send({ type: 'broadcast', event: 'chat_message', payload: msg });
-  
-  // VERİTABANINA KAYDET (Kalıcılık için)
-  if (sb) {
-    sb.from('support_messages').insert([{
-      session_id: activeAdminSession,
-      sender: 'admin',
-      username: adminName,
-      message: text
-    }]).then(); // Arka planda sessiz çalışır
-  }
-  
-  renderAdminChat();
-  renderAdminUserList();
-}
-
-function renderUserChat() {
-  const msgs = document.getElementById('aiChatMessages');
-  if(!msgs) return;
-  const history = JSON.parse(localStorage.getItem('urun_client_chat') || '[]');
-  
-  if (history.length === 0) {
-    msgs.innerHTML = '<div class="ai-msg bot" style="animation: chatPopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;" data-i18n="aiWelcome">Canlı Destek sistemine hoş geldiniz! Sizi müsait bir temsilciye bağlamadan önce, sorununuzu veya talebinizi kısaca yazar mısınız?</div>';
-  } else {
-    msgs.innerHTML = '';
-    history.forEach(msg => {
-      const isUser = msg.sender === 'user';
-      const div = document.createElement('div');
-      div.className = 'ai-msg ' + (isUser ? 'user' : 'bot');
-      div.style.animation = 'chatPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
-      
-      div.innerHTML = `<div style="font-size:0.7rem; opacity:0.7; margin-bottom:4px; text-align:${isUser?'right':'left'}">${msg.username || (isUser?'Sen':'Yetkili')}</div><span class="chat-txt"><i class="fas fa-spinner fa-spin" style="font-size:0.7rem;"></i></span>`;
-      msgs.appendChild(div);
-      
-      getTranslation(msg.text, currentLang).then(tlText => {
-         let sub = (!isUser && tlText !== msg.text) ? `<br><small style="opacity:0.4; font-size:0.6rem;">(Oto-Çeviri)</small>` : "";
-         div.querySelector('.chat-txt').innerHTML = tlText + sub;
-         msgs.scrollTop = msgs.scrollHeight;
-      });
-    });
-  }
-}
-
-function renderAdminChat() {
-  const msgs = document.getElementById('adminChatMessages');
-  if(!msgs) return;
-  if (!currentUserIsAdmin) return;
-  
-  if (!activeAdminSession) {
-    msgs.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding-top:20px;">Lütfen soldan bir konuşma seçin</div>';
-    return;
-  }
-  
-  const aHist = JSON.parse(localStorage.getItem('urun_admin_chats') || '{}');
-  const history = aHist[activeAdminSession] || [];
-  
-  msgs.innerHTML = '';
-  history.forEach(msg => {
-    const isUser = msg.sender === 'user';
-    const div = document.createElement('div');
-    div.style.maxWidth = '85%';
-    div.style.padding = '10px 14px';
-    div.style.borderRadius = '16px';
-    div.style.fontSize = '0.9rem';
-    div.style.lineHeight = '1.4';
-    div.style.animation = 'chatPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
-    
-    if (isUser) {
-       div.style.alignSelf = 'flex-start';
-       div.style.background = 'var(--card-bg)';
-       div.style.border = '1px solid var(--border)';
-       div.style.color = 'var(--text)';
-    } else {
-       div.style.alignSelf = 'flex-end';
-       div.style.background = 'var(--primary)';
-       div.style.color = '#fff';
-    }
-    
-    div.innerHTML = `<div style="font-size:0.75rem; opacity:0.7; margin-bottom:4px; text-align:${isUser?'left':'right'}">${msg.username || (isUser?'Sen':'Yetkili')}</div><span class="chat-txt"><i class="fas fa-spinner fa-spin" style="font-size:0.7rem;"></i></span>`;
-    msgs.appendChild(div);
-    
-    getTranslation(msg.text, currentLang).then(tlText => {
-       let sub = (isUser && tlText !== msg.text) ? `<br><small style="opacity:0.4; font-size:0.6rem;">(Oto-Çeviri)</small>` : "";
-       div.querySelector('.chat-txt').innerHTML = tlText + sub;
-       msgs.scrollTop = msgs.scrollHeight;
-    });
-  });
-}
-
-async function switchAdminTab(tab) {
-  if (tab !== 'chat' && !(await canAccessAdminPanel())) {
-    showToast(currentLang === 'TR' ? 'Bu sekmeye erişim yetkiniz yok.' : 'You do not have access to this tab.', true);
-    tab = 'chat';
-  }
-  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
-  
-  if (tab === 'chat') {
-    document.getElementById('tabAdminChat').classList.add('active');
-    document.getElementById('adminPanelChat').classList.add('active');
-  } else {
-    document.getElementById('tabAdminUsers').classList.add('active');
-    document.getElementById('adminPanelUsers').classList.add('active');
-    loadAdminUsers();
-  }
-}
-
-let allUsersCache = [];
-async function loadAdminUsers() {
-  if (!sb) return;
-  if (!(await canAccessAdminPanel())) {
-    allUsersCache = [];
-    const list = document.getElementById('adminAllUsersList');
-    if (list) list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--danger);">Yetkisiz erişim.</div>';
-    return;
-  }
-  const list = document.getElementById('adminAllUsersList');
-  list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);"><span class="spinner" style="border-top-color:var(--primary); margin-bottom:10px;"></span><br>Kullanıcılar yükleniyor...</div>';
-  try {
-    const { data, error } = await sb.from('user_profiles').select('*');
-    if (error) throw error;
-    allUsersCache = data || [];
-    document.getElementById('adminTotalUsers').textContent = allUsersCache.length;
-    renderAdminAllUsers(allUsersCache);
-  } catch (err) {
-    list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--danger);">Yüklenirken hata oluştu: ' + err.message + '</div>';
-  }
-}
-
-function renderAdminAllUsers(users) {
-  const list = document.getElementById('adminAllUsersList');
-  if (!currentUserIsAdmin) {
-    if (list) list.innerHTML = '';
-    return;
-  }
-  if (users.length === 0) {
-    list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">Kullanıcı bulunamadı.</div>';
-    return;
-  }
-  
-  list.innerHTML = '';
-  users.forEach(user => {
-    const div = document.createElement('div');
-    div.className = 'user-row';
-    const isBanned = user.is_banned;
-    const isTimeout = user.banned_until && new Date(user.banned_until) > new Date();
-    
-
-    let badgeHtml = '<span style="background:rgba(16,185,129,0.1); color:var(--success); padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:700; margin-left:6px;">Aktif</span>';
-    if (isBanned) badgeHtml = '<span class="banned-badge">Banlı</span>';
-    else if (isTimeout) badgeHtml = `<span class="timeout-badge">Timeout (${new Date(user.banned_until).toLocaleString('tr-TR')})</span>`;
-    div.innerHTML = `
-        <div class="user-avatar">${(user.username || 'U')[0].toUpperCase()}</div>
-        <div class="user-details">
-          <h4>${user.username || 'İsimsiz'} ${badgeHtml}</h4>
-          <p>${user.email} <span style="margin-left:8px; font-size:0.75rem; padding: 2px 6px; background:var(--surface); border-radius:4px; border:1px solid var(--border);"><i class="fas fa-network-wired"></i> ${user.last_ip ? user.last_ip.replace(/\.\d+\.\d+$/, '.***.***') : 'IP Yok'}</span></p>
+    <div class="platform-selector reveal delay-2">
+      <div class="platform-content">
+        <!-- WINDOWS -->
+        <div class="platform-panel active" id="platformWindows" style="width: 100%;">
+          <div class="download-card" style="flex-direction: column; text-align: center;">
+            <div class="os-icon" style="margin-bottom: 16px; width: 64px; height: 64px; font-size: 2.5rem;">
+              <i class="fab fa-windows"></i>
+            </div>
+            <div class="os-info" style="text-align: center; width: 100%;">
+              <h3 data-i18n="winTitle" style="font-size: 1.2rem; margin-bottom: 8px;">Windows için İndir</h3>
+              <p data-i18n="winDesc" style="margin-bottom: 20px;">Windows 10 / 11 uyumlu &bull; Kurulum dosyası (.exe)</p>
+            </div>
+            <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn-download" style="width: 100%; justify-content: center; padding: 18px; font-size: 1.2rem;">
+              <i class="fas fa-download"></i> <span data-i18n="dlBtn">İndir</span>
+            </a>
+          </div>
+          <div class="download-badge">
+            <i class="fas fa-shield-alt"></i> <span data-i18n="winSafe">Güvenli indirme &bull; GitHub Releases üzerinden sunulmaktadır</span>
+          </div>
         </div>
       </div>
-      <div class="user-actions" style="flex-wrap:wrap;">
-        ${isBanned ? `<button class="btn-unban" onclick="unbanUser(${JSON.stringify(user.email)})"><i class="fas fa-check-circle"></i> Ban Kaldır</button>` : ''}
-        ${isTimeout ? `<button class="btn-unban" onclick="removeTimeout(${JSON.stringify(user.email)})"><i class="fas fa-check-circle"></i> Timeout Kaldır</button>` : ''}
-        ${!isBanned && !isTimeout ? `
-          <button class="btn-timeout" onclick="timeoutUser(${JSON.stringify(user.email)})"><i class="fas fa-clock"></i> Timeout</button>
-          <button class="btn-ban" onclick="banUser(${JSON.stringify(user.email)})"><i class="fas fa-ban"></i> Banla</button>
-        ` : ''}
-        ${user.last_ip ? `<button onclick="ipBanUser(${JSON.stringify(user.email)}, ${JSON.stringify(user.last_ip)})" style="color:#a855f7; border: 1px solid rgba(168,85,247,0.3); padding: 6px 10px; border-radius: 6px; background: var(--surface); cursor: pointer; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-network-wired"></i> IP Ban</button>` : ''}
-        ${user.last_ip ? `<button onclick="ipUnbanUser(${JSON.stringify(user.last_ip)})" style="color:#22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 6px 10px; border-radius: 6px; background: var(--surface); cursor: pointer; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-unlock"></i> IP Ban Kaldır</button>` : ''}
-        <button onclick="changeUserPassword(${JSON.stringify(user.email)})" style="color:#3b82f6; border: 1px solid rgba(59,130,246,0.3); padding: 6px 10px; border-radius: 6px; background: var(--surface); cursor: pointer; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-key"></i> Şifre Değiştir</button>
+    </div>
+  </section>
+
+  <section class="about-section" id="hakkinda">
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <h2 data-i18n="aboutTitle">Tek Platform, Sınırsız Deneyim.</h2>
+        <p data-i18n="aboutDesc">Ürün Store, ihtiyacınız olan her şeyi basit ve düzenli bir yapıda sunar. Kütüphanenizi yönetin, indirmeleri başlatın ve karmaşık menülerde kaybolmadan arkadaşlarınızla iletişimde kalın.</p>
+        <button class="btn btn-outline" onclick="openModal('register')"><span data-i18n="aboutBtn">Hesap Oluştur</span> <i class="fas fa-arrow-right"></i></button>
       </div>
-    `;
-    list.appendChild(div);
-  });
-}
+    </div>
+  </section>
 
-function filterAdminUsers() {
-  const q = document.getElementById('adminSearchUser').value.toLowerCase();
-  const filtered = allUsersCache.filter(u => 
-    (u.username && u.username.toLowerCase().includes(q)) || 
-    (u.email && u.email.toLowerCase().includes(q))
-  );
-  renderAdminAllUsers(filtered);
-}
+  <section class="features-section" id="ozellikler">
+    <div class="features-header reveal">
+      <h2 data-i18n="featuresTitle">Neden Bizi <span class="text-primary">Tercih Etmelisiniz?</span></h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card card reveal delay-1">
+        <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+        <h3 data-i18n="f1Title">Hızlı İndirme</h3>
+        <p data-i18n="f1Desc">Optimize edilmiş sunucularımız sayesinde oyunlarınızı saniyeler içinde kütüphanenize ekleyin ve hemen başlayın.</p>
+      </div>
+      <div class="feature-card card reveal delay-2">
+        <div class="feature-icon"><i class="fas fa-sync"></i></div>
+        <h3 data-i18n="f2Title">Otomatik Güncelleme</h3>
+        <p data-i18n="f2Desc">Arka planda çalışan sistemimiz, siz oyuna girmeden önce tüm dosyalarınızı en güncel halinde tutar.</p>
+      </div>
+      <div class="feature-card card reveal delay-3">
+        <div class="feature-icon"><i class="fas fa-users"></i></div>
+        <h3 data-i18n="f3Title">Sosyal Hub</h3>
+        <p data-i18n="f3Desc">Arkadaşlarınızın ne oynadığını anında görün, sohbet edin ve Discord entegrasyonuyla gruplara katılın.</p>
+      </div>
+    </div>
+  </section>
 
-async function banUser(email) {
-  if (!(await canAccessAdminPanel())) return;
-  if (!confirm(`${email} hesabını kalıcı olarak banlamak istediğinize emin misiniz?`)) return;
-  try {
-    const { error } = await sb.from('user_profiles').update({ is_banned: true, banned_until: null }).eq('email', email);
-    if (error) throw error;
-    showToast('Kullanıcı banlandı!');
-    loadAdminUsers();
-  } catch (err) { showToast('Hata: ' + err.message, true); }
-}
+  <section class="faq-section reveal delay-1" id="sss">
+    <div class="features-header">
+      <h2 data-i18n="faqTitle">Sıkça Sorulan <span class="text-primary">Sorular</span></h2>
+    </div>
+    <div class="faq-container">
+      <div class="faq-item" onclick="this.classList.toggle('active')">
+        <div class="faq-question">
+          <span data-i18n="faq1_q">Uygulama tamamen ücretsiz mi?</span>
+          <i class="fas fa-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer"><p data-i18n="faq1_a">Evet, Ürün Store istemcisini indirmek ve kullanmak tamamen ücretsizdir. Ancak platform içindeki bazı spesifik oyunlar veya içerikler ücretli olabilir.</p></div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('active')">
+        <div class="faq-question">
+          <span data-i18n="faq2_q">Hangi işletim sistemlerini destekliyor?</span>
+          <i class="fas fa-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer"><p data-i18n="faq2_a">Şu anda Windows 10/11 desteği aktif.</p></div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('active')">
+        <div class="faq-question">
+          <span data-i18n="faq3_q">Hesap bilgilerim güvende mi?</span>
+          <i class="fas fa-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer"><p data-i18n="faq3_a">Kesinlikle. Şifreleriniz ve kişisel verileriniz Supabase altyapısıyla şifrelenir ve endüstri standardı güvenlik protokolleriyle korunur.</p></div>
+      </div>
+    </div>
+  </section>
 
-async function timeoutUser(email) {
-  if (!(await canAccessAdminPanel())) return;
-  const hours = prompt(`${email} hesabı için timeout süresi (saat):`, "24");
-  if (!hours || isNaN(hours)) return;
-  try {
-    const until = new Date();
-    until.setHours(until.getHours() + parseInt(hours));
-    const { error } = await sb.from('user_profiles').update({ is_banned: false, banned_until: until.toISOString() }).eq('email', email);
-    if (error) throw error;
-    showToast(`Kullanıcı ${hours} saat uzaklaştırıldı!`);
-    loadAdminUsers();
-  } catch (err) { showToast('Hata: ' + err.message, true); }
-}
+</main>
 
-async function unbanUser(email) {
-  if (!(await canAccessAdminPanel())) return;
-  if (!confirm(`${email} hesabının banını kaldırmak istediğinize emin misiniz?`)) return;
-  try {
-    const { error } = await sb.from('user_profiles').update({ is_banned: false, banned_until: null }).eq('email', email);
-    if (error) throw error;
-    showToast('Ban kaldırıldı!');
-    loadAdminUsers();
-  } catch (err) { showToast('Hata: ' + err.message, true); }
-}
-
-async function removeTimeout(email) {
-  if (!(await canAccessAdminPanel())) return;
-  if (!confirm(`${email} hesabının timeout'unu kaldırmak istediğinize emin misiniz?`)) return;
-  try {
-    const { error } = await sb.from('user_profiles').update({ banned_until: null }).eq('email', email);
-    if (error) throw error;
-    showToast('Timeout kaldırıldı!');
-    loadAdminUsers();
-  } catch (err) { showToast('Hata: ' + err.message, true); }
-}
-
-async function ipBanUser(email, ip) {
-  if (!(await canAccessAdminPanel())) return;
-  if (!ip) return showToast('Bu kullanıcının IP adresi bulunmuyor.', true);
-  if (!confirm(`${email} hesabının IP adresini (${ip}) kalıcı olarak banlamak istediğinize emin misiniz?`)) return;
-  try {
-    const { error } = await sb.from('banned_ips').insert([{ ip: ip }]);
-    if (error) {
-      if(error.message.includes('duplicate')) showToast('Bu IP zaten banlı!');
-      else throw error;
-    } else {
-      await sb.from('user_profiles').update({ is_banned: true, banned_until: null }).eq('email', email);
-      showToast('Kullanıcı IP bazlı olarak banlandı!');
-      loadAdminUsers();
-    }
-  } catch (err) { showToast('Hata: ' + err.message, true); }
-}
-
-async function ipUnbanUser(ip) {
-  if (!(await canAccessAdminPanel())) return;
-  if (!ip) return showToast('IP adresi bulunamadı.', true);
-  if (!confirm(`${ip} adresinin IP banını kaldırmak istediğinize emin misiniz?`)) return;
-  try {
-    const { error } = await sb.from('banned_ips').delete().eq('ip', ip);
-    if (error) throw error;
-    showToast(`${ip} adresinin IP banı kaldırıldı!`);
-    loadAdminUsers();
-  } catch (err) { showToast('Hata: ' + err.message, true); }
-}
-
-window.addEventListener('storage', (e) => {
-  if (e.key === 'urun_client_chat') renderUserChat();
-  if (e.key === 'urun_admin_chats' && currentUserIsAdmin) {
-    renderAdminUserList();
-    if(activeAdminSession) renderAdminChat();
-  }
-});
-
-// VERİTABANINDAN GEÇMİŞİ YÜKLE (yalnız yetkililer tüm oturumları çeker; diğerleri yalnız yerel depoda kalır — RLS ile birlikte kullanın)
-async function loadChatHistory() {
-  if (!sb) return;
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.user?.email) await refreshAdminStatus(session);
-
-    if (!currentUserIsAdmin) {
-      renderUserChat();
-      return;
-    }
-
-    const { data: msgs, error } = await sb.from('support_messages').select('*').order('created_at', { ascending: true });
-    if (error || !msgs) return;
-
-    let uHist = [];
-    let aHist = {};
-
-    msgs.forEach(m => {
-      let msgObj = { id: m.id, sessionId: m.session_id, username: m.username, sender: m.sender, text: m.message, ts: new Date(m.created_at).getTime() };
-
-      if(!aHist[m.session_id]) aHist[m.session_id] = [];
-      aHist[m.session_id].push(msgObj);
-
-      if (m.session_id === mySessionId) uHist.push(msgObj);
-    });
-
-    localStorage.setItem('urun_client_chat', JSON.stringify(uHist));
-    localStorage.setItem('urun_admin_chats', JSON.stringify(aHist));
-
-    renderUserChat();
-    renderAdminUserList();
-    if(activeAdminSession) renderAdminChat();
-  } catch (err) {}
-}
-
-// Animasyon stillerini JS üzerinden dinamik olarak HTML head'e basıyoruz
-const animStyle = document.createElement('style');
-animStyle.innerHTML = `
-@keyframes chatPopIn {
-  0% { opacity: 0; transform: translateY(15px) scale(0.95); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-`;
-document.head.appendChild(animStyle);
-
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        renderUserChat();
-        renderAdminUserList();
-    }, 500);
-});
-
-/* ======== PASSWORD STRENGTH & FORM VALIDATION ======== */
-
-function checkPasswordStrength(password) {
-  const box = document.getElementById('passwordStrengthBox');
-  const label = document.getElementById('strengthLabel');
-  const suggestions = document.getElementById('strengthSuggestions');
-  const bars = [document.getElementById('sBar1'), document.getElementById('sBar2'), document.getElementById('sBar3'), document.getElementById('sBar4')];
+<div class="dashboard" id="dashboard">
   
-  if (!password || password.length === 0) {
-    box.style.display = 'none';
-    return;
-  }
-  box.style.display = 'block';
-  
-  const hasLower = /[a-z]/.test(password);
-  const hasUpper = /[A-Z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(password);
-  const isLong = password.length >= 8;
-  const isVeryLong = password.length >= 12;
-  
-  let score = 0;
-  if (hasLower) score++;
-  if (hasUpper) score++;
-  if (hasNumber) score++;
-  if (hasSpecial) score++;
-  if (isLong) score++;
-  if (isVeryLong) score++;
-  
-  let level, levelText, barCount;
-  if (score <= 2) { level = 'weak'; levelText = '⚠️ Zayıf şifre'; barCount = 1; }
-  else if (score <= 3) { level = 'medium'; levelText = '🟡 Orta güçlükte'; barCount = 2; }
-  else if (score <= 4) { level = 'strong'; levelText = '✅ Güçlü şifre'; barCount = 3; }
-  else { level = 'very-strong'; levelText = '🛡️ Çok güçlü!'; barCount = 4; }
-  
-  // Update bars
-  bars.forEach((bar, i) => {
-    bar.className = 'strength-bar';
-    if (i < barCount) bar.classList.add('active', level);
-  });
-  
-  // Update label
-  label.className = 'strength-label ' + level;
-  label.textContent = levelText;
-  
-  // Build suggestion chips
-  const checks = [
-    { met: hasUpper, icon: 'fa-font', text: 'Büyük harf (A-Z)' },
-    { met: hasLower, icon: 'fa-font', text: 'Küçük harf (a-z)' },
-    { met: hasNumber, icon: 'fa-hashtag', text: 'Rakam (0-9)' },
-    { met: hasSpecial, icon: 'fa-asterisk', text: 'Özel karakter (!@#$)' },
-    { met: isLong, icon: 'fa-ruler-horizontal', text: '8+ karakter' }
-  ];
-  
-  // Only show unmet ones first, then met ones
-  const unmet = checks.filter(c => !c.met);
-  const met = checks.filter(c => c.met);
-  const sorted = [...unmet, ...met];
-  
-  let html = '';
-  if (unmet.length > 0 && score <= 3) {
-    html += '<div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:4px; width:100%;">Bunları ekleyerek güçlendirebilirsiniz:</div>';
-  }
-  sorted.forEach(c => {
-    const cls = c.met ? 'met' : 'unmet';
-    const icon = c.met ? 'fa-check' : 'fa-plus';
-    html += `<span class="strength-chip ${cls}"><i class="fas ${icon}"></i> ${c.text}</span>`;
-  });
-  suggestions.innerHTML = html;
-}
+  <div class="welcome-banner card">
+    <div class="welcome-left">
+      <div class="avatar-lg" id="dashAvatar">U</div>
+      <div class="welcome-info">
+        <h2><span data-i18n="dashWelcome">Hoş Geldin</span>, <span class="text-primary" id="dashUsername">Kullanıcı</span></h2>
+        <p id="dashEmail">email@email.com</p>
+      </div>
+    </div>
+    <div class="dash-actions">
+      <button class="btn btn-primary" onclick="openModal('download')"><i class="fas fa-download"></i> <span data-i18n="dashDlBtn">Programı İndir</span></button>
+      <button class="btn btn-outline" onclick="openModal('settings')"><i class="fas fa-cog"></i> <span data-i18n="dashSet">Ayarlar</span></button>
+    </div>
+  </div>
 
-// ===== FORM VALIDATION: Enable/Disable Buttons =====
+  <div class="dash-grid">
+    <div class="panel card">
+      <div class="panel-header">
+        <h3><i class="fas fa-user-shield text-primary"></i> <span data-i18n="dashSum">Hesap Özeti</span></h3>
+      </div>
+      <div class="info-list">
+        <div class="info-row"><span data-i18n="dashUser">Kullanıcı Adı</span><span id="infoUsername">-</span></div>
+        <div class="info-row"><span data-i18n="dashEmail">E-posta</span><span id="infoEmail">-</span></div>
+        <div class="info-row"><span data-i18n="dashId">Hesap ID</span><span id="infoId">-</span></div>
+        <div class="info-row"><span data-i18n="dashDate">Kayıt Tarihi</span><span id="infoCreated">-</span></div>
+        <div class="info-row"><span data-i18n="dashStat">Durum</span><span style="color:var(--success);"><i class="fas fa-check-circle"></i> <span data-i18n="dashAct">Onaylı</span></span></div>
+        <div style="margin-top:12px;">
+           <button class="btn btn-outline text-danger" style="width:100%; border-color:var(--border);" onclick="logout()">
+             <i class="fas fa-sign-out-alt"></i> <span data-i18n="dashOut">Çıkış Yap</span>
+           </button>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
 
-function validateLoginForm() {
-  const email = document.getElementById('loginEmail')?.value.trim();
-  const pass = document.getElementById('loginPassword')?.value;
-  const btn = document.getElementById('loginBtn');
-  if (!btn) return;
+
+
+</div>
+
+<!-- AUTH PAGE -->
+<div class="auth-page" id="authPage">
+  <button class="auth-close" onclick="closeAuth()"><i class="fas fa-arrow-left"></i> <span data-i18n="authBack">Geri Dön</span></button>
+  <div class="auth-split">
+    <div class="auth-visual">
+      <div class="char-container" id="charContainer">
+        <div class="char purple-rect">
+          <div class="eyes"><div class="eye"><div class="pupil"></div></div><div class="eye"><div class="pupil"></div></div></div>
+          <div class="mouth"></div>
+        </div>
+        <div class="char black-rect">
+          <div class="eyes"><div class="eye"><div class="pupil"></div></div><div class="eye"><div class="pupil"></div></div></div>
+        </div>
+        <div class="char orange-semi">
+          <div class="eyes"><div class="eye"><div class="pupil"></div></div><div class="eye"><div class="pupil"></div></div></div>
+          <div class="mouth"></div>
+        </div>
+        <div class="char yellow-semi">
+          <div class="eyes"><div class="eye"><div class="pupil"></div></div><div class="eye"><div class="pupil"></div></div></div>
+          <div class="mouth-line"></div>
+        </div>
+      </div>
+    </div>
+    <div class="auth-form-container">
+      
+      <div class="auth-form-box" id="authLoginPanel">
+        <div class="auth-logo-icon"><i class="fas fa-meteor"></i></div>
+        <h2 data-i18n="authW">Hoş Geldin!</h2>
+        <p class="subtitle" data-i18n="authWD">Lütfen detaylarını gir.</p>
+        <!-- GOOGLE SIGN-IN -->
+        <button class="btn-google" onclick="signInWithGoogle()" id="loginGoogleBtn">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          <span data-i18n="authGoogle">Google ile Giriş Yap</span>
+        </button>
+        <div class="auth-divider" data-i18n="authOr">veya</div>
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group custom-input" style="margin-bottom:24px;">
+            <label data-i18n="loginUserEmail">E-posta veya Kullanıcı Adı</label>
+            <input type="text" id="loginEmail" data-i18n-placeholder="loginUserEmail" placeholder="ornek@email.com veya kullanıcı" required>
+            <div class="form-error" id="loginEmailErr" style="color:var(--danger); font-size:0.8rem; margin-top:4px;"></div>
+          </div>
+          <div class="form-group custom-input password-wrapper" style="margin-bottom:24px;">
+            <label data-i18n="authPass">Şifre</label>
+            <input type="password" id="loginPassword" placeholder="Şifreniz" required onfocus="document.getElementById('charContainer').classList.remove('focused-away')">
+            <i class="fas fa-eye password-toggle" onclick="togglePassword('loginPassword', this)"></i>
+            <div class="form-error" id="loginPasswordErr" style="color:var(--danger); font-size:0.8rem; margin-top:4px;"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:28px; color:var(--text-muted);">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox"> <span data-i18n="authRem">30 gün hatırla</span></label>
+            <a style="cursor:pointer; font-weight:600; color:var(--text);" data-i18n="authFor">Şifremi unuttum</a>
+          </div>
+          <button type="submit" class="btn btn-primary btn-submit" id="loginBtn" disabled style="border-radius:24px; margin-top:0; padding:12px;" data-i18n="authLog">Giriş Yap</button>
+        </form>
+        <div class="modal-switch" style="margin-top:28px;"><span data-i18n="authNoAcc">Hesabın yok mu? </span><a onclick="switchAuth('register')" data-i18n="navRegister">Kayıt Ol</a></div>
+      </div>
+
+      <div class="auth-form-box" id="authRegisterPanel" style="display:none">
+        <div class="auth-logo-icon"><i class="fas fa-meteor"></i></div>
+        <h2 data-i18n="authJoin">Aramıza Katıl</h2>
+        <p class="subtitle" data-i18n="authJoinD">Platforma giriş yapmak için ücretsiz kayıt ol.</p>
+        <!-- GOOGLE SIGN-UP -->
+        <button class="btn-google" onclick="signInWithGoogle()" id="regGoogleBtn">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          <span data-i18n="authGoogleReg">Google ile Kayıt Ol</span>
+        </button>
+        <div class="auth-divider" data-i18n="authOr">veya</div>
+        <form onsubmit="handleRegister(event)">
+          <div class="form-group custom-input">
+            <label data-i18n="dashUser">Kullanıcı Adı</label>
+            <input type="text" id="regUsername" data-i18n-placeholder="dashUser" placeholder="Kullanıcı adınız" required minlength="3">
+            <div class="form-error" id="regUsernameErr"></div>
+          </div>
+          <div class="form-group custom-input">
+            <label data-i18n="dashEmail">E-posta</label>
+            <input type="email" id="regEmail" placeholder="ornek@email.com" required>
+            <div class="form-error" id="regEmailErr"></div>
+          </div>
+          <div class="form-group custom-input password-wrapper">
+            <label data-i18n="authPass">Şifre</label>
+            <input type="password" id="regPassword" data-i18n-placeholder="authPass" placeholder="En az 6 karakter" required minlength="6" onfocus="document.getElementById('charContainer').classList.remove('focused-away')" oninput="checkPasswordStrength(this.value); validateRegisterForm()">
+            <i class="fas fa-eye password-toggle" onclick="togglePassword('regPassword', this)"></i>
+          </div>
+          <!-- PASSWORD STRENGTH INDICATOR -->
+          <div class="password-strength" id="passwordStrengthBox" style="display:none; margin-top:-16px; margin-bottom:16px;">
+            <div class="strength-bar-container">
+              <div class="strength-bar" id="sBar1"></div>
+              <div class="strength-bar" id="sBar2"></div>
+              <div class="strength-bar" id="sBar3"></div>
+              <div class="strength-bar" id="sBar4"></div>
+            </div>
+            <div class="strength-label" id="strengthLabel"></div>
+            <div class="strength-suggestions" id="strengthSuggestions"></div>
+          </div>
+          <div class="form-group custom-input password-wrapper" style="margin-bottom:20px;">
+            <label data-i18n="authPass2">Şifre tekrar</label>
+            <input type="password" id="regPassword2" data-i18n-placeholder="authPass2P" placeholder="Şifrenizi doğrulayın" required onfocus="document.getElementById('charContainer').classList.remove('focused-away')">
+            <div class="form-error" id="regPassword2Err"></div>
+          </div>
+          <div style="display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; color:var(--text-muted); margin-bottom:24px;">
+            <input type="checkbox" id="kvkkCheck" required style="margin-top:4px; cursor:pointer;">
+            <label for="kvkkCheck" style="margin-bottom:0; font-weight:500;">
+              <a href="#" onclick="openModal('kvkk')" style="font-weight:600; color:var(--text); text-decoration:underline;" data-i18n="authTerms">Kullanım Koşulları ve KVKK Aydınlatma Metni'ni</a> <span data-i18n="authTerms2">okudum, anladım ve kabul ediyorum.</span>
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-submit" id="regBtn" disabled style="border-radius:24px; margin-top:0; padding:12px;" data-i18n="authReg">Hesap Oluştur</button>
+        </form>
+        <div class="modal-switch" style="margin-top:28px;"><span data-i18n="authHasAcc">Hesabın var mı? </span><a onclick="switchAuth('login')" data-i18n="authLog">Giriş Yap</a></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+
+  <div class="modal" id="kvkkModal" style="display:none; max-width: 600px; width: 90%;">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <h2>KVKK ve Kullanım Koşulları</h2>
+    <div style="font-size: 0.85rem; color: var(--text-muted); padding: 16px; border: 1px solid var(--border); border-radius: 8px; margin-top: 16px; line-height:1.6; max-height: 400px; overflow-y: auto;">
+      <h3 style="color:var(--text); font-size:1rem; margin-bottom:8px;">Kullanım Koşulları</h3>
+      <p style="margin-bottom: 12px;">Bu platformu ("Ürün Store") ziyaret ederek ve kayıt olarak, aşağıda belirtilen şartları, kuralları ve <strong>KVKK (Kişisel Verilerin Korunması Kanunu)</strong> aydınlatma metnini tamamen okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş sayılırsınız. Platform, kullanıcılarına dijital içerik yönetim hizmetleri ve kütüphane sunar.</p>
+      
+      <p style="margin-bottom: 12px;"><strong>1. Hesap Güvenliği:</strong> Platform üzerinde oluşturduğunuz kullanıcı adı, e-posta adresi ve şifre bilgilerinin güvenliğinden bütünüyle siz sorumlusunuz. Üçüncü şahıslarla paylaşılan şifrelerden doğacak maddi veya manevi zararlardan platformumuz sorumlu tutulamaz.</p>
+
+      <p style="margin-bottom: 12px;"><strong>2. İçerik ve Lisanslar:</strong> Platform üzerinden erişilen tüm içerikler, ürünler ve görsellerin fikri mülkiyet hakları ilgili hak sahiplerine aittir. Kullanıcı, bu hakları ihlal edecek kopyalama, dağıtma veya yetkisiz erişim girişimlerinde bulunmayacağını taahhüt eder.</p>
+
+      <h3 style="color:var(--text); font-size:1rem; margin-bottom:8px; margin-top:16px;">KVKK Aydınlatma Metni</h3>
+      <p style="margin-bottom: 12px;">6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") uyarınca, kişisel verileriniz veri sorumlusu sıfatıyla tarafımızca işlenmektedir. Platforma üyeliğiniz sırasında alınan "E-Posta, Şifre, Kullanıcı Adı" gibi temel veri setleriniz aşağıdaki amaçlarla işlenir:</p>
+      
+      <p style="margin-bottom: 12px;"><strong>a) İşleme Amacı:</strong> Hizmetlerimizin sorunsuz bir şekilde yerine getirilmesi, üyelik profilinizin oluşturulması, sistem güncellemeleri hakkında bilgi verilmesi ve güvenliğinizin sağlanması amacıyla bilgileriniz veri tabanımızda yüksek güvenlik standartlarıyla şifrelenerek korunmaktadır.</p>
+
+      <p style="margin-bottom: 12px;"><strong>b) Aktarım:</strong> Kişisel verileriniz hiçbir suretle hukuki gereksinimler (adli mercilerin meşru ve yasal talepleri) dışında üçüncü şahıslara veya şirketlere ticari amaçlı aktarılmaz, izinsiz paylaşılmaz ve kesinlikle satılmaz.</p>
+
+      <p style="margin-bottom: 12px;"><strong>c) Haklarınız:</strong> Kanunun 11. maddesi uyarınca veri sahipleri; verilerinin işlenip işlenmediğini öğrenme, işlenmişse buna ilişkin bilgi talep etme, silinmesini veya yok edilmesini talep etme ve eksik/yanlış işlenmişse düzeltilmesi haklarına sahiptir.</p>
+
+      <p style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-weight: 600; color: var(--text);">Teyit: İşbu metni kayıt esnasında onaylayarak, platformun kullanımını düzenleyen tüm kuralları ve verilerinizin belirtilen esaslar dahilinde işlenmesini açık rızanızla onaylamış sayılırsınız.</p>
+    </div>
+  </div>
   
-  if (email && email.length > 0 && pass && pass.length > 0) {
-    btn.disabled = false;
-  } else {
-    btn.disabled = true;
-  }
-}
+  <div class="modal" id="settingsModal" style="display:none;">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <h2>Ayarlar</h2>
+    <p class="subtitle">Profil detaylarını düzenle.</p>
+    
+    <div class="card" style="padding:16px; margin-bottom:16px;">
+      <h4 style="font-size:0.9rem; margin-bottom:12px;"><i class="fas fa-user-edit text-primary"></i> Profil Bilgileri</h4>
+      <form onsubmit="handleUpdateProfile(event)">
+        <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="updateUsername" required minlength="3"></div>
+        <div class="form-group"><label>E-posta</label><input type="email" id="updateEmail" required></div>
+        <button type="submit" class="btn btn-primary" id="btnUpdateProfile" style="width:100%;">Kaydet</button>
+      </form>
+    </div>
+    
+    <div class="card" style="padding:16px;">
+      <h4 style="font-size:0.9rem; margin-bottom:12px;"><i class="fas fa-lock text-primary"></i> Şifre İşlemleri</h4>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">Sıfırlama linki e-posta adresinize gönderilecektir.</p>
+      <button onclick="handleSendPasswordReset(event)" class="btn btn-outline" id="btnUpdatePassword" style="width:100%;">Şifre Sıfırla</button>
+    </div>
+  </div>
 
-function validateRegisterForm() {
-  const username = document.getElementById('regUsername')?.value.trim();
-  const email = document.getElementById('regEmail')?.value.trim();
-  const pass = document.getElementById('regPassword')?.value;
-  const pass2 = document.getElementById('regPassword2')?.value;
-  const kvkk = document.getElementById('kvkkCheck')?.checked;
-  const btn = document.getElementById('regBtn');
-  if (!btn) return;
-  
-  if (username && username.length >= 3 && email && email.length > 0 && pass && pass.length >= 6 && pass2 && pass2.length > 0 && kvkk) {
-    btn.disabled = false;
-  } else {
-    btn.disabled = true;
-  }
-}
+  <div class="modal" id="otpModal" style="display:none;">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <div style="font-size:2.5rem; color:var(--primary); margin-bottom:12px; text-align:center;"><i class="fas fa-shield-alt"></i></div>
+    <h2>Güvenlik Kodu</h2>
+    <p class="subtitle">E-postana gelen 6 haneli kodu gir.</p>
+    <form onsubmit="handleVerifyOTP(event)">
+      <div class="form-group">
+        <input type="text" id="otpCode" placeholder="000000" maxlength="6" style="text-align:center; font-size:1.4rem; letter-spacing:8px; font-weight:700;" required>
+        <div class="form-error" id="otpError"></div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-submit" id="otpBtn">Doğrula ve Gir</button>
+    </form>
+    <div class="modal-switch">Kod gelmedi mi? <a onclick="resendOTP()">Tekrar İste</a></div>
+  </div>
 
-// Attach listeners after DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  // Login form listeners
-  const loginEmail = document.getElementById('loginEmail');
-  const loginPass = document.getElementById('loginPassword');
-  if (loginEmail) loginEmail.addEventListener('input', validateLoginForm);
-  if (loginPass) loginPass.addEventListener('input', validateLoginForm);
-  
-  // Register form listeners
-  const regUsername = document.getElementById('regUsername');
-  const regEmail = document.getElementById('regEmail');
-  const regPass = document.getElementById('regPassword');
-  const regPass2 = document.getElementById('regPassword2');
-  const kvkk = document.getElementById('kvkkCheck');
-  
-  if (regUsername) regUsername.addEventListener('input', validateRegisterForm);
-  if (regEmail) regEmail.addEventListener('input', validateRegisterForm);
-  if (regPass) regPass.addEventListener('input', validateRegisterForm);
-  if (regPass2) regPass2.addEventListener('input', validateRegisterForm);
-  if (kvkk) kvkk.addEventListener('change', validateRegisterForm);
-});
+  <div class="modal" id="downloadModal" style="display:none">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <h2>İndir</h2>
+    <p class="subtitle">İşletim sisteminizi seçin.</p>
+    
+    <div class="platform-selector" style="margin-top:20px; width: 100%;">
+      <div class="platform-content" style="width: 100%;">
+        <!-- WINDOWS -->
+        <div class="platform-panel active" id="platformWindowsDash" style="width: 100%;">
+          <div class="download-card" style="padding:24px 20px; flex-direction:column; text-align:center;">
+            <div class="os-icon" style="width:64px;height:64px;font-size:2.5rem; margin:0 auto 16px;">
+              <i class="fab fa-windows"></i>
+            </div>
+            <div class="os-info" style="text-align:center; width:100%;">
+              <h3 style="font-size: 1.2rem; font-weight:700; margin-bottom: 8px;" data-i18n="winTitle">Windows İçin İndir</h3>
+              <p style="font-size: 0.9rem; margin-bottom: 20px;" data-i18n="winDesc">Windows 10 / 11 uyumlu • Kurulum dosyası (.exe)</p>
+            </div>
+            <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn btn-primary" style="width: 100%; border-radius: 8px; padding: 14px;">
+              <i class="fas fa-download"></i> <span data-i18n="dlBtn">İndir</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-/* ======== GOOGLE OAUTH ======== */
-async function signInWithGoogle() {
-  if (!sb) {
-    showToast('Supabase bağlantısı kurulamadı.', true);
-    return;
-  }
-  try {
-    const { data, error } = await sb.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin + window.location.pathname
-      }
-    });
-    if (error) throw error;
-    // Supabase will redirect to Google's OAuth page automatically
-  } catch (err) {
-    showToast('Google giriş hatası: ' + (err.message || 'Bir hata oluştu.'), true);
-  }
-}
+</div>
 
-async function changeUserPassword(email) {
-  if (!(await canAccessAdminPanel())) return;
-  showToast(currentLang === 'TR'
-    ? 'Şifre sıfırlama yalnızca Supabase Dashboard veya güvenli bir Edge Function (service_role sunucuda) ile yapılmalıdır. Bu düğme devre dışı bırakıldı.'
-    : 'Password reset must be done via Supabase Dashboard or a secure Edge Function. This action is disabled.', true);
-}
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
 
-// PWA Service Worker Registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then((reg) => console.log('Service worker registered.', reg))
-      .catch((err) => console.log('Service worker not registered.', err));
-  });
-}
+<footer style="padding: 18px 40px; min-height: auto;">
+
+  <div class="footer-text">© 2026 Ürün Store. <span data-i18n="footerAllRights">Tüm Hakları Saklıdır.</span></div>
+  <div>
+    <a href="https://discord.gg/jtsKHGcTf4" target="_blank" style="font-size:1.2rem; color:var(--text-muted);"><i class="fab fa-discord"></i></a>
+  </div>
+</footer>
+
+<script src="./config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./app.js" defer></script>
+
+</body>
+</html>
