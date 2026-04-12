@@ -1671,15 +1671,19 @@ async function handleRegister(e){
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> İşleniyor...';
 
   try{
-    const{data:taken,error:rpcErr}=await sb.rpc('is_username_taken',{check_username:username});
-    if(rpcErr){
-      notifyAuthProblem('regUsernameErr',formatSupabaseErr(rpcErr));
-      throw rpcErr;
+    const unameRpc=await sb.rpc('is_username_taken',{check_username:username});
+    if(unameRpc.error&&!isRpcFnMissing(unameRpc.error)){
+      notifyAuthProblem('regUsernameErr',formatSupabaseErr(unameRpc.error));
+      throw unameRpc.error;
     }
-    if(taken===true){
-      notifyAuthProblem('regUsernameErr','Bu kullanıcı adı alınmış. Lütfen başka bir tane seçin.');
+    if(!unameRpc.error&&rpcBoolTrue(unameRpc.data)){
+      notifyAuthProblem('regUsernameErr','Bu kullanıcı adı başka bir hesapta (başka bir e-posta ile) kayıtlı. Farklı bir kullanıcı adı seç veya o hesabın e-postasıyla giriş yap.');
       document.getElementById('regUsername').focus();
       return;
+    }
+    if(unameRpc.error&&isRpcFnMissing(unameRpc.error)){
+      const tr=typeof currentLang==='undefined'||currentLang==='TR';
+      showToast(tr?'İpucu: supabase-rpc-auth.sql dosyasını Supabase’te çalıştırırsanız kullanıcı adı kontrolü de aktif olur.':'Tip: run supabase-rpc-auth.sql in Supabase for username checks.',false,4500);
     }
 
     const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{username}}});
@@ -1687,22 +1691,51 @@ async function handleRegister(e){
       if(error.status===429)throw new Error((typeof currentLang!=='undefined'&&currentLang!=='TR')?'Too many requests. Wait and try again.':'Çok fazla istek; bir süre sonra tekrar deneyin.');
       throw error;
     }
-    if(data.user&&data.session){
-      await insertUserProfileRow(username,email);
+    const trReg=typeof currentLang==='undefined'||currentLang==='TR';
+    async function finishSignupSession(){
       closeAuth();
-      showToast('Kayıt başarılı! Hoş geldin.');showDashboard();updateUI();
+      showToast(trReg?'Kayıt başarılı! Hoş geldin.':'Welcome! Account ready.');
+      showDashboard();
+      await updateUI();
+    }
+    if(data.user&&data.session){
+      try{await insertUserProfileRow(username,email);}
+      catch(_){showToast(trReg?'Hesap açıldı; profil satırı eklenemedi (sunucu). Ayarlardan tekrar dene veya destek.':'Account created but profile row failed.',true);}
+      await finishSignupSession();
     }else if(data.user){
       if(data.user.identities&&data.user.identities.length===0){
-        notifyAuthProblem('regEmailErr','Bu e-posta kayıtlı. Lütfen giriş yapın.');
+        const{data:siDup,error:dupErr}=await sb.auth.signInWithPassword({email,password:pass});
+        if(!dupErr&&siDup.session){
+          try{await insertUserProfileRow(username,email);}catch(_){}
+          try{await sb.from('user_profiles').update({username}).eq('email',email);}catch(_){}
+          showToast(trReg?'Bu e-posta zaten kayıtlıydı; şifre doğru, hesabına giriş yaptık.':'That email was already registered; signed you in.',false,4200);
+          await finishSignupSession();
+        }else{
+          notifyAuthProblem('regEmailErr',dupErr&&String(dupErr.message||'').includes('Invalid')?trReg?'Bu e-posta kayıtlı; şifre yanlış. Aşağıdan giriş dene.':'Wrong password for this email.':(dupErr?formatSupabaseErr(dupErr):(trReg?'Bu e-posta kayıtlı; giriş yap.':'Please sign in.')));
+          switchAuth('login');
+          const le=document.getElementById('loginEmail');if(le)le.value=email;
+          const lp=document.getElementById('loginPassword');if(lp)lp.value='';
+          validateLoginForm();
+        }
         return;
       }
-      const{error:e2}=await sb.auth.signInWithPassword({email,password:pass});
-      if(!e2){
-        await insertUserProfileRow(username,email);
-        closeAuth();showToast('Kayıt başarılı!');showDashboard();updateUI();
+      const{data:signInData,error:e2}=await sb.auth.signInWithPassword({email,password:pass});
+      if(!e2&&signInData.session){
+        try{await insertUserProfileRow(username,email);}
+        catch(_){showToast(trReg?'Giriş yapıldı; profil eklenemedi. Ayarlar veya destek.':'Signed in; profile insert failed.',true);}
+        await finishSignupSession();
       }else{
-        const tr=typeof currentLang==='undefined'||currentLang==='TR';
-        notifyAuthProblem('regEmailErr',tr?'Kayıt alındı. Önce e-postanızdaki doğrulama bağlantısına tıklayın, sonra giriş yapın.':'Please confirm your email, then sign in.');
+        const needMail=(e2&&String(e2.message||'').toLowerCase().includes('confirm'))||(!e2&&!signInData?.session);
+        switchAuth('login');
+        const le=document.getElementById('loginEmail');if(le)le.value=email;
+        if(needMail){
+          notifyAuthProblem('regEmailErr',trReg?'Hesap oluştu. Gelen kutundaki doğrulama linkine tıkla; ardından "Giriş Yap" ile devam et.':'Confirm your email, then use Sign in.');
+          const lp=document.getElementById('loginPassword');if(lp)lp.value=pass;
+          showToast(trReg?'Giriş sekmesi açıldı; maili onayladıktan sonra aynı şifreyle giriş yap.':'Login tab opened; after email confirm, sign in with the same password.',false,5500);
+        }else{
+          notifyAuthProblem('regEmailErr',e2?formatSupabaseErr(e2):trReg?'Oturum açılamadı; tekrar dene.':'Could not sign in.');
+        }
+        validateLoginForm();
       }
     }
   }catch(err){
@@ -1730,6 +1763,11 @@ async function handleLogin(e){
   try{
     if(sb&&!email.includes('@')){
       const{data:resolvedEmail,error:rpcE}=await sb.rpc('profile_email_by_username',{login:email});
+      if(rpcE&&isRpcFnMissing(rpcE)){
+        const tr=typeof currentLang==='undefined'||currentLang==='TR';
+        notifyAuthProblem('loginEmailErr',tr?'Kullanıcı adı ile giriş için Supabase’te `supabase-rpc-auth.sql` çalıştırılmalı. Şimdilik tam e-posta adresinizle giriş yapın.':'Run supabase-rpc-auth.sql for username login; use full email for now.');
+        return;
+      }
       if(rpcE||!resolvedEmail){
         const tr=typeof currentLang==='undefined'||currentLang==='TR';
         const msg=rpcE?formatSupabaseErr(rpcE):(tr?'Bu kullanıcı adı sistemde bulunamadı.':'Username not found.');
@@ -1972,11 +2010,22 @@ function showToast(msg,isError,customMs){
   setTimeout(()=>t.classList.remove('show'),ms);
 }
 
+function isRpcFnMissing(err){
+  if(!err)return false;
+  const m=String(err.message||'')+String(err.details||'')+String(err.hint||'');
+  return /could not find the function|schema cache|function public\.is_username_taken|function public\.profile_email_by_username/i.test(m);
+}
+
+function rpcBoolTrue(v){
+  return v===true||v==='true'||v==='t'||v===1;
+}
+
 function formatSupabaseErr(err){
   if(!err)return typeof currentLang!=='undefined'&&currentLang!=='TR'?'Unknown error.':'Bilinmeyen hata oluştu.';
   const raw=String(err.message||err.error_description||err);
   const m=raw.toLowerCase();
   const tr=typeof currentLang==='undefined'||currentLang==='TR';
+  if(m.includes('could not find the function')||m.includes('schema cache'))return tr?'Veritabanı fonksiyonu henüz yok veya önbellek güncellenmedi. Supabase → SQL Editor’da `supabase-rpc-auth.sql` dosyasını çalıştırın; 1–2 dk bekleyip sayfayı yenileyin.':'Run `supabase-rpc-auth.sql` in Supabase SQL Editor, wait 1–2 min, refresh.';
   if(raw.includes('Invalid login credentials')||m.includes('invalid login'))return tr?'Hatalı e-posta veya şifre.':'Wrong email or password.';
   if(m.includes('email not confirmed')||m.includes('email_not_confirmed'))return tr?'Önce e-postanızdaki doğrulama bağlantısına tıklayın.':'Please confirm your email first.';
   if(m.includes('user already registered')||m.includes('already registered'))return tr?'Bu e-posta zaten kayıtlı; giriş yapın.':'This email is already registered.';
