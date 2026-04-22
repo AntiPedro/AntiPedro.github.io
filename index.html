@@ -3,54 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-
-<!-- SEO Meta Tags -->
-<title>Ürün Store — Oyun ve Uygulamaların Yepyeni Evi</title>
-<meta name="description" content="Ürün Store - Oyun ve uygulamaların tek merkezde buluştuğu platform. Ücretsiz indir, kolayca yönet.">
-<meta name="keywords" content="ürün store, oyun mağazası, ücretsiz oyun indirme, game store, uygulama mağazası">
-<meta name="author" content="Ürün Store">
-<meta name="robots" content="index, follow">
-
-<!-- Open Graph / Facebook -->
-<meta property="og:type" content="website">
-<meta property="og:title" content="Ürün Store — Oyun ve Uygulamaların Yepyeni Evi">
-<meta property="og:description" content="Favori oyunlarınızı tek platformda yönetin. Hızlı indirme, otomatik güncelleme.">
-<meta property="og:image" content="./icon.png">
-<meta property="og:url" content="https://urunstore.com">
-
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Ürün Store — Oyun ve Uygulamaların Yepyeni Evi">
-<meta name="twitter:description" content="Favori oyunlarınızı tek platformda yönetin.">
-
-<!-- Canonical -->
-<link rel="canonical" href="https://urunstore.com">
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#18181b">
-<link rel="apple-touch-icon" href="./icon.png">
+<title>ÃœrÃ¼n Store</title>
+<meta name="description" content="ÃœrÃ¼n Store - TÃ¼m oyunlarÄ±n ve uygulamalarÄ±n tek bir yerde. Ãœcretsiz indir, oyna ve topluluÄŸa katÄ±l.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --bg: #ffffff;
-  --surface: #f8fafc;
-  --surface-hover: #f1f5f9;
-  --border: #e2e8f0;
-  --text: #0f172a;
-  --text-muted: #64748b;
+  --bg: #f4f4f5;
+  --surface: #ffffff;
+  --surface-hover: #e4e4e7;
+  --border: #d4d4d8;
+  --text: #09090b;
+  --text-muted: #52525b;
   
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
+  --primary: #09090b;
+  --primary-dark: #27272a;
   --accent: #3b82f6;
   
   --danger: #ef4444;
-  --success: #22c55e;
+  --success: #10b981;
   --discord: #5865F2;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: all 0.2s ease-in-out;
   --primary-text: #ffffff;
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 [data-theme="dark"] {
@@ -76,8 +51,8 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.6;
-  user-select: text;
-  -webkit-user-select: text;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 ::-webkit-scrollbar { width: 8px; }
@@ -139,20 +114,15 @@ a { text-decoration: none; color: inherit; }
 nav {
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 70px;
-  z-index: 1000;
+  height: 64px;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 60px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
+  padding: 0 40px;
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow);
 }
-
-.site-logo { height: 75px; width: auto; object-fit: contain; transition: var(--transition); }
-@media(max-width: 900px) { .site-logo { height: 60px; } }
 
 .logo {
   display: flex;
@@ -162,9 +132,13 @@ nav {
 }
 .logo-text { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
 
+.nav-links {
   display: flex;
-  gap: 40px;
+  gap: 32px;
   align-items: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 .nav-links a {
   font-size: 0.9rem;
@@ -174,7 +148,7 @@ nav {
 }
 .nav-links a:hover { color: var(--text); }
 
-.nav-right { display: flex; align-items: center; gap: 20px; }
+.nav-right { display: flex; align-items: center; gap: 12px; }
 
 /* Custom Dropdown */
 .custom-dropdown { position: relative; display: inline-block; margin-right: 8px; user-select: none; }
@@ -219,33 +193,30 @@ nav {
 
 /* HERO SECTION */
 .hero {
-  padding: 160px 40px 100px;
+  padding: 140px 40px 80px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.03), transparent);
 }
 .hero h1 {
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
-  font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: -2.5px;
-  margin-bottom: 24px;
-  max-width: 900px;
-  color: var(--text);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  margin-bottom: 20px;
+  max-width: 800px;
 }
 .hero p {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   color: var(--text-muted);
-  max-width: 750px;
-  margin-bottom: 48px;
-  line-height: 1.6;
+  max-width: 600px;
+  margin-bottom: 32px;
 }
 .hero-actions {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
@@ -588,7 +559,7 @@ nav {
 }
 .form-group input:focus { border-color: var(--primary); }
 .form-error { color: var(--danger); font-size: 0.8rem; margin-top: 6px; display: none; }
-.form-error.show { display: block !important; }
+.form-error.show { display: block; }
 .btn-submit { width: 100%; margin-top: 8px; padding: 12px;}
 .modal-switch { text-align: center; margin-top: 20px; font-size: 0.85rem; color: var(--text-muted); }
 .modal-switch a { color: var(--primary); cursor: pointer; font-weight: 600; }
@@ -659,7 +630,7 @@ footer {
 .auth-page.show .char-container { overflow: visible; }
 .auth-page.show .char { transition: none; will-change: transform, opacity; }
 
-/* Mor: Aşağıdan takla atarak */
+/* Mor: AÅŸaÄŸÄ±dan takla atarak */
 .auth-page.show .purple-rect { opacity: 0; animation: purpleAnim 1s 0.2s ease-out forwards; }
 @keyframes purpleAnim {
   0% { opacity: 0; transform: translateY(300px) rotate(0deg); }
@@ -679,7 +650,7 @@ footer {
   100% { opacity: 1; transform: translateX(0); }
 }
 
-/* Siyah: Yukarıdan düşüyor */
+/* Siyah: YukarÄ±dan dÃ¼ÅŸÃ¼yor */
 .auth-page.show .black-rect { opacity: 0; animation: blackAnim 0.8s 0.55s ease-out forwards; }
 @keyframes blackAnim {
   0% { opacity: 0; transform: translateY(-400px); }
@@ -689,7 +660,7 @@ footer {
   100% { opacity: 1; transform: none; }
 }
 
-/* Sarı: Sağdan zıplaya zıplaya */
+/* SarÄ±: SaÄŸdan zÄ±playa zÄ±playa */
 .auth-page.show .yellow-semi { opacity: 0; animation: yellowAnim 1.2s 0.65s ease-out forwards; }
 @keyframes yellowAnim {
   0% { opacity: 0; transform: translateX(250px); }
@@ -710,7 +681,7 @@ footer {
 .password-toggle:hover { color: var(--text); }
 
 /* CHARACTERS */
-.char-container { position: relative; width: 300px; height: 250px; display: flex; align-items: flex-end; justify-content: center; transform: scale(1.3); transform-origin: bottom center; }
+.char-container { position: relative; width: 300px; height: 250px; display: flex; align-items: flex-end; justify-content: center; }
 .char { position: absolute; bottom: 0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; transition: transform 0.3s; }
 .char .eyes { display: flex; gap: 8px; margin-top: 20px; }
 .char .eye { width: 12px; height: 12px; background: #fff; border-radius: 50%; position: relative; overflow: hidden; }
@@ -728,93 +699,6 @@ footer {
 .yellow-semi .pupil { width: 4px; height: 4px; }
 .yellow-semi .mouth-line { width: 18px; height: 3px; background: #a16207; border-radius: 3px; margin-top: 8px; margin-left: 8px; }
 .focused-away .pupil { transform: translate(calc(-50% - 6px), calc(-50% - 2px)) !important; }
-
-/* GOOGLE SIGN-IN BUTTON */
-.btn-google {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 12px 20px;
-  border-radius: 24px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-.btn-google:hover {
-  border-color: var(--text-muted);
-  background: var(--surface-hover);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  transform: translateY(-1px);
-}
-.btn-google:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-.btn-google svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-}
-.auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin: 24px 0;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 500;
-}
-.auth-divider::before,
-.auth-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-.auth-page.show .btn-google { opacity: 0; animation: authFadeUp 0.6s 0.45s ease forwards; }
-.auth-page.show .auth-divider { opacity: 0; animation: authFadeUp 0.6s 0.5s ease forwards; }
-
-/* PASSWORD STRENGTH METER */
-.password-strength { margin-top: 8px; }
-.strength-bar-container { display: flex; gap: 4px; margin-bottom: 6px; }
-.strength-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: all 0.4s ease; }
-.strength-bar.active.weak { background: #ef4444; }
-.strength-bar.active.medium { background: #f59e0b; }
-.strength-bar.active.strong { background: #10b981; }
-.strength-bar.active.very-strong { background: #06b6d4; }
-.strength-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); transition: color 0.3s; margin-bottom: 6px; }
-.strength-label.weak { color: #ef4444; }
-.strength-label.medium { color: #f59e0b; }
-.strength-label.strong { color: #10b981; }
-.strength-label.very-strong { color: #06b6d4; }
-.strength-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.strength-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 14px; font-size: 0.72rem; font-weight: 500; background: rgba(59, 130, 246, 0.08); color: var(--text-muted); border: 1px solid transparent; transition: all 0.3s ease; }
-.strength-chip.met { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
-.strength-chip.met i { color: #10b981; }
-.strength-chip.unmet { background: rgba(239, 68, 68, 0.06); color: var(--text-muted); border-color: rgba(239, 68, 68, 0.12); }
-.strength-chip i { font-size: 0.65rem; }
-
-/* DISABLED AUTH BUTTON */
-.btn-submit:disabled, .btn-submit[disabled] {
-  opacity: 0.35;
-  cursor: not-allowed;
-  pointer-events: none;
-  filter: grayscale(0.3);
-  transform: scale(0.98);
-  transition: all 0.3s ease;
-}
-.btn-submit:not(:disabled) {
-  transition: all 0.3s ease;
-}
 
 /* GALLERY */
 .gallery-section { padding: 80px 40px; background: var(--bg); border-top: 1px solid var(--border); }
@@ -840,6 +724,31 @@ footer {
 .faq-item.active .faq-answer { max-height: 200px; padding: 0 24px 20px; opacity: 1; }
 .faq-item.active .faq-icon { transform: rotate(180deg); color: var(--primary); }
 
+/* AI WIDGET */
+.ai-widget { position: fixed; bottom: 30px; right: 30px; z-index: 9999; }
+.ai-widget-btn { width: 65px; height: 65px; border-radius: 50%; background: var(--primary); color: var(--primary-text); border: none; font-size: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.25); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.ai-widget-btn:hover { transform: scale(1.1); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+.ai-chat-window { position: absolute; bottom: 80px; right: 0; width: 350px; height: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.15); transform: translateY(20px) scale(0.9); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-origin: bottom right; }
+.ai-chat-window.show { transform: translateY(0) scale(1); opacity: 1; pointer-events: all; }
+.ai-chat-header { background: var(--primary); color: var(--primary-text); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1.1rem; }
+.ai-chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: var(--bg); }
+.ai-chat-messages::-webkit-scrollbar { width: 6px; }
+.ai-chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.ai-msg { padding: 12px 16px; border-radius: 12px; font-size: 0.92rem; max-width: 85%; width: fit-content; line-height: 1.4; animation: msgIn 0.3s ease forwards; }
+@keyframes msgIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.ai-msg.bot { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.ai-msg.user { background: var(--primary); color: var(--primary-text); border-bottom-right-radius: 4px; align-self: flex-end; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.ai-typing { display: flex; gap: 4px; padding: 14px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); width: fit-content; border-bottom-left-radius: 4px; display:none; }
+.ai-typing.show { display: flex; }
+.ai-dot { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; animation: typeBounce 1.4s infinite ease-in-out; }
+.ai-dot:nth-child(1) { animation-delay: -0.32s; } .ai-dot:nth-child(2) { animation-delay: -0.16s; }
+@keyframes typeBounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+.ai-chat-input { display: flex; padding: 16px; background: var(--surface); border-top: 1px solid var(--border); gap: 12px; }
+.ai-chat-input input { flex: 1; border: 1px solid var(--border); background: var(--bg); padding: 12px 18px; border-radius: 24px; color: var(--text); outline: none; font-size: 0.95rem; font-family: inherit; transition: var(--transition); }
+.ai-chat-input input:focus { border-color: var(--primary); }
+.ai-chat-input button { background: var(--primary); border: none; color: #fff; width: 44px; height: 44px; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-size: 1.1rem; cursor: pointer; transition: transform 0.2s; flex-shrink:0; }
+.ai-chat-input button:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
 @media(max-width: 768px) {
   .auth-split { flex-direction: column; }
   .auth-visual { display: none; }
@@ -848,28 +757,21 @@ footer {
 
 /* RESPONSIVE */
 @media(max-width: 900px) {
-  nav { padding: 0 15px; height: 50px; }
-  .logo img { height: 32px !important; }
-  .logo-text { font-size: 1rem !important; }
-  .nav-right { gap: 6px; }
-  .btn { padding: 6px 12px; font-size: 0.8rem; }
-  .dropdown-selected { padding: 4px 8px; font-size: 0.8rem; }
-  .mobile-btn { margin-left: 6px; font-size: 1.2rem; }
-  
+  nav { padding: 0 20px; }
   .dash-grid { grid-template-columns: 1fr; gap: 24px;}
   .welcome-banner { flex-direction: column; text-align: center; gap: 20px; }
   .dash-actions { width: 100%; justify-content: center; flex-wrap: wrap;}
   footer { flex-direction: column; gap: 16px; text-align: center; }
   
-  .hero { padding: 75px 15px 50px; }
-  .about-section, .features-section, .dashboard { padding-left: 15px; padding-right: 15px; }
+  .hero { padding: 100px 20px 60px; }
+  .about-section, .features-section, .dashboard { padding-left: 20px; padding-right: 20px; }
 
   .nav-links {
     position: absolute;
-    top: 50px; left: 0; width: 100%;
+    top: 64px; left: 0; width: 100%;
     background: var(--surface);
     flex-direction: column;
-    padding: 20px; gap: 16px;
+    padding: 24px; gap: 16px;
     border-bottom: 1px solid var(--border);
     transform: translateY(-150%);
     opacity: 0; pointer-events: none;
@@ -877,11 +779,7 @@ footer {
   .nav-links.active { transform: translateY(0); opacity: 1; pointer-events: all; }
   .mobile-btn { display: block; }
   .hide-mobile { display: none; }
-  
-  .download-card { flex-direction: column; text-align: center; }
-  .download-card .os-info { text-align: center; }
 }
-
 @media(max-width: 480px) {
   .hero-actions, .hero-actions button, .hero-actions a { width: 100%; }
   .modal { padding: 24px; }
@@ -890,50 +788,44 @@ footer {
 }
 </style>
 </head>
-<body>
-<div id="ddosShield" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text); font-family:sans-serif; transition: opacity 0.5s;">
-  <i class="fas fa-shield-alt" style="font-size:5rem; color:var(--primary); margin-bottom:24px; animation: shieldPulse 1.5s infinite;"></i>
-  <h2 style="margin-bottom:12px; font-weight:700;">Ürün Store Güvenlik Duvarı</h2>
-  <p style="color:var(--text-muted); font-size:1rem;" id="shieldStatus">Bağlantınız kontrol ediliyor, lütfen bekleyin...</p>
-</div>
-<style>
-@keyframes shieldPulse { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
-</style>
+<body oncontextmenu="return false;">
 
 <nav id="navbar">
-  <div class="logo" onclick="goHome()" style="display:flex; align-items:center; cursor:pointer;">
-    <img src="./logo.svg" alt="URUNSTORE" style="height:42px; width:auto;">
+  <div class="logo" onclick="goHome()">
+    <div class="logo-text" data-i18n="brandName">ÃœRÃœN <span class="text-primary">STORE</span></div>
   </div>
-
   <div class="nav-links" id="navLinks">
     <a href="#" onclick="goHome(); toggleMenu();" data-i18n="navHome">Ana Sayfa</a>
-    <a href="#hakkinda" onclick="goHome(); toggleMenu();" data-i18n="navAbout">Hakkında</a>
-    <a href="#ozellikler" onclick="goHome(); toggleMenu();" data-i18n="navFeatures">Özellikler</a>
+    <a href="#hakkinda" onclick="goHome(); toggleMenu();" data-i18n="navAbout">HakkÄ±nda</a>
+    <a href="#ozellikler" onclick="goHome(); toggleMenu();" data-i18n="navFeatures">Ã–zellikler</a>
     <a href="https://discord.gg/jtsKHGcTf4" target="_blank" data-i18n="navCommunity">Topluluk</a>
   </div>
   <div class="nav-right">
     <div class="custom-dropdown" id="langDropdown">
       <div class="dropdown-selected" onclick="toggleDropdown()">
-        <span id="selectedLangText">🇹🇷 TR</span>
+        <span id="selectedLangText">ğŸ‡¹ğŸ‡· TR</span>
         <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
       </div>
       <div class="dropdown-options" id="langOptions">
-        <div class="dropdown-option" onclick="selectLang('TR', '🇹🇷 TR')">🇹🇷 TR</div>
-        <div class="dropdown-option" onclick="selectLang('EN', '🇬🇧 EN')">🇬🇧 EN</div>
-        <div class="dropdown-option" onclick="selectLang('DE', '🇩🇪 DE')">🇩🇪 DE</div>
-        <div class="dropdown-option" onclick="selectLang('FR', '🇫🇷 FR')">🇫🇷 FR</div>
-        <div class="dropdown-option" onclick="selectLang('ES', '🇪🇸 ES')">🇪🇸 ES</div>
-        <div class="dropdown-option" onclick="selectLang('RU', '🇷🇺 RU')">🇷🇺 RU</div>
-        <div class="dropdown-option" onclick="selectLang('ZH', '🇨🇳 ZH')">🇨🇳 ZH</div>
+        <div class="dropdown-option" onclick="selectLang('TR', 'ğŸ‡¹ğŸ‡· TR')">ğŸ‡¹ğŸ‡· TR</div>
+        <div class="dropdown-option" onclick="selectLang('EN', 'ğŸ‡¬ğŸ‡§ EN')">ğŸ‡¬ğŸ‡§ EN</div>
+        <div class="dropdown-option" onclick="selectLang('DE', 'ğŸ‡©ğŸ‡ª DE')">ğŸ‡©ğŸ‡ª DE</div>
+        <div class="dropdown-option" onclick="selectLang('FR', 'ğŸ‡«ğŸ‡· FR')">ğŸ‡«ğŸ‡· FR</div>
+        <div class="dropdown-option" onclick="selectLang('ES', 'ğŸ‡ªğŸ‡¸ ES')">ğŸ‡ªğŸ‡¸ ES</div>
+        <div class="dropdown-option" onclick="selectLang('RU', 'ğŸ‡·ğŸ‡º RU')">ğŸ‡·ğŸ‡º RU</div>
+        <div class="dropdown-option" onclick="selectLang('ZH', 'ğŸ‡¨ğŸ‡³ ZH')">ğŸ‡¨ğŸ‡³ ZH</div>
       </div>
     </div>
+    <button class="btn btn-outline" style="border:none; font-size:1.1rem; padding:8px; margin-right:8px;" onclick="toggleTheme()" id="themeToggleBtn" title="Gece/GÃ¼ndÃ¼z Modu">
+      <i class="fas fa-moon"></i>
+    </button>
     <div id="authButtons" style="display:flex; gap:8px;">
-      <button class="btn btn-outline" onclick="openAuth('login')" data-i18n="navLogin">Giriş</button>
-      <button class="btn btn-primary" onclick="openAuth('register')" data-i18n="navRegister">Kayıt Ol</button>
+      <button class="btn btn-outline" onclick="openAuth('login')" data-i18n="navLogin">GiriÅŸ</button>
+      <button class="btn btn-primary" onclick="openAuth('register')" data-i18n="navRegister">KayÄ±t Ol</button>
     </div>
     <div class="nav-user" id="navUser" onclick="showDashboard()">
       <div class="avatar" id="navAvatar">U</div>
-      <span id="navUsername" class="hide-mobile">Kullanıcı</span>
+      <span id="navUsername" class="hide-mobile">KullanÄ±cÄ±</span>
     </div>
     <button class="mobile-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
   </div>
@@ -942,28 +834,59 @@ footer {
 <main id="mainContent">
   
   <section class="hero" id="heroSection">
-    <h1 class="reveal" data-i18n="heroTitle">Oyun ve Uygulamaların <br>Yepyeni Evi.</h1>
-    <p class="reveal delay-1" data-i18n="heroDesc">Ürün Store, favori oyunlarınızı tek bir pratik arayüzde birleştirir. İndirin, her zaman güncel kalın ve toplulukla etkileşimi koparmayın.</p>
+    <h1 class="reveal" data-i18n="heroTitle">Oyun ve UygulamalarÄ±n <br>Yepyeni Evi.</h1>
+    <p class="reveal delay-1" data-i18n="heroDesc">ÃœrÃ¼n Store, favori oyunlarÄ±nÄ±zÄ± tek bir pratik arayÃ¼zde birleÅŸtirir. Ä°ndirin, her zaman gÃ¼ncel kalÄ±n ve toplulukla etkileÅŸimi koparmayÄ±n.</p>
     
     <div class="platform-selector reveal delay-2">
+      <div class="platform-tabs">
+        <button class="platform-tab active" onclick="switchPlatform('windows')">
+          <i class="fab fa-windows"></i> Windows
+        </button>
+        <button class="platform-tab" onclick="switchPlatform('linux')">
+          <i class="fab fa-linux"></i> Linux
+        </button>
+      </div>
+
       <div class="platform-content">
         <!-- WINDOWS -->
-        <div class="platform-panel active" id="platformWindows" style="width: 100%;">
-          <div class="download-card" style="flex-direction: column; text-align: center;">
-            <div class="os-icon" style="margin-bottom: 16px; width: 64px; height: 64px; font-size: 2.5rem;">
+        <div class="platform-panel active" id="platformWindows">
+          <div class="download-card">
+            <div class="os-icon">
               <i class="fab fa-windows"></i>
             </div>
-            <div class="os-info" style="text-align: center; width: 100%;">
-              <h3 data-i18n="winTitle" style="font-size: 1.2rem; margin-bottom: 8px;">Windows için İndir</h3>
-              <p data-i18n="winDesc" style="margin-bottom: 20px;">Windows 10 / 11 uyumlu &bull; Kurulum dosyası (.exe)</p>
+            <div class="os-info">
+              <h3>Windows iÃ§in Ä°ndir</h3>
+              <p>Windows 10 / 11 uyumlu &bull; Kurulum dosyasÄ± (.exe)</p>
             </div>
-            <a href="https://release-assets.githubusercontent.com/github-production-release-asset/1184779055/2d293f3c-453d-481a-974a-08feefff4630?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-04-14T17%3A23%3A39Z&rscd=attachment%3B+filename%3DUrun.Store.Setup.1.0.3.exe&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-04-14T16%3A23%3A17Z&ske=2026-04-14T17%3A23%3A39Z&sks=b&skv=2018-11-09&sig=AeIq%2BSDA9kxhoq6X5RsNMNTy7yxUQ5HfwFtcNMTQMGg%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc3NjE4Njg5MCwibmJmIjoxNzc2MTg1MDkwLCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.zqx9QDv_uPcHErBeiHomkBXpMDGBYu32XOFU6Ii2b6U&response-content-disposition=attachment%3B%20filename%3DUrun.Store.Setup.1.0.3.exe&response-content-type=application%2Foctet-stream" class="btn-download" style="width: 100%; justify-content: center; padding: 18px; font-size: 1.2rem;">
-              <i class="fas fa-download"></i> <span data-i18n="dlBtn">İndir</span>
+            <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn-download">
+              <i class="fas fa-download"></i> Ä°ndir
             </a>
           </div>
           <div class="download-badge">
-            <i class="fas fa-shield-alt"></i> <span data-i18n="winSafe">Güvenli indirme &bull; GitHub Releases üzerinden sunulmaktadır</span>
+            <i class="fas fa-shield-alt"></i> GÃ¼venli indirme &bull; GitHub Releases Ã¼zerinden sunulmaktadÄ±r
           </div>
+        </div>
+
+        <!-- LINUX -->
+        <div class="platform-panel" id="platformLinux">
+          <div class="download-card">
+            <div class="os-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);">
+              <i class="fab fa-linux"></i>
+            </div>
+            <div class="os-info">
+              <h3>Linux iÃ§in ÃœrÃ¼n Store</h3>
+              <p>Linux sÃ¼rÃ¼mÃ¼ ÅŸu anda geliÅŸtirme aÅŸamasÄ±ndadÄ±r.</p>
+            </div>
+            <span class="btn-download disabled">
+              <i class="fas fa-clock"></i> YakÄ±nda
+            </span>
+          </div>
+          <div class="coming-soon-badge">
+            <i class="fas fa-code-branch"></i> Linux desteÄŸi henÃ¼z Ã§Ä±kmadÄ±. GeliÅŸtirmeler devam ediyor!
+          </div>
+          <a href="https://discord.gg/jtsKHGcTf4" target="_blank" class="btn btn-outline" style="padding: 10px 20px; font-size: 0.85rem;">
+            <i class="fab fa-discord"></i> GeliÅŸmelerden haberdar olmak iÃ§in Discord'a katÄ±l
+          </a>
         </div>
       </div>
     </div>
@@ -972,9 +895,9 @@ footer {
   <section class="about-section" id="hakkinda">
     <div class="about-grid">
       <div class="about-text reveal">
-        <h2 data-i18n="aboutTitle">Tek Platform, Sınırsız Deneyim.</h2>
-        <p data-i18n="aboutDesc">Ürün Store, ihtiyacınız olan her şeyi basit ve düzenli bir yapıda sunar. Kütüphanenizi yönetin, indirmeleri başlatın ve karmaşık menülerde kaybolmadan arkadaşlarınızla iletişimde kalın.</p>
-        <button class="btn btn-outline" onclick="openModal('register')"><span data-i18n="aboutBtn">Hesap Oluştur</span> <i class="fas fa-arrow-right"></i></button>
+        <h2 data-i18n="aboutTitle">Tek Platform, SÄ±nÄ±rsÄ±z Deneyim.</h2>
+        <p data-i18n="aboutDesc">ÃœrÃ¼n Store, ihtiyacÄ±nÄ±z olan her ÅŸeyi basit ve dÃ¼zenli bir yapÄ±da sunar. KÃ¼tÃ¼phanenizi yÃ¶netin, indirmeleri baÅŸlatÄ±n ve karmaÅŸÄ±k menÃ¼lerde kaybolmadan arkadaÅŸlarÄ±nÄ±zla iletiÅŸimde kalÄ±n.</p>
+        <button class="btn btn-outline" onclick="openModal('register')"><span data-i18n="aboutBtn">Hesap OluÅŸtur</span> <i class="fas fa-arrow-right"></i></button>
       </div>
     </div>
   </section>
@@ -986,47 +909,47 @@ footer {
     <div class="features-grid">
       <div class="feature-card card reveal delay-1">
         <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-        <h3 data-i18n="f1Title">Hızlı İndirme</h3>
-        <p data-i18n="f1Desc">Optimize edilmiş sunucularımız sayesinde oyunlarınızı saniyeler içinde kütüphanenize ekleyin ve hemen başlayın.</p>
+        <h3 data-i18n="f1Title">HÄ±zlÄ± Ä°ndirme</h3>
+        <p data-i18n="f1Desc">Optimize edilmiÅŸ sunucularÄ±mÄ±z sayesinde oyunlarÄ±nÄ±zÄ± saniyeler iÃ§inde kÃ¼tÃ¼phanenize ekleyin ve hemen baÅŸlayÄ±n.</p>
       </div>
       <div class="feature-card card reveal delay-2">
         <div class="feature-icon"><i class="fas fa-sync"></i></div>
-        <h3 data-i18n="f2Title">Otomatik Güncelleme</h3>
-        <p data-i18n="f2Desc">Arka planda çalışan sistemimiz, siz oyuna girmeden önce tüm dosyalarınızı en güncel halinde tutar.</p>
+        <h3 data-i18n="f2Title">Otomatik GÃ¼ncelleme</h3>
+        <p data-i18n="f2Desc">Arka planda Ã§alÄ±ÅŸan sistemimiz, siz oyuna girmeden Ã¶nce tÃ¼m dosyalarÄ±nÄ±zÄ± en gÃ¼ncel halinde tutar.</p>
       </div>
       <div class="feature-card card reveal delay-3">
         <div class="feature-icon"><i class="fas fa-users"></i></div>
         <h3 data-i18n="f3Title">Sosyal Hub</h3>
-        <p data-i18n="f3Desc">Arkadaşlarınızın ne oynadığını anında görün, sohbet edin ve Discord entegrasyonuyla gruplara katılın.</p>
+        <p data-i18n="f3Desc">ArkadaÅŸlarÄ±nÄ±zÄ±n ne oynadÄ±ÄŸÄ±nÄ± anÄ±nda gÃ¶rÃ¼n, sohbet edin ve Discord entegrasyonuyla gruplara katÄ±lÄ±n.</p>
       </div>
     </div>
   </section>
 
   <section class="faq-section reveal delay-1" id="sss">
     <div class="features-header">
-      <h2 data-i18n="faqTitle">Sıkça Sorulan <span class="text-primary">Sorular</span></h2>
+      <h2 data-i18n="faqTitle">SÄ±kÃ§a Sorulan <span class="text-primary">Sorular</span></h2>
     </div>
     <div class="faq-container">
       <div class="faq-item" onclick="this.classList.toggle('active')">
         <div class="faq-question">
-          <span data-i18n="faq1_q">Uygulama tamamen ücretsiz mi?</span>
+          <span data-i18n="faq1_q">Uygulama tamamen Ã¼cretsiz mi?</span>
           <i class="fas fa-chevron-down faq-icon"></i>
         </div>
-        <div class="faq-answer"><p data-i18n="faq1_a">Evet, Ürün Store istemcisini indirmek ve kullanmak tamamen ücretsizdir. Ancak platform içindeki bazı spesifik oyunlar veya içerikler ücretli olabilir.</p></div>
+        <div class="faq-answer"><p data-i18n="faq1_a">Evet, ÃœrÃ¼n Store istemcisini indirmek ve kullanmak tamamen Ã¼cretsizdir. Ancak platform iÃ§indeki bazÄ± spesifik oyunlar veya iÃ§erikler Ã¼cretli olabilir.</p></div>
       </div>
       <div class="faq-item" onclick="this.classList.toggle('active')">
         <div class="faq-question">
-          <span data-i18n="faq2_q">Hangi işletim sistemlerini destekliyor?</span>
+          <span data-i18n="faq2_q">Hangi iÅŸletim sistemlerini destekliyor?</span>
           <i class="fas fa-chevron-down faq-icon"></i>
         </div>
-        <div class="faq-answer"><p data-i18n="faq2_a">Şu anda Windows 10/11 desteği aktif.</p></div>
+        <div class="faq-answer"><p data-i18n="faq2_a">Åu anda Windows 10/11 desteÄŸi aktif. Linux versiyonumuz geliÅŸtirme aÅŸamasÄ±ndadÄ±r ve yakÄ±nda yayÄ±nlanacaktÄ±r.</p></div>
       </div>
       <div class="faq-item" onclick="this.classList.toggle('active')">
         <div class="faq-question">
-          <span data-i18n="faq3_q">Hesap bilgilerim güvende mi?</span>
+          <span data-i18n="faq3_q">Hesap bilgilerim gÃ¼vende mi?</span>
           <i class="fas fa-chevron-down faq-icon"></i>
         </div>
-        <div class="faq-answer"><p data-i18n="faq3_a">Kesinlikle. Şifreleriniz ve kişisel verileriniz Supabase altyapısıyla şifrelenir ve endüstri standardı güvenlik protokolleriyle korunur.</p></div>
+        <div class="faq-answer"><p data-i18n="faq3_a">Kesinlikle. Åifreleriniz ve kiÅŸisel verileriniz Supabase altyapÄ±sÄ±yla ÅŸifrelenir ve endÃ¼stri standardÄ± gÃ¼venlik protokolleriyle korunur.</p></div>
       </div>
     </div>
   </section>
@@ -1039,30 +962,30 @@ footer {
     <div class="welcome-left">
       <div class="avatar-lg" id="dashAvatar">U</div>
       <div class="welcome-info">
-        <h2><span data-i18n="dashWelcome">Hoş Geldin</span>, <span class="text-primary" id="dashUsername">Kullanıcı</span></h2>
+        <h2>HoÅŸ Geldin, <span class="text-primary" id="dashUsername">KullanÄ±cÄ±</span></h2>
         <p id="dashEmail">email@email.com</p>
       </div>
     </div>
     <div class="dash-actions">
-      <button class="btn btn-primary" onclick="openModal('download')"><i class="fas fa-download"></i> <span data-i18n="dashDlBtn">Programı İndir</span></button>
-      <button class="btn btn-outline" onclick="openModal('settings')"><i class="fas fa-cog"></i> <span data-i18n="dashSet">Ayarlar</span></button>
+      <button class="btn btn-primary" onclick="openModal('download')"><i class="fas fa-download"></i> ProgramÄ± Ä°ndir</button>
+      <button class="btn btn-outline" onclick="openModal('settings')"><i class="fas fa-cog"></i> Ayarlar</button>
     </div>
   </div>
 
   <div class="dash-grid">
     <div class="panel card">
       <div class="panel-header">
-        <h3><i class="fas fa-user-shield text-primary"></i> <span data-i18n="dashSum">Hesap Özeti</span></h3>
+        <h3><i class="fas fa-user-shield text-primary"></i> Hesap Ã–zeti</h3>
       </div>
       <div class="info-list">
-        <div class="info-row"><span data-i18n="dashUser">Kullanıcı Adı</span><span id="infoUsername">-</span></div>
-        <div class="info-row"><span data-i18n="dashEmail">E-posta</span><span id="infoEmail">-</span></div>
-        <div class="info-row"><span data-i18n="dashId">Hesap ID</span><span id="infoId">-</span></div>
-        <div class="info-row"><span data-i18n="dashDate">Kayıt Tarihi</span><span id="infoCreated">-</span></div>
-        <div class="info-row"><span data-i18n="dashStat">Durum</span><span style="color:var(--success);"><i class="fas fa-check-circle"></i> <span data-i18n="dashAct">Onaylı</span></span></div>
+        <div class="info-row"><span>KullanÄ±cÄ± AdÄ±</span><span id="infoUsername">-</span></div>
+        <div class="info-row"><span>E-posta</span><span id="infoEmail">-</span></div>
+        <div class="info-row"><span>Hesap ID</span><span id="infoId">-</span></div>
+        <div class="info-row"><span>KayÄ±t Tarihi</span><span id="infoCreated">-</span></div>
+        <div class="info-row"><span>Durum</span><span style="color:var(--success);"><i class="fas fa-check-circle"></i> OnaylÄ±</span></div>
         <div style="margin-top:12px;">
            <button class="btn btn-outline text-danger" style="width:100%; border-color:var(--border);" onclick="logout()">
-             <i class="fas fa-sign-out-alt"></i> <span data-i18n="dashOut">Çıkış Yap</span>
+             <i class="fas fa-sign-out-alt"></i> Ã‡Ä±kÄ±ÅŸ Yap
            </button>
         </div>
       </div>
@@ -1076,7 +999,7 @@ footer {
 
 <!-- AUTH PAGE -->
 <div class="auth-page" id="authPage">
-  <button class="auth-close" onclick="closeAuth()"><i class="fas fa-arrow-left"></i> <span data-i18n="authBack">Geri Dön</span></button>
+  <button class="auth-close" onclick="closeAuth()"><i class="fas fa-arrow-left"></i> Geri DÃ¶n</button>
   <div class="auth-split">
     <div class="auth-visual">
       <div class="char-container" id="charContainer">
@@ -1101,86 +1024,64 @@ footer {
       
       <div class="auth-form-box" id="authLoginPanel">
         <div class="auth-logo-icon"><i class="fas fa-meteor"></i></div>
-        <h2 data-i18n="authW">Hoş Geldin!</h2>
-        <p class="subtitle" data-i18n="authWD">Lütfen detaylarını gir.</p>
-        <!-- GOOGLE SIGN-IN -->
-        <button class="btn-google" onclick="signInWithGoogle()" id="loginGoogleBtn">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-          <span data-i18n="authGoogle">Google ile Giriş Yap</span>
-        </button>
-        <div class="auth-divider" data-i18n="authOr">veya</div>
+        <h2>HoÅŸ Geldin!</h2>
+        <p class="subtitle">LÃ¼tfen detaylarÄ±nÄ± gir.</p>
         <form onsubmit="handleLogin(event)">
           <div class="form-group custom-input" style="margin-bottom:24px;">
-            <label data-i18n="loginUserEmail">E-posta veya Kullanıcı Adı</label>
-            <input type="text" id="loginEmail" data-i18n-placeholder="loginUserEmail" placeholder="ornek@email.com veya kullanıcı" required>
-            <div class="form-error" id="loginEmailErr" style="color:var(--danger); font-size:0.8rem; margin-top:4px;"></div>
+            <label>E-posta</label>
+            <input type="email" id="loginEmail" placeholder="ornek@email.com" required>
+            <div class="form-error" id="loginEmailErr"></div>
           </div>
           <div class="form-group custom-input password-wrapper" style="margin-bottom:24px;">
-            <label data-i18n="authPass">Şifre</label>
-            <input type="password" id="loginPassword" placeholder="Şifreniz" required onfocus="document.getElementById('charContainer').classList.remove('focused-away')">
+            <label>Åifre</label>
+            <input type="password" id="loginPassword" placeholder="Åifreniz" required onfocus="document.getElementById('charContainer').classList.remove('focused-away')">
             <i class="fas fa-eye password-toggle" onclick="togglePassword('loginPassword', this)"></i>
-            <div class="form-error" id="loginPasswordErr" style="color:var(--danger); font-size:0.8rem; margin-top:4px;"></div>
+            <div class="form-error" id="loginPasswordErr"></div>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:28px; color:var(--text-muted);">
-            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox"> <span data-i18n="authRem">30 gün hatırla</span></label>
-            <a style="cursor:pointer; font-weight:600; color:var(--text);" data-i18n="authFor">Şifremi unuttum</a>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox"> 30 gÃ¼n hatÄ±rla</label>
+            <a style="cursor:pointer; font-weight:600; color:var(--text);">Åifremi unuttum</a>
           </div>
-          <button type="submit" class="btn btn-primary btn-submit" id="loginBtn" disabled style="border-radius:24px; margin-top:0; padding:12px;" data-i18n="authLog">Giriş Yap</button>
+          <button type="submit" class="btn btn-primary btn-submit" id="loginBtn" style="border-radius:24px; margin-top:0; padding:12px;">GiriÅŸ Yap</button>
         </form>
-        <div class="modal-switch" style="margin-top:28px;"><span data-i18n="authNoAcc">Hesabın yok mu? </span><a onclick="switchAuth('register')" data-i18n="navRegister">Kayıt Ol</a></div>
+        <div class="modal-switch" style="margin-top:28px;">HesabÄ±n yok mu? <a onclick="switchAuth('register')">KayÄ±t Ol</a></div>
       </div>
 
       <div class="auth-form-box" id="authRegisterPanel" style="display:none">
         <div class="auth-logo-icon"><i class="fas fa-meteor"></i></div>
-        <h2 data-i18n="authJoin">Aramıza Katıl</h2>
-        <p class="subtitle" data-i18n="authJoinD">Platforma giriş yapmak için ücretsiz kayıt ol.</p>
-        <!-- GOOGLE SIGN-UP -->
-        <button class="btn-google" onclick="signInWithGoogle()" id="regGoogleBtn">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-          <span data-i18n="authGoogleReg">Google ile Kayıt Ol</span>
-        </button>
-        <div class="auth-divider" data-i18n="authOr">veya</div>
+        <h2>AramÄ±za KatÄ±l</h2>
+        <p class="subtitle">Platforma giriÅŸ yapmak iÃ§in Ã¼cretsiz kayÄ±t ol.</p>
         <form onsubmit="handleRegister(event)">
           <div class="form-group custom-input">
-            <label data-i18n="dashUser">Kullanıcı Adı</label>
-            <input type="text" id="regUsername" data-i18n-placeholder="dashUser" placeholder="Kullanıcı adınız" required minlength="3">
+            <label>KullanÄ±cÄ± AdÄ±</label>
+            <input type="text" id="regUsername" placeholder="KullanÄ±cÄ± adÄ±nÄ±z" required minlength="3">
             <div class="form-error" id="regUsernameErr"></div>
           </div>
           <div class="form-group custom-input">
-            <label data-i18n="dashEmail">E-posta</label>
+            <label>E-posta</label>
             <input type="email" id="regEmail" placeholder="ornek@email.com" required>
             <div class="form-error" id="regEmailErr"></div>
           </div>
           <div class="form-group custom-input password-wrapper">
-            <label data-i18n="authPass">Şifre</label>
-            <input type="password" id="regPassword" data-i18n-placeholder="authPass" placeholder="En az 6 karakter" required minlength="6" onfocus="document.getElementById('charContainer').classList.remove('focused-away')" oninput="checkPasswordStrength(this.value); validateRegisterForm()">
+            <label>Åifre</label>
+            <input type="password" id="regPassword" placeholder="En az 6 karakter" required minlength="6" onfocus="document.getElementById('charContainer').classList.remove('focused-away')">
             <i class="fas fa-eye password-toggle" onclick="togglePassword('regPassword', this)"></i>
-          </div>
-          <!-- PASSWORD STRENGTH INDICATOR -->
-          <div class="password-strength" id="passwordStrengthBox" style="display:none; margin-top:-16px; margin-bottom:16px;">
-            <div class="strength-bar-container">
-              <div class="strength-bar" id="sBar1"></div>
-              <div class="strength-bar" id="sBar2"></div>
-              <div class="strength-bar" id="sBar3"></div>
-              <div class="strength-bar" id="sBar4"></div>
-            </div>
-            <div class="strength-label" id="strengthLabel"></div>
-            <div class="strength-suggestions" id="strengthSuggestions"></div>
+            <div class="form-error" id="regPasswordErr"></div>
           </div>
           <div class="form-group custom-input password-wrapper" style="margin-bottom:20px;">
-            <label data-i18n="authPass2">Şifre tekrar</label>
-            <input type="password" id="regPassword2" data-i18n-placeholder="authPass2P" placeholder="Şifrenizi doğrulayın" required onfocus="document.getElementById('charContainer').classList.remove('focused-away')">
+            <label>Åifre tekrar</label>
+            <input type="password" id="regPassword2" placeholder="Åifrenizi doÄŸrulayÄ±n" required onfocus="document.getElementById('charContainer').classList.remove('focused-away')">
             <div class="form-error" id="regPassword2Err"></div>
           </div>
           <div style="display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; color:var(--text-muted); margin-bottom:24px;">
             <input type="checkbox" id="kvkkCheck" required style="margin-top:4px; cursor:pointer;">
             <label for="kvkkCheck" style="margin-bottom:0; font-weight:500;">
-              <a href="#" onclick="openModal('kvkk')" style="font-weight:600; color:var(--text); text-decoration:underline;" data-i18n="authTerms">Kullanım Koşulları ve KVKK Aydınlatma Metni'ni</a> <span data-i18n="authTerms2">okudum, anladım ve kabul ediyorum.</span>
+              <a href="#" onclick="openModal('kvkk')" style="font-weight:600; color:var(--text); text-decoration:underline;">KullanÄ±m KoÅŸullarÄ± ve KVKK AydÄ±nlatma Metni'ni</a> okudum, anladÄ±m ve kabul ediyorum.
             </label>
           </div>
-          <button type="submit" class="btn btn-primary btn-submit" id="regBtn" disabled style="border-radius:24px; margin-top:0; padding:12px;" data-i18n="authReg">Hesap Oluştur</button>
+          <button type="submit" class="btn btn-primary btn-submit" id="regBtn" style="border-radius:24px; margin-top:0; padding:12px;">Hesap OluÅŸtur</button>
         </form>
-        <div class="modal-switch" style="margin-top:28px;"><span data-i18n="authHasAcc">Hesabın var mı? </span><a onclick="switchAuth('login')" data-i18n="authLog">Giriş Yap</a></div>
+        <div class="modal-switch" style="margin-top:28px;">HesabÄ±n var mÄ±? <a onclick="switchAuth('login')">GiriÅŸ Yap</a></div>
       </div>
 
     </div>
@@ -1192,84 +1093,106 @@ footer {
 
   <div class="modal" id="kvkkModal" style="display:none; max-width: 600px; width: 90%;">
     <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
-    <h2>KVKK ve Kullanım Koşulları</h2>
+    <h2>KVKK ve KullanÄ±m KoÅŸullarÄ±</h2>
     <div style="font-size: 0.85rem; color: var(--text-muted); padding: 16px; border: 1px solid var(--border); border-radius: 8px; margin-top: 16px; line-height:1.6; max-height: 400px; overflow-y: auto;">
-      <h3 style="color:var(--text); font-size:1rem; margin-bottom:8px;">Kullanım Koşulları</h3>
-      <p style="margin-bottom: 12px;">Bu platformu ("Ürün Store") ziyaret ederek ve kayıt olarak, aşağıda belirtilen şartları, kuralları ve <strong>KVKK (Kişisel Verilerin Korunması Kanunu)</strong> aydınlatma metnini tamamen okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş sayılırsınız. Platform, kullanıcılarına dijital içerik yönetim hizmetleri ve kütüphane sunar.</p>
+      <h3 style="color:var(--text); font-size:1rem; margin-bottom:8px;">KullanÄ±m KoÅŸullarÄ±</h3>
+      <p style="margin-bottom: 12px;">Bu platformu ("ÃœrÃ¼n Store") ziyaret ederek ve kayÄ±t olarak, aÅŸaÄŸÄ±da belirtilen ÅŸartlarÄ±, kurallarÄ± ve <strong>KVKK (KiÅŸisel Verilerin KorunmasÄ± Kanunu)</strong> aydÄ±nlatma metnini tamamen okuduÄŸunuzu, anladÄ±ÄŸÄ±nÄ±zÄ± ve kabul ettiÄŸinizi beyan etmiÅŸ sayÄ±lÄ±rsÄ±nÄ±z. Platform, kullanÄ±cÄ±larÄ±na dijital iÃ§erik yÃ¶netim hizmetleri ve kÃ¼tÃ¼phane sunar.</p>
       
-      <p style="margin-bottom: 12px;"><strong>1. Hesap Güvenliği:</strong> Platform üzerinde oluşturduğunuz kullanıcı adı, e-posta adresi ve şifre bilgilerinin güvenliğinden bütünüyle siz sorumlusunuz. Üçüncü şahıslarla paylaşılan şifrelerden doğacak maddi veya manevi zararlardan platformumuz sorumlu tutulamaz.</p>
+      <p style="margin-bottom: 12px;"><strong>1. Hesap GÃ¼venliÄŸi:</strong> Platform Ã¼zerinde oluÅŸturduÄŸunuz kullanÄ±cÄ± adÄ±, e-posta adresi ve ÅŸifre bilgilerinin gÃ¼venliÄŸinden bÃ¼tÃ¼nÃ¼yle siz sorumlusunuz. ÃœÃ§Ã¼ncÃ¼ ÅŸahÄ±slarla paylaÅŸÄ±lan ÅŸifrelerden doÄŸacak maddi veya manevi zararlardan platformumuz sorumlu tutulamaz.</p>
 
-      <p style="margin-bottom: 12px;"><strong>2. İçerik ve Lisanslar:</strong> Platform üzerinden erişilen tüm içerikler, ürünler ve görsellerin fikri mülkiyet hakları ilgili hak sahiplerine aittir. Kullanıcı, bu hakları ihlal edecek kopyalama, dağıtma veya yetkisiz erişim girişimlerinde bulunmayacağını taahhüt eder.</p>
+      <p style="margin-bottom: 12px;"><strong>2. Ä°Ã§erik ve Lisanslar:</strong> Platform Ã¼zerinden eriÅŸilen tÃ¼m iÃ§erikler, Ã¼rÃ¼nler ve gÃ¶rsellerin fikri mÃ¼lkiyet haklarÄ± ilgili hak sahiplerine aittir. KullanÄ±cÄ±, bu haklarÄ± ihlal edecek kopyalama, daÄŸÄ±tma veya yetkisiz eriÅŸim giriÅŸimlerinde bulunmayacaÄŸÄ±nÄ± taahhÃ¼t eder.</p>
 
-      <h3 style="color:var(--text); font-size:1rem; margin-bottom:8px; margin-top:16px;">KVKK Aydınlatma Metni</h3>
-      <p style="margin-bottom: 12px;">6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") uyarınca, kişisel verileriniz veri sorumlusu sıfatıyla tarafımızca işlenmektedir. Platforma üyeliğiniz sırasında alınan "E-Posta, Şifre, Kullanıcı Adı" gibi temel veri setleriniz aşağıdaki amaçlarla işlenir:</p>
+      <h3 style="color:var(--text); font-size:1rem; margin-bottom:8px; margin-top:16px;">KVKK AydÄ±nlatma Metni</h3>
+      <p style="margin-bottom: 12px;">6698 sayÄ±lÄ± KiÅŸisel Verilerin KorunmasÄ± Kanunu ("KVKK") uyarÄ±nca, kiÅŸisel verileriniz veri sorumlusu sÄ±fatÄ±yla tarafÄ±mÄ±zca iÅŸlenmektedir. Platforma Ã¼yeliÄŸiniz sÄ±rasÄ±nda alÄ±nan "E-Posta, Åifre, KullanÄ±cÄ± AdÄ±" gibi temel veri setleriniz aÅŸaÄŸÄ±daki amaÃ§larla iÅŸlenir:</p>
       
-      <p style="margin-bottom: 12px;"><strong>a) İşleme Amacı:</strong> Hizmetlerimizin sorunsuz bir şekilde yerine getirilmesi, üyelik profilinizin oluşturulması, sistem güncellemeleri hakkında bilgi verilmesi ve güvenliğinizin sağlanması amacıyla bilgileriniz veri tabanımızda yüksek güvenlik standartlarıyla şifrelenerek korunmaktadır.</p>
+      <p style="margin-bottom: 12px;"><strong>a) Ä°ÅŸleme AmacÄ±:</strong> Hizmetlerimizin sorunsuz bir ÅŸekilde yerine getirilmesi, Ã¼yelik profilinizin oluÅŸturulmasÄ±, sistem gÃ¼ncellemeleri hakkÄ±nda bilgi verilmesi ve gÃ¼venliÄŸinizin saÄŸlanmasÄ± amacÄ±yla bilgileriniz veri tabanÄ±mÄ±zda yÃ¼ksek gÃ¼venlik standartlarÄ±yla ÅŸifrelenerek korunmaktadÄ±r.</p>
 
-      <p style="margin-bottom: 12px;"><strong>b) Aktarım:</strong> Kişisel verileriniz hiçbir suretle hukuki gereksinimler (adli mercilerin meşru ve yasal talepleri) dışında üçüncü şahıslara veya şirketlere ticari amaçlı aktarılmaz, izinsiz paylaşılmaz ve kesinlikle satılmaz.</p>
+      <p style="margin-bottom: 12px;"><strong>b) AktarÄ±m:</strong> KiÅŸisel verileriniz hiÃ§bir suretle hukuki gereksinimler (adli mercilerin meÅŸru ve yasal talepleri) dÄ±ÅŸÄ±nda Ã¼Ã§Ã¼ncÃ¼ ÅŸahÄ±slara veya ÅŸirketlere ticari amaÃ§lÄ± aktarÄ±lmaz, izinsiz paylaÅŸÄ±lmaz ve kesinlikle satÄ±lmaz.</p>
 
-      <p style="margin-bottom: 12px;"><strong>c) Haklarınız:</strong> Kanunun 11. maddesi uyarınca veri sahipleri; verilerinin işlenip işlenmediğini öğrenme, işlenmişse buna ilişkin bilgi talep etme, silinmesini veya yok edilmesini talep etme ve eksik/yanlış işlenmişse düzeltilmesi haklarına sahiptir.</p>
+      <p style="margin-bottom: 12px;"><strong>c) HaklarÄ±nÄ±z:</strong> Kanunun 11. maddesi uyarÄ±nca veri sahipleri; verilerinin iÅŸlenip iÅŸlenmediÄŸini Ã¶ÄŸrenme, iÅŸlenmiÅŸse buna iliÅŸkin bilgi talep etme, silinmesini veya yok edilmesini talep etme ve eksik/yanlÄ±ÅŸ iÅŸlenmiÅŸse dÃ¼zeltilmesi haklarÄ±na sahiptir.</p>
 
-      <p style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-weight: 600; color: var(--text);">Teyit: İşbu metni kayıt esnasında onaylayarak, platformun kullanımını düzenleyen tüm kuralları ve verilerinizin belirtilen esaslar dahilinde işlenmesini açık rızanızla onaylamış sayılırsınız.</p>
+      <p style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-weight: 600; color: var(--text);">Teyit: Ä°ÅŸbu metni kayÄ±t esnasÄ±nda onaylayarak, platformun kullanÄ±mÄ±nÄ± dÃ¼zenleyen tÃ¼m kurallarÄ± ve verilerinizin belirtilen esaslar dahilinde iÅŸlenmesini aÃ§Ä±k rÄ±zanÄ±zla onaylamÄ±ÅŸ sayÄ±lÄ±rsÄ±nÄ±z.</p>
     </div>
   </div>
   
   <div class="modal" id="settingsModal" style="display:none;">
     <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
     <h2>Ayarlar</h2>
-    <p class="subtitle">Profil detaylarını düzenle.</p>
+    <p class="subtitle">Profil detaylarÄ±nÄ± dÃ¼zenle.</p>
     
     <div class="card" style="padding:16px; margin-bottom:16px;">
       <h4 style="font-size:0.9rem; margin-bottom:12px;"><i class="fas fa-user-edit text-primary"></i> Profil Bilgileri</h4>
       <form onsubmit="handleUpdateProfile(event)">
-        <div class="form-group"><label>Kullanıcı Adı</label><input type="text" id="updateUsername" required minlength="3"></div>
+        <div class="form-group"><label>KullanÄ±cÄ± AdÄ±</label><input type="text" id="updateUsername" required minlength="3"></div>
         <div class="form-group"><label>E-posta</label><input type="email" id="updateEmail" required></div>
         <button type="submit" class="btn btn-primary" id="btnUpdateProfile" style="width:100%;">Kaydet</button>
       </form>
     </div>
     
     <div class="card" style="padding:16px;">
-      <h4 style="font-size:0.9rem; margin-bottom:12px;"><i class="fas fa-lock text-primary"></i> Şifre İşlemleri</h4>
-      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">Sıfırlama linki e-posta adresinize gönderilecektir.</p>
-      <button onclick="handleSendPasswordReset(event)" class="btn btn-outline" id="btnUpdatePassword" style="width:100%;">Şifre Sıfırla</button>
+      <h4 style="font-size:0.9rem; margin-bottom:12px;"><i class="fas fa-lock text-primary"></i> Åifre Ä°ÅŸlemleri</h4>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">SÄ±fÄ±rlama linki e-posta adresinize gÃ¶nderilecektir.</p>
+      <button onclick="handleSendPasswordReset(event)" class="btn btn-outline" id="btnUpdatePassword" style="width:100%;">Åifre SÄ±fÄ±rla</button>
     </div>
   </div>
 
   <div class="modal" id="otpModal" style="display:none;">
     <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
     <div style="font-size:2.5rem; color:var(--primary); margin-bottom:12px; text-align:center;"><i class="fas fa-shield-alt"></i></div>
-    <h2>Güvenlik Kodu</h2>
+    <h2>GÃ¼venlik Kodu</h2>
     <p class="subtitle">E-postana gelen 6 haneli kodu gir.</p>
     <form onsubmit="handleVerifyOTP(event)">
       <div class="form-group">
         <input type="text" id="otpCode" placeholder="000000" maxlength="6" style="text-align:center; font-size:1.4rem; letter-spacing:8px; font-weight:700;" required>
         <div class="form-error" id="otpError"></div>
       </div>
-      <button type="submit" class="btn btn-primary btn-submit" id="otpBtn">Doğrula ve Gir</button>
+      <button type="submit" class="btn btn-primary btn-submit" id="otpBtn">DoÄŸrula ve Gir</button>
     </form>
-    <div class="modal-switch">Kod gelmedi mi? <a onclick="resendOTP()">Tekrar İste</a></div>
+    <div class="modal-switch">Kod gelmedi mi? <a onclick="resendOTP()">Tekrar Ä°ste</a></div>
   </div>
 
   <div class="modal" id="downloadModal" style="display:none">
     <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
-    <h2>İndir</h2>
-    <p class="subtitle">İşletim sisteminizi seçin.</p>
+    <h2>Ä°ndir</h2>
+    <p class="subtitle">Ä°ÅŸletim sisteminizi seÃ§in.</p>
     
-    <div class="platform-selector" style="margin-top:20px; width: 100%;">
-      <div class="platform-content" style="width: 100%;">
+    <div class="platform-selector" style="margin-top:20px;">
+      <div class="platform-tabs">
+        <button class="platform-tab active" onclick="switchPlatformDash('windows')" id="tabWinDash">
+          <i class="fab fa-windows"></i> Windows
+        </button>
+        <button class="platform-tab" onclick="switchPlatformDash('linux')" id="tabLinDash">
+          <i class="fab fa-linux"></i> Linux
+        </button>
+      </div>
+
+      <div class="platform-content">
         <!-- WINDOWS -->
-        <div class="platform-panel active" id="platformWindowsDash" style="width: 100%;">
-          <div class="download-card" style="padding:24px 20px; flex-direction:column; text-align:center;">
-            <div class="os-icon" style="width:64px;height:64px;font-size:2.5rem; margin:0 auto 16px;">
+        <div class="platform-panel active" id="platformWindowsDash">
+          <div class="download-card" style="padding:24px 20px;">
+            <div class="os-icon" style="width:48px;height:48px;font-size:1.8rem; flex-shrink:0;">
               <i class="fab fa-windows"></i>
             </div>
-            <div class="os-info" style="text-align:center; width:100%;">
-              <h3 style="font-size: 1.2rem; font-weight:700; margin-bottom: 8px;" data-i18n="winTitle">Windows İçin İndir</h3>
-              <p style="font-size: 0.9rem; margin-bottom: 20px;" data-i18n="winDesc">Windows 10 / 11 uyumlu • Kurulum dosyası (.exe)</p>
+            <div class="os-info">
+              <h3 style="font-size: 1.1rem; font-weight:700;" data-i18n="winTitle">Windows Ä°Ã§in Ä°ndir</h3>
+              <p style="font-size: 0.85rem;" data-i18n="winDesc">Windows 10 / 11 uyumlu â€¢ Kurulum dosyasÄ± (.exe)</p>
             </div>
-            <a href="https://release-assets.githubusercontent.com/github-production-release-asset/1184779055/2d293f3c-453d-481a-974a-08feefff4630?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-04-14T17%3A23%3A39Z&rscd=attachment%3B+filename%3DUrun.Store.Setup.1.0.3.exe&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-04-14T16%3A23%3A17Z&ske=2026-04-14T17%3A23%3A39Z&sks=b&skv=2018-11-09&sig=AeIq%2BSDA9kxhoq6X5RsNMNTy7yxUQ5HfwFtcNMTQMGg%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc3NjE4Njg5MCwibmJmIjoxNzc2MTg1MDkwLCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.zqx9QDv_uPcHErBeiHomkBXpMDGBYu32XOFU6Ii2b6U&response-content-disposition=attachment%3B%20filename%3DUrun.Store.Setup.1.0.3.exe&response-content-type=application%2Foctet-stream" class="btn btn-primary" style="width: 100%; border-radius: 8px; padding: 14px;">
-              <i class="fas fa-download"></i> <span data-i18n="dlBtn">İndir</span>
+            <a href="https://github.com/AntiPedro/UrunStore/releases/download/%C3%9Cr%C3%BCnWindows/UrunStoreSetup.exe" class="btn btn-primary" style="margin-top: 10px; width: 100%; border-radius: 8px;">
+              <i class="fas fa-download"></i> <span data-i18n="dlBtn">Ä°ndir</span>
             </a>
+          </div>
+        </div>
+
+        <!-- LINUX -->
+        <div class="platform-panel" id="platformLinuxDash">
+          <div class="download-card" style="padding:24px 20px;">
+            <div class="os-icon" style="width:48px;height:48px;font-size:1.8rem; color: #f59e0b; background: rgba(245, 158, 11, 0.1); flex-shrink:0;">
+              <i class="fab fa-linux"></i>
+            </div>
+            <div class="os-info">
+              <h3 style="font-size: 1rem;">Linux <span style="font-size:0.7rem; font-weight:normal; background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">YakÄ±nda</span></h3>
+              <p style="font-size: 0.75rem;">GeliÅŸtirme aÅŸamasÄ±nda</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1278,19 +1201,621 @@ footer {
 
 </div>
 
+<div class="ai-widget" id="aiWidget">
+  <button class="ai-widget-btn" onclick="toggleChat()" title="Yapay Zeka DesteÄŸi">
+    <i class="fas fa-robot"></i>
+  </button>
+  <div class="ai-chat-window" id="aiChatWindow">
+    <div class="ai-chat-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <i class="fas fa-robot" style="font-size:1.2rem;"></i> <span data-i18n="aiTitle">Destek AsistanÄ±</span>
+      </div>
+      <button onclick="toggleChat()" style="background:transparent; border:none; color:white; font-size:1.1rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="ai-chat-messages" id="aiChatMessages">
+      <div class="ai-msg bot" data-i18n="aiWelcome">Merhaba! ÃœrÃ¼n Store hakkÄ±nda sormak istediÄŸiniz bir ÅŸey var mÄ±?</div>
+    </div>
+    <div class="ai-chat-input">
+      <input type="text" id="aiInput" placeholder="MesajÄ±nÄ±zÄ± yazÄ±n..." onkeypress="if(event.key === 'Enter') sendAIMessage()">
+      <button onclick="sendAIMessage()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
 
-<footer style="padding: 18px 40px; min-height: auto;">
-
-  <div class="footer-text">© 2026 Ürün Store. <span data-i18n="footerAllRights">Tüm Hakları Saklıdır.</span></div>
+<footer>
+  <div class="logo">
+    <div class="logo-text" data-i18n="brandName">ÃœRÃœN <span class="text-primary">STORE</span></div>
+  </div>
+  <div class="footer-text">Â© 2026 ÃœrÃ¼n Store. TÃ¼m HaklarÄ± SaklÄ±dÄ±r.</div>
   <div>
     <a href="https://discord.gg/jtsKHGcTf4" target="_blank" style="font-size:1.2rem; color:var(--text-muted);"><i class="fab fa-discord"></i></a>
   </div>
 </footer>
 
-<script src="./config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./app.js" defer></script>
+<script>
+const SUPABASE_URL='https://qyyxblsytifczxcgpvpi.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5eXhibHN5dGlmY3p4Y2dwdnBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MzA2NTIsImV4cCI6MjA4NTIwNjY1Mn0.gFny_HVvl2KGYrs1J0T9mR06U5kR95FI_dOIuHkSvA4';
 
+let sb = null;
+try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.error(e); }
+
+let lastEmail = ""; let lastType = "signup"; 
+
+function openModal(t){
+  document.getElementById('modalOverlay').classList.add('open');
+  ['settings','otp','download','kvkk'].forEach(m => {
+    const el = document.getElementById(m+'Modal');
+    if (el) el.style.display = t===m ? 'block' : 'none';
+  });
+  clearErrors();
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open')}
+function closeModalOutside(e){if(e.target===document.getElementById('modalOverlay'))closeModal()}
+function switchModal(t){openModal(t)}
+
+function openAuth(type) {
+  // Dropdown aÃ§Ä±ksa kapat
+  const langOpts = document.getElementById('langOptions');
+  if (langOpts) langOpts.classList.remove('show');
+  
+  document.getElementById('mainContent').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('navbar').style.display = 'none';
+  document.getElementById('authPage').classList.add('show');
+  switchAuth(type);
+  clearErrors();
+}
+function closeAuth() {
+  document.getElementById('authPage').classList.remove('show');
+  document.getElementById('navbar').style.display = 'flex';
+  if (sb) {
+    sb.auth.getSession().then(({data:{session}}) => {
+      if(session?.user) showDashboard();
+      else goHome();
+    }).catch(() => goHome());
+  } else goHome();
+}
+function switchAuth(type) {
+  document.getElementById('authLoginPanel').style.display = type === 'login' ? 'block' : 'none';
+  document.getElementById('authRegisterPanel').style.display = type === 'register' ? 'block' : 'none';
+}
+function togglePassword(inputId, iconElement) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    iconElement.classList.replace('fa-eye', 'fa-eye-slash');
+    document.getElementById('charContainer').classList.add('focused-away');
+  } else {
+    input.type = 'password';
+    iconElement.classList.replace('fa-eye-slash', 'fa-eye');
+    document.getElementById('charContainer').classList.remove('focused-away');
+  }
+}
+document.addEventListener('mousemove', (e) => {
+  const container = document.getElementById('charContainer');
+  if (!container || !document.getElementById('authPage').classList.contains('show')) return;
+  if (container.classList.contains('focused-away')) return;
+  document.querySelectorAll('.pupil').forEach(pupil => {
+    const rect = pupil.parentElement.getBoundingClientRect();
+    const eyeCenterX = rect.left + rect.width / 2;
+    const eyeCenterY = rect.top + rect.height / 2;
+    const angle = Math.atan2(e.clientY - eyeCenterY, e.clientX - eyeCenterX);
+    const maxMove = 3; 
+    const dx = Math.cos(angle) * maxMove;
+    const dy = Math.sin(angle) * maxMove;
+    pupil.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+  });
+});
+
+function clearErrors(){document.querySelectorAll('.form-error').forEach(e=>{e.textContent='';e.classList.remove('show')})}
+function showError(id,msg){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.classList.add('show')}
+
+async function handleRegister(e){
+  e.preventDefault();clearErrors();
+  const username=document.getElementById('regUsername').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const pass=document.getElementById('regPassword').value;
+  const pass2=document.getElementById('regPassword2').value;
+  
+  if(pass!==pass2){showError('regPassword2Err','Åifreler eÅŸleÅŸmiyor.');return}
+  
+  const btn=document.getElementById('regBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Ä°ÅŸleniyor...';
+
+  try{
+    const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{username}}});
+    if(error) {
+      if(error.status === 429) throw new Error("Ã‡ok fazla istek attÄ±nÄ±z, lÃ¼tfen bir sÃ¼re bekleyin.");
+      throw error;
+    }
+    if(data.user && data.session){
+      closeAuth();
+      showToast('KayÄ±t baÅŸarÄ±lÄ±! HoÅŸ geldin.'); showDashboard(); updateUI();
+    } else if(data.user) {
+      if(data.user.identities && data.user.identities.length === 0) {
+        showError('regEmailErr', 'Bu e-posta kayÄ±tlÄ±. LÃ¼tfen giriÅŸ yapÄ±n.');
+        document.getElementById('regBtn').disabled=false;
+        document.getElementById('regBtn').textContent='KayÄ±t Ol';
+        return;
+      }
+      const{data:d2,error:e2}=await sb.auth.signInWithPassword({email,password:pass});
+      if(!e2){closeAuth();showToast('KayÄ±t baÅŸarÄ±lÄ±!'); showDashboard(); updateUI();}
+      else{showToast('KayÄ±t olundu, giriÅŸ yapabilirsiniz.');closeAuth();}
+    }
+  }catch(err){
+    showError('regEmailErr', err.message || 'KayÄ±t sÄ±rasÄ±nda bir hata oluÅŸtu.');
+  } finally {
+    btn.disabled=false;btn.textContent='KayÄ±t Ol';
+  }
+}
+
+async function handleLogin(e){
+  e.preventDefault();clearErrors();
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPassword').value;
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Ä°ÅŸleniyor...';
+
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error) throw error;
+    closeAuth();
+    showToast('GiriÅŸ baÅŸarÄ±lÄ±.'); showDashboard(); updateUI();
+  }catch(err){
+    showError('loginPasswordErr', err.message === 'Invalid login credentials' ? 'HatalÄ± e-posta veya ÅŸifre.' : err.message);
+  } finally {
+    btn.disabled=false;btn.textContent='GiriÅŸ Yap';
+  }
+}
+
+async function logout(){
+  if(sb){try{await sb.auth.signOut()}catch(e){}}
+  showToast('Ã‡Ä±kÄ±ÅŸ yapÄ±ldÄ±.'); updateUI();
+}
+
+async function updateUI(){
+  let user=null;
+  if(sb){
+    try{
+      const{data:{session}}=await sb.auth.getSession();
+      if(session?.user) {
+        user={
+          username:session.user.user_metadata?.username || session.user.email.split('@')[0],
+          email:session.user.email,
+          created: new Date(session.user.created_at).toLocaleDateString('tr-TR'),
+          id: session.user.id
+        };
+      }
+    }catch(e){}
+  }
+
+  if(user){
+    document.getElementById('authButtons').style.display='none';
+    document.getElementById('navUser').style.display='flex';
+    document.getElementById('navAvatar').textContent=user.username[0].toUpperCase();
+    document.getElementById('navUsername').textContent=user.username;
+    
+    document.getElementById('dashAvatar').textContent=user.username[0].toUpperCase();
+    document.getElementById('dashUsername').textContent=user.username;
+    document.getElementById('dashEmail').textContent=user.email;
+    
+    document.getElementById('infoUsername').textContent=user.username;
+    document.getElementById('infoEmail').textContent=user.email;
+    document.getElementById('infoId').textContent=user.id;
+    document.getElementById('infoCreated').textContent=user.created;
+    
+    document.getElementById('updateUsername').value = user.username;
+    document.getElementById('updateEmail').value = user.email;
+
+    if (!window.initialLayoutSet) {
+      window.initialLayoutSet = true;
+      showDashboard();
+    }
+  }else{
+    window.initialLayoutSet = true;
+    document.getElementById('authButtons').style.display='flex';
+    document.getElementById('navUser').style.display='none';
+    goHome();
+  }
+}
+
+async function handleUpdateProfile(e) {
+  e.preventDefault();
+  const username = document.getElementById('updateUsername').value.trim();
+  const email = document.getElementById('updateEmail').value.trim();
+  const btn = document.getElementById('btnUpdateProfile');
+  btn.disabled = true;
+
+  if (sb) {
+    try {
+      const { error } = await sb.auth.updateUser({ email, data: { username } });
+      if (error) throw error;
+      showToast('Profil gÃ¼ncellendi!'); updateUI();
+    } catch (err) { showToast('Hata: ' + err.message, true); }
+  }
+  btn.disabled = false;
+}
+
+async function handleSendPasswordReset(e) {
+  e.preventDefault();
+  let currentEmail = document.getElementById('infoEmail').textContent;
+  if (!currentEmail || currentEmail === '-') return;
+  
+  if (sb) {
+    try { await sb.auth.resetPasswordForEmail(currentEmail); showToast('BaÄŸlantÄ± gÃ¶nderildi!'); }
+    catch (err) { showToast('Hata oluÅŸtu.', true); }
+  }
+}
+
+async function handleVerifyOTP(e) {
+  e.preventDefault();
+  const code = document.getElementById('otpCode').value.trim();
+  const err = document.getElementById('otpError'); err.classList.remove('show');
+  if (code.length !== 6) return;
+
+  try {
+    const { error } = await sb.auth.verifyOtp({ email: lastEmail, token: code, type: lastType });
+    if (error) throw error;
+    closeModal(); showToast('E-posta baÅŸarÄ±yla doÄŸrulandÄ±.'); showDashboard(); updateUI();
+  } catch (err) { showError('otpError', 'GeÃ§ersiz veya sÃ¼resi dolmuÅŸ kod.'); }
+}
+
+async function resendOTP() {
+  if (!lastEmail) return;
+  try { await sb.auth.resend({ type: lastType, email: lastEmail }); showToast('Yeni kod gÃ¶nderildi.'); }
+  catch (e) { showToast('Hata oluÅŸtu.', true); }
+}
+
+
+
+function goHome() {
+  const main = document.getElementById('mainContent');
+  const dash = document.getElementById('dashboard');
+  main.style.display = 'block';
+  main.style.opacity = '0';
+  setTimeout(() => main.style.opacity = '1', 10);
+  dash.style.opacity = '0';
+  setTimeout(() => {
+    dash.style.display = 'none';
+    dash.classList.remove('show');
+  }, 400);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function showDashboard() {
+  const main = document.getElementById('mainContent');
+  const dash = document.getElementById('dashboard');
+  main.style.opacity = '0';
+  window.scrollTo({top:0, behavior:'smooth'});
+  setTimeout(() => {
+    main.style.display = 'none';
+    dash.style.display = 'block';
+    dash.classList.add('show');
+    dash.style.opacity = '0';
+    setTimeout(() => dash.style.opacity = '1', 10);
+  }, 400);
+}
+function toggleMenu() {
+  const menu = document.getElementById('navLinks');
+  menu.classList.toggle('active');
+}
+
+
+
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  
+  const icon = document.querySelector('#themeToggleBtn i');
+  if (icon) {
+    icon.className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  const icon = document.querySelector('#themeToggleBtn i');
+  if (icon) {
+    icon.className = savedTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+  }
+});
+
+function switchPlatform(platform) {
+  document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.platform-panel').forEach(p => { p.classList.remove('active'); });
+  if (platform === 'windows') {
+    document.querySelector('.platform-tab:first-child').classList.add('active');
+    document.getElementById('platformWindows').classList.add('active');
+  } else {
+    document.querySelector('.platform-tab:last-child').classList.add('active');
+    document.getElementById('platformLinux').classList.add('active');
+  }
+}
+
+function switchPlatformDash(platform) {
+  const modal = document.getElementById('downloadModal');
+  modal.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
+  modal.querySelectorAll('.platform-panel').forEach(p => { p.classList.remove('active'); });
+  if (platform === 'windows') {
+    document.getElementById('tabWinDash').classList.add('active');
+    document.getElementById('platformWindowsDash').classList.add('active');
+  } else {
+    document.getElementById('tabLinDash').classList.add('active');
+    document.getElementById('platformLinuxDash').classList.add('active');
+  }
+}
+function showToast(msg,isError){
+  const t=document.getElementById('toast');
+  t.className = 'toast show ' + (isError?'error':'');
+  document.getElementById('toastMsg').textContent=msg;
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+if(sb){ 
+  try {
+    sb.auth.onAuthStateChange((event, session) => {
+      updateUI();
+      if(session?.user) {
+         // Online durumu gÃ¼ncelle (Basit bir Ã§Ã¶zÃ¼m)
+         sb.from('profiles').update({status:'online', last_seen: new Date()}).eq('id', session.user.id).then(()=>{});
+      }
+    })
+  }catch(e){} 
+}
+
+updateUI();
+
+// ANIMATIONS LOGIC
+document.addEventListener('DOMContentLoaded', () => {
+  const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting) {
+        entry.target.classList.add('active');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+});
+
+/* MULTI-LANGUAGE */
+const translations = {
+  TR: {
+    brandName: "ÃœRÃœN <span class='text-primary'>STORE</span>",
+    navHome: "Ana Sayfa", navAbout: "HakkÄ±nda", navFeatures: "Ã–zellikler", navCommunity: "Topluluk", navLogin: "GiriÅŸ", navRegister: "KayÄ±t Ol",
+    galleryTitle: "ArayÃ¼z <span class='text-primary'>GÃ¶rselleri</span>", gal1: "KÃ¼tÃ¼phane GÃ¶rÃ¼nÃ¼mÃ¼", gal2: "Ä°ndirme YÃ¶neticisi", gal3: "MaÄŸaza Sekmesi",
+    heroTitle: "Oyun ve UygulamalarÄ±n <br>Yepyeni Evi.", heroDesc: "ÃœrÃ¼n Store, favori oyunlarÄ±nÄ±zÄ± tek bir pratik arayÃ¼zde birleÅŸtirir. Ä°ndirin, her zaman gÃ¼ncel kalÄ±n ve toplulukla etkileÅŸimi koparmayÄ±n.",
+    aboutTitle: "Tek Platform, SÄ±nÄ±rsÄ±z Deneyim.", aboutDesc: "ÃœrÃ¼n Store, ihtiyacÄ±nÄ±z olan her ÅŸeyi basit ve dÃ¼zenli bir yapÄ±da sunar. KÃ¼tÃ¼phanenizi yÃ¶netin, indirmeleri baÅŸlatÄ±n ve karmaÅŸÄ±k menÃ¼lerde kaybolmadan arkadaÅŸlarÄ±nÄ±zla iletiÅŸimde kalÄ±n.", aboutBtn: "Hesap OluÅŸtur",
+    featuresTitle: "Neden Bizi <span class='text-primary'>Tercih Etmelisiniz?</span>",
+    f1Title: "HÄ±zlÄ± Ä°ndirme", f1Desc: "Optimize edilmiÅŸ sunucularÄ±mÄ±z sayesinde oyunlarÄ±nÄ±zÄ± saniyeler iÃ§inde kÃ¼tÃ¼phanenize ekleyin ve hemen baÅŸlayÄ±n.",
+    f2Title: "Otomatik GÃ¼ncelleme", f2Desc: "Arka planda Ã§alÄ±ÅŸan sistemimiz, siz oyuna girmeden Ã¶nce tÃ¼m dosyalarÄ±nÄ±zÄ± en gÃ¼ncel halinde tutar.",
+    f3Title: "Sosyal Hub", f3Desc: "ArkadaÅŸlarÄ±nÄ±zÄ±n ne oynadÄ±ÄŸÄ±nÄ± anÄ±nda gÃ¶rÃ¼n, sohbet edin ve Discord entegrasyonuyla gruplara katÄ±lÄ±n.",
+    winTitle: "Windows Ä°Ã§in Ä°ndir", winDesc: "Windows 10 / 11 uyumlu â€¢ Kurulum dosyasÄ± (.exe)", dlBtn: "Ä°ndir",
+    faqTitle: "SÄ±kÃ§a Sorulan <span class='text-primary'>Sorular</span>", faq1_q: "Uygulama tamamen Ã¼cretsiz mi?", faq1_a: "Evet, ÃœrÃ¼n Store istemcisini indirmek ve kullanmak tamamen Ã¼cretsizdir. Ancak platform iÃ§indeki bazÄ± oyunlar Ã¼cretli olabilir.",
+    faq2_q: "Hangi iÅŸletim sistemlerini destekliyor?", faq2_a: "Åu anda Windows 10/11 desteÄŸi aktif. Linux versiyonumuz geliÅŸtirme aÅŸamasÄ±ndadÄ±r.", faq3_q: "Hesap bilgilerim gÃ¼vende mi?", faq3_a: "Kesinlikle. Åifreleriniz ve kiÅŸisel verileriniz Supabase altyapÄ±sÄ±yla korunur.",
+    aiTitle: "Destek AsistanÄ±", aiWelcome: "Merhaba! ÃœrÃ¼n Store hakkÄ±nda sormak istediÄŸiniz bir ÅŸey var mÄ±?",
+    aiPrompt: "Sen ÃœrÃ¼n Store isimli bir uygulamanÄ±n asistanÄ±sÄ±n. KullanÄ±cÄ±ya net, samimi ve TÃœRKÃ‡E cevaplar ver."
+  },
+  EN: {
+    brandName: "PRODUCT <span class='text-primary'>STORE</span>",
+    navHome: "Home", navAbout: "About Us", navFeatures: "Features", navCommunity: "Community", navLogin: "Login", navRegister: "Sign Up",
+    galleryTitle: "Interface <span class='text-primary'>Showcase</span>", gal1: "Library View", gal2: "Download Manager", gal3: "Store Tab",
+    heroTitle: "A Brand New Home <br>for Games & Apps.", heroDesc: "Product Store combines your favorite games in a single practical interface. Download, stay up to date, and never lose touch with the community.",
+    aboutTitle: "One Platform, Limitless Experience.", aboutDesc: "Product Store provides everything you need in a simple and organized structure. Manage your library, start downloads, and communicate with friends without getting lost in complex menus.", aboutBtn: "Create Account",
+    featuresTitle: "Why Should You <span class='text-primary'>Choose Us?</span>",
+    f1Title: "Fast Downloading", f1Desc: "Adding games to your library takes seconds thanks to our optimized servers. Start playing right away.",
+    f2Title: "Auto Updates", f2Desc: "Our background system keeps all your files up-to-date before you even enter the game.",
+    f3Title: "Social Hub", f3Desc: "Instantly see what your friends are playing, chat, and join groups with Discord integration.",
+    winTitle: "Download for Windows", winDesc: "Windows 10 / 11 compatible â€¢ Installer file (.exe)", dlBtn: "Download",
+    faqTitle: "Frequently Asked <span class='text-primary'>Questions</span>", faq1_q: "Is the app completely free?", faq1_a: "Yes, downloading and using the Product Store client is completely free. However, specific games might be paid.",
+    faq2_q: "Which operating systems are supported?", faq2_a: "Currently, Windows 10/11 support is active. Our Linux version is in development.", faq3_q: "Are my account details safe?", faq3_a: "Absolutely. Passwords and personal data are protected by Supabase.",
+    aiTitle: "Support Assistant", aiWelcome: "Hello! Do you have any questions about Product Store?",
+    aiPrompt: "You are the smart support assistant for a platform named Product Store. Give concise, friendly, and ENGLISH answers."
+  },
+  DE: {
+    brandName: "PRODUKT <span class='text-primary'>STORE</span>",
+    navHome: "Startseite", navAbout: "Ãœber Uns", navFeatures: "Funktionen", navCommunity: "Gemeinschaft", navLogin: "Anmelden", navRegister: "Registrieren",
+    galleryTitle: "Schnittstellen <span class='text-primary'>Galerie</span>", gal1: "Bibliotheksansicht", gal2: "Download-Manager", gal3: "Store-Tab",
+    heroTitle: "Ein ganz neues Zuhause <br>fÃ¼r Spiele & Apps.", heroDesc: "Produkt Store vereint Ihre Lieblingsspiele in einer einzigen praktischen BenutzeroberflÃ¤che. Laden Sie herunter, bleiben Sie auf dem Laufenden.",
+    aboutTitle: "Eine Plattform, grenzenlose Erfahrung.", aboutDesc: "Produkt Store bietet alles, was Sie brauchen, in einer einfachen und organisierten Struktur.", aboutBtn: "Konto erstellen",
+    featuresTitle: "Warum sollten Sie <span class='text-primary'>uns wÃ¤hlen?</span>",
+    f1Title: "Schnelles Herunterladen", f1Desc: "Das HinzufÃ¼gen von Spielen zu Ihrer Bibliothek dauert dank unserer optimierten Server nur Sekunden.",
+    f2Title: "Automatische Updates", f2Desc: "Unser Hintergrundsystem hÃ¤lt alle Ihre Dateien auf dem neuesten Stand.",
+    f3Title: "Sozialer Hub", f3Desc: "Sehen Sie sofort, was Ihre Freunde spielen, chatten Sie und treten Sie Gruppen bei.",
+    winTitle: "Download fÃ¼r Windows", winDesc: "Windows 10 / 11 kompatibel â€¢ Installationsdatei (.exe)", dlBtn: "Herunterladen",
+    faqTitle: "HÃ¤ufig gestellte <span class='text-primary'>Fragen</span>", faq1_q: "Ist die App vÃ¶llig kostenlos?", faq1_a: "Ja, der Download und die Nutzung sind vÃ¶llig kostenlos.",
+    faq2_q: "Welche Betriebssysteme werden unterstÃ¼tzt?", faq2_a: "Derzeit wird Windows 10/11 unterstÃ¼tzt. Unsere Linux-Version ist in Entwicklung.", faq3_q: "Sind meine Kontodaten sicher?", faq3_a: "Absolut. Alle Daten sind geschÃ¼tzt.",
+    aiTitle: "Support-Assistent", aiWelcome: "Hallo! Haben Sie Fragen zum Produkt Store?",
+    aiPrompt: "Du bist der intelligente Support-Assistent fÃ¼r eine Plattform namens Produkt Store. Gib prÃ¤gnante, freundliche und DEUTSCHE Antworten."
+  },
+  FR: {
+    brandName: "PRODUIT <span class='text-primary'>STORE</span>",
+    navHome: "Accueil", navAbout: "Ã€ Propos", navFeatures: "FonctionnalitÃ©s", navCommunity: "CommunautÃ©", navLogin: "Connexion", navRegister: "S'inscrire",
+    galleryTitle: "Vitrine <span class='text-primary'>Interface</span>", gal1: "Vue BibliothÃ¨que", gal2: "Gestionnaire de TÃ©lÃ©chargement", gal3: "Onglet Magasin",
+    heroTitle: "Une toute nouvelle maison <br>pour Jeux & Apps.", heroDesc: "Le Produit Store combine vos jeux prÃ©fÃ©rÃ©s dans une seule interface pratique.",
+    aboutTitle: "Une Plateforme, ExpÃ©rience IllimitÃ©e.", aboutDesc: "Produit Store fournit tout ce dont vous avez besoin dans une structure simple et organisÃ©e.", aboutBtn: "CrÃ©er un Compte",
+    featuresTitle: "Pourquoi devriez-vous <span class='text-primary'>nous choisir?</span>",
+    f1Title: "TÃ©lÃ©chargement Rapide", f1Desc: "Ajouter des jeux Ã  votre bibliothÃ¨que prend quelques secondes.",
+    f2Title: "Mises Ã  jour Automatiques", f2Desc: "Notre systÃ¨me en arriÃ¨re-plan maintient tous vos fichiers Ã  jour.",
+    f3Title: "Hub Social", f3Desc: "Voyez instantanÃ©ment ce Ã  quoi vos amis jouent.",
+    winTitle: "TÃ©lÃ©charger pour Windows", winDesc: "Compatible Windows 10 / 11 â€¢ Fichier d'installation (.exe)", dlBtn: "TÃ©lÃ©charger",
+    faqTitle: "Questions <span class='text-primary'>FrÃ©quentes</span>", faq1_q: "L'application est-elle gratuite ?", faq1_a: "Oui, c'est totalement gratuit.",
+    faq2_q: "Quels systÃ¨mes d'exploitation ?", faq2_a: "Windows 10/11 est pris en charge. Linux est en dÃ©veloppement.", faq3_q: "Mes donnÃ©es sont-elles en sÃ©curitÃ© ?", faq3_a: "Absolument.",
+    aiTitle: "Assistant Support", aiWelcome: "Bonjour ! Avez-vous des questions sur Produit Store ?",
+    aiPrompt: "Vous Ãªtes l'assistant de support intelligent du Produit Store. Donnez des rÃ©ponses concises, amicales et en FRANÃ‡AIS."
+  },
+  ES: {
+    brandName: "PRODUCTO <span class='text-primary'>STORE</span>",
+    navHome: "Inicio", navAbout: "Sobre Nosotros", navFeatures: "CaracterÃ­sticas", navCommunity: "Comunidad", navLogin: "Iniciar sesiÃ³n", navRegister: "Registrarse",
+    galleryTitle: "GalerÃ­a de <span class='text-primary'>Interfaz</span>", gal1: "Vista de Biblioteca", gal2: "Gestor de Descargas", gal3: "PestaÃ±a de Tienda",
+    heroTitle: "Un Nuevo Hogar <br>para Juegos y Apps.", heroDesc: "Producto Store combina tus juegos favoritos en una Ãºnica interfaz prÃ¡ctica.",
+    aboutTitle: "Una Plataforma, Experiencia Ilimitada.", aboutDesc: "Producto Store proporciona todo lo que necesitas en una estructura simple.", aboutBtn: "Crear Cuenta",
+    featuresTitle: "Â¿Por quÃ© <span class='text-primary'>elegirnos?</span>",
+    f1Title: "Descarga RÃ¡pida", f1Desc: "AÃ±adir juegos a tu biblioteca lleva segundos gracias a nuestros servidores optimizados.",
+    f2Title: "Actualizaciones AutomÃ¡ticas", f2Desc: "Nuestro sistema mantiene todos tus archivos actualizados.",
+    f3Title: "Centro Social", f3Desc: "Ve instantÃ¡neamente a quÃ© juegan tus amigos y chatea con ellos.",
+    winTitle: "Descargar para Windows", winDesc: "Compatible con Windows 10 / 11 â€¢ Archivo de instalaciÃ³n (.exe)", dlBtn: "Descargar",
+    faqTitle: "Preguntas <span class='text-primary'>Frecuentes</span>", faq1_q: "Â¿Es totalmente gratis?", faq1_a: "SÃ­, es completamente gratis para descargar y usar.",
+    faq2_q: "Â¿QuÃ© sistemas operativos soporta?", faq2_a: "Windows 10/11. Linux en desarrollo.", faq3_q: "Â¿EstÃ¡n seguros mis datos?", faq3_a: "Absolutamente.",
+    aiTitle: "Asistente de Soporte", aiWelcome: "Â¡Hola! Â¿Tienes alguna pregunta sobre Producto Store?",
+    aiPrompt: "Eres el asistente de soporte inteligente para Producto Store. Da respuestas concisas, amigables y en ESPAÃ‘OL."
+  },
+  RU: {
+    brandName: "ĞŸĞ ĞĞ”Ğ£ĞšĞ¢ <span class='text-primary'>STORE</span>",
+    navHome: "Ğ“Ğ»Ğ°Ğ²Ğ½Ğ°Ñ", navAbout: "Ğ ĞĞ°Ñ", navFeatures: "Ğ¤ÑƒĞ½ĞºÑ†Ğ¸Ğ¸", navCommunity: "Ğ¡Ğ¾Ğ¾Ğ±Ñ‰ĞµÑÑ‚Ğ²Ğ¾", navLogin: "Ğ’Ğ¾Ğ¹Ñ‚Ğ¸", navRegister: "Ğ ĞµĞ³Ğ¸ÑÑ‚Ñ€Ğ°Ñ†Ğ¸Ñ",
+    galleryTitle: "Ğ“Ğ°Ğ»ĞµÑ€ĞµÑ <span class='text-primary'>Ğ˜Ğ½Ñ‚ĞµÑ€Ñ„ĞµĞ¹ÑĞ°</span>", gal1: "Ğ‘Ğ¸Ğ±Ğ»Ğ¸Ğ¾Ñ‚ĞµĞºĞ°", gal2: "ĞœĞµĞ½ĞµĞ´Ğ¶ĞµÑ€ Ğ—Ğ°Ğ³Ñ€ÑƒĞ·Ğ¾Ğº", gal3: "ĞœĞ°Ğ³Ğ°Ğ·Ğ¸Ğ½",
+    heroTitle: "ĞĞ¾Ğ²Ñ‹Ğ¹ Ğ”Ğ¾Ğ¼ <br>Ğ´Ğ»Ñ Ğ˜Ğ³Ñ€ Ğ¸ ĞŸÑ€Ğ¸Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ğ¹.", heroDesc: "ĞŸÑ€Ğ¾Ğ´ÑƒĞºÑ‚ Store Ğ¾Ğ±ÑŠĞµĞ´Ğ¸Ğ½ÑĞµÑ‚ Ğ²Ğ°ÑˆĞ¸ Ğ»ÑĞ±Ğ¸Ğ¼Ñ‹Ğµ Ğ¸Ğ³Ñ€Ñ‹ Ğ² Ğ¾Ğ´Ğ½Ğ¾Ğ¼ ÑƒĞ´Ğ¾Ğ±Ğ½Ğ¾Ğ¼ Ğ¸Ğ½Ñ‚ĞµÑ€Ñ„ĞµĞ¹ÑĞµ.",
+    aboutTitle: "ĞĞ´Ğ½Ğ° ĞŸĞ»Ğ°Ñ‚Ñ„Ğ¾Ñ€Ğ¼Ğ°, Ğ‘ĞµĞ·Ğ³Ñ€Ğ°Ğ½Ğ¸Ñ‡Ğ½Ñ‹Ğ¹ ĞĞ¿Ñ‹Ñ‚.", aboutDesc: "ĞŸÑ€Ğ¾Ğ´ÑƒĞºÑ‚ Store Ğ¿Ñ€ĞµĞ´Ğ¾ÑÑ‚Ğ°Ğ²Ğ»ÑĞµÑ‚ Ğ²ÑĞµ Ğ½ĞµĞ¾Ğ±Ñ…Ğ¾Ğ´Ğ¸Ğ¼Ğ¾Ğµ Ğ² Ğ¿Ñ€Ğ¾ÑÑ‚Ğ¾Ğ¹ Ğ¸ Ğ¿Ğ¾Ğ½ÑÑ‚Ğ½Ğ¾Ğ¹ ÑÑ‚Ñ€ÑƒĞºÑ‚ÑƒÑ€Ğµ.", aboutBtn: "Ğ¡Ğ¾Ğ·Ğ´Ğ°Ñ‚ÑŒ ĞĞºĞºĞ°ÑƒĞ½Ñ‚",
+    featuresTitle: "ĞŸĞ¾Ñ‡ĞµĞ¼Ñƒ <span class='text-primary'>Ğ’Ñ‹Ğ±Ğ¸Ñ€Ğ°ÑÑ‚ ĞĞ°Ñ?</span>",
+    f1Title: "Ğ‘Ñ‹ÑÑ‚Ñ€Ğ°Ñ Ğ—Ğ°Ğ³Ñ€ÑƒĞ·ĞºĞ°", f1Desc: "Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ Ğ¸Ğ³Ñ€ Ğ² Ğ±Ğ¸Ğ±Ğ»Ğ¸Ğ¾Ñ‚ĞµĞºÑƒ Ğ·Ğ°Ğ½Ğ¸Ğ¼Ğ°ĞµÑ‚ ÑĞµĞºÑƒĞ½Ğ´Ñ‹ Ğ±Ğ»Ğ°Ğ³Ğ¾Ğ´Ğ°Ñ€Ñ Ğ½Ğ°ÑˆĞ¸Ğ¼ ÑĞµÑ€Ğ²ĞµÑ€Ğ°Ğ¼.",
+    f2Title: "ĞĞ²Ñ‚Ğ¾Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸Ñ", f2Desc: "ĞĞ°ÑˆĞ° ÑĞ¸ÑÑ‚ĞµĞ¼Ğ° Ğ°Ğ²Ñ‚Ğ¾Ğ¼Ğ°Ñ‚Ğ¸Ñ‡ĞµÑĞºĞ¸ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ÑĞµÑ‚ Ğ²Ğ°ÑˆĞ¸ Ñ„Ğ°Ğ¹Ğ»Ñ‹.",
+    f3Title: "Ğ¡Ğ¾Ñ†Ğ¸Ğ°Ğ»ÑŒĞ½Ñ‹Ğ¹ Ğ¦ĞµĞ½Ñ‚Ñ€", f3Desc: "ĞĞ±Ñ‰Ğ°Ğ¹Ñ‚ĞµÑÑŒ Ñ Ğ´Ñ€ÑƒĞ·ÑŒÑĞ¼Ğ¸ Ğ¸ Ğ¿Ñ€Ğ¸ÑĞ¾ĞµĞ´Ğ¸Ğ½ÑĞ¹Ñ‚ĞµÑÑŒ Ğº Ğ³Ñ€ÑƒĞ¿Ğ¿Ğ°Ğ¼.",
+    winTitle: "Ğ¡ĞºĞ°Ñ‡Ğ°Ñ‚ÑŒ Ğ´Ğ»Ñ Windows", winDesc: "Ğ¡Ğ¾Ğ²Ğ¼ĞµÑÑ‚Ğ¸Ğ¼Ğ¾ Ñ Windows 10 / 11 â€¢ Ğ¤Ğ°Ğ¹Ğ» ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²ĞºĞ¸ (.exe)", dlBtn: "Ğ¡ĞºĞ°Ñ‡Ğ°Ñ‚ÑŒ",
+    faqTitle: "Ğ§Ğ°ÑÑ‚Ñ‹Ğµ <span class='text-primary'>Ğ’Ğ¾Ğ¿Ñ€Ğ¾ÑÑ‹</span>", faq1_q: "Ğ­Ñ‚Ğ¾ Ğ¿Ñ€Ğ¸Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ğµ Ğ¿Ğ¾Ğ»Ğ½Ğ¾ÑÑ‚ÑŒÑ Ğ±ĞµÑĞ¿Ğ»Ğ°Ñ‚Ğ½Ğ¾Ğµ?", faq1_a: "Ğ”Ğ°, Ğ·Ğ°Ğ³Ñ€ÑƒĞ·ĞºĞ° Ğ¸ Ğ¸ÑĞ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ğ½Ğ¸Ğµ Ğ°Ğ±ÑĞ¾Ğ»ÑÑ‚Ğ½Ğ¾ Ğ±ĞµÑĞ¿Ğ»Ğ°Ñ‚Ğ½Ñ‹.",
+    faq2_q: "ĞšĞ°ĞºĞ¸Ğµ ĞĞ¡ Ğ¿Ğ¾Ğ´Ğ´ĞµÑ€Ğ¶Ğ¸Ğ²Ğ°ÑÑ‚ÑÑ?", faq2_a: "Windows 10/11. Linux Ğ² Ñ€Ğ°Ğ·Ñ€Ğ°Ğ±Ğ¾Ñ‚ĞºĞµ.", faq3_q: "ĞœĞ¾Ğ¸ Ğ´Ğ°Ğ½Ğ½Ñ‹Ğµ Ğ² Ğ±ĞµĞ·Ğ¾Ğ¿Ğ°ÑĞ½Ğ¾ÑÑ‚Ğ¸?", faq3_a: "ĞĞ±ÑĞ¾Ğ»ÑÑ‚Ğ½Ğ¾.",
+    aiTitle: "Ğ¡Ğ»ÑƒĞ¶Ğ±Ğ° ĞŸĞ¾Ğ´Ğ´ĞµÑ€Ğ¶ĞºĞ¸", aiWelcome: "Ğ—Ğ´Ñ€Ğ°Ğ²ÑÑ‚Ğ²ÑƒĞ¹Ñ‚Ğµ! Ğ£ Ğ²Ğ°Ñ ĞµÑÑ‚ÑŒ Ğ²Ğ¾Ğ¿Ñ€Ğ¾ÑÑ‹ Ğ¾ ĞŸÑ€Ğ¾Ğ´ÑƒĞºÑ‚ Store?",
+    aiPrompt: "Ğ’Ñ‹ â€” ÑƒĞ¼Ğ½Ñ‹Ğ¹ Ğ¿Ğ¾Ğ¼Ğ¾Ñ‰Ğ½Ğ¸Ğº ÑĞ»ÑƒĞ¶Ğ±Ñ‹ Ğ¿Ğ¾Ğ´Ğ´ĞµÑ€Ğ¶ĞºĞ¸ Ğ¿Ğ»Ğ°Ñ‚Ñ„Ğ¾Ñ€Ğ¼Ñ‹ ĞŸÑ€Ğ¾Ğ´ÑƒĞºÑ‚ Store. Ğ”Ğ°Ğ²Ğ°Ğ¹Ñ‚Ğµ ĞºÑ€Ğ°Ñ‚ĞºĞ¸Ğµ, Ğ´Ñ€ÑƒĞ¶ĞµĞ»ÑĞ±Ğ½Ñ‹Ğµ Ğ¾Ñ‚Ğ²ĞµÑ‚Ñ‹ Ğ½Ğ° Ğ Ğ£Ğ¡Ğ¡ĞšĞĞœ ÑĞ·Ñ‹ĞºĞµ."
+  },
+  ZH: {
+    brandName: "äº§å“ <span class='text-primary'>å•†åº—</span>",
+    navHome: "é¦–é¡µ", navAbout: "å…³äºæˆ‘ä»¬", navFeatures: "ç‰¹ç‚¹", navCommunity: "ç¤¾åŒº", navLogin: "ç™»å½•", navRegister: "æ³¨å†Œ",
+    galleryTitle: "ç•Œé¢ <span class='text-primary'>å±•ç¤º</span>", gal1: "å›¾ä¹¦é¦†è§†å›¾", gal2: "ä¸‹è½½ç®¡ç†å™¨", gal3: "å•†åº—æ ‡ç­¾",
+    heroTitle: "æ¸¸æˆå’Œåº”ç”¨çš„æ–°å®¶ã€‚", heroDesc: "äº§å“å•†åº—åœ¨ä¸€ä¸ªä½¿ç”¨çš„ç•Œé¢ä¸­ç»“åˆäº†ä½ æœ€å–œæ¬¢çš„æ¸¸æˆã€‚ä¸‹è½½ï¼Œäº†è§£æœ€æ–°åŠ¨æ€ã€‚",
+    aboutTitle: "ä¸€ä¸ªå¹³å°ï¼Œæ— é™ä½“éªŒã€‚", aboutDesc: "äº§å“å•†åº—ä»¥ç®€å•å’Œæœ‰ç»„ç»‡çš„ç»“æ„æä¾›æ‚¨éœ€è¦çš„ä¸€åˆ‡ã€‚", aboutBtn: "åˆ›å»ºå¸æˆ·",
+    featuresTitle: "ä¸ºä»€ä¹ˆ <span class='text-primary'>é€‰æ‹©æˆ‘ä»¬ï¼Ÿ</span>",
+    f1Title: "å¿«é€Ÿä¸‹è½½", f1Desc: "æ„Ÿè°¢ä¼˜åŒ–çš„æœåŠ¡å™¨ï¼Œå°†æ¸¸æˆæ·»åŠ åˆ°æ‚¨çš„å›¾ä¹¦é¦†åªéœ€æ•°ç§’ã€‚",
+    f2Title: "è‡ªåŠ¨æ›´æ–°", f2Desc: "æˆ‘ä»¬çš„åå°ç³»ç»Ÿä¼šä¸æ–­æ›´æ–°æ‚¨çš„æ‰€æœ‰æ–‡ä»¶ã€‚",
+    f3Title: "ç¤¾äº¤ä¸­å¿ƒ", f3Desc: "ä¸ä»…æ˜¯åœ¨ç©æ¸¸æˆï¼Œè¿˜èƒ½é©¬ä¸Šçœ‹åˆ°ä½ çš„æœ‹å‹åœ¨ç©ä»€ä¹ˆï¼Œè¿›è¡ŒèŠå¤©ã€‚",
+    winTitle: "Windows ä¸‹è½½", winDesc: "Windows 10 / 11 å…¼å®¹ â€¢ å®‰è£…ç¨‹åºæ–‡ä»¶ (.exe)", dlBtn: "ä¸‹è½½",
+    faqTitle: "å¸¸è§ <span class='text-primary'>é—®é¢˜</span>", faq1_q: "è¯¥åº”ç”¨å®Œå…¨å…è´¹å—ï¼Ÿ", faq1_a: "æ˜¯çš„ï¼Œä¸‹è½½å’Œä½¿ç”¨äº§å“å•†åº—å®¢æˆ·ç«¯æ˜¯å®Œå…¨å…è´¹çš„ã€‚",
+    faq2_q: "æ”¯æŒå“ªäº›æ“ä½œç³»ç»Ÿï¼Ÿ", faq2_a: "ç›®å‰æ”¯æŒ Windows 10/11ã€‚æˆ‘ä»¬çš„ Linux ç‰ˆæœ¬æ­£åœ¨å¼€å‘ä¸­ã€‚", faq3_q: "æˆ‘çš„å¸æˆ·è¯¦ç»†ä¿¡æ¯å®‰å…¨å—ï¼Ÿ", faq3_a: "ç»å¯¹å®‰å…¨ã€‚",
+    aiTitle: "æ”¯æŒåŠ©æ‰‹", aiWelcome: "ä½ å¥½ï¼ä½ æœ‰å…³äºäº§å“å•†åº—çš„é—®é¢˜å—ï¼Ÿ",
+    aiPrompt: "ä½ æ˜¯äº§å“å•†åº—çš„æ™ºèƒ½æ”¯æŒåŠ©æ‰‹ã€‚è¯·ç®€æ˜ã€å‹å¥½åœ°ç”¨ä¸­æ–‡ç»™å‡ºå›ç­”ã€‚"
+  }
+};
+
+let currentLang = 'TR';
+function changeLanguage(langKey) {
+  currentLang = langKey;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(translations[currentLang][key]) { el.innerHTML = translations[currentLang][key]; }
+  });
+}
+
+function toggleDropdown() {
+  document.getElementById('langOptions').classList.toggle('show');
+}
+function selectLang(langKey, displayText) {
+  document.getElementById('selectedLangText').textContent = displayText;
+  document.getElementById('langOptions').classList.remove('show');
+  changeLanguage(langKey);
+}
+
+// Close dropdown if clicked outside
+document.addEventListener('click', function(e) {
+  const dropdown = document.getElementById('langDropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    document.getElementById('langOptions').classList.remove('show');
+  }
+});
+
+/* AI CHAT WIDGET */
+function toggleChat() {
+  document.getElementById('aiChatWindow').classList.toggle('show');
+}
+function appendMessage(text, className) {
+  const msgs = document.getElementById('aiChatMessages');
+  const div = document.createElement('div');
+  div.className = 'ai-msg ' + className;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+function showTyping() {
+  const msgs = document.getElementById('aiChatMessages');
+  const div = document.createElement('div');
+  div.className = 'ai-typing show';
+  div.id = 'aiTypingIndicator';
+  div.innerHTML = '<div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() {
+  const el = document.getElementById('aiTypingIndicator');
+  if(el) el.remove();
+}
+// BU KISMA ALACAÄINI API KEY YAZILMALI (Ã–RN: GEMINI API veya OPENAI API)
+// UYARI: Frontend koduna API key koymak gÃ¼venli deÄŸildir! Bu sadece test/Ã¶ÄŸrenim amaÃ§lÄ±dÄ±r.
+const AI_API_KEY = "AIzaSyCXbdqeUn-qpFABSASuumHIYBBUJRNSX74"; // Harika, anahtar kopyalandÄ±!
+
+async function sendAIMessage() {
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if(!text) return;
+  
+  appendMessage(text, 'user');
+  input.value = '';
+  showTyping();
+  
+  if (!AI_API_KEY) {
+    // API KEY YOKSA ESKÄ° BASÄ°T YÃ–NTEM Ã‡ALIÅSIN
+    setTimeout(() => {
+      removeTyping();
+      const lText = text.toLowerCase();
+      let reply = currentLang === 'TR' ? "AnlaÅŸÄ±lmadÄ±, tam olarak nasÄ±l yardÄ±mcÄ± olabilirim?" : "I didn't understand, how exactly can I help you?";
+      
+      if(lText.includes('selam') || lText.includes('merhaba') || lText.includes('hi') || lText.includes('hello')) {
+        reply = currentLang === 'TR' ? "Merhaba! Size platformumuzda nasÄ±l yardÄ±mcÄ± olabilirim? (GerÃ§ek yapay zeka cevaplarÄ± iÃ§in koda API KEY eklemelisin)" : "Hello! How can I help you? (Add an API KEY to the code for real AI responses)";
+      } else if(lText.includes('Ã¼cret') || lText.includes('bedava')) {
+        reply = translations[currentLang].faq1_a;
+      } else if(lText.includes('api')) {
+        reply = "GerÃ§ek yapay zeka (Gemini/ChatGPT) ile konuÅŸmak iÃ§in script.js dosyasÄ±ndaki AI_API_KEY deÄŸiÅŸkenine bir anahtar girmelisin!";
+      } else {
+        reply = currentLang === 'TR' ? "GerÃ§ek baÄŸlanabilmem iÃ§in API anahtarÄ±ma ihtiyacÄ±m var! Koda ekleyebilir misin?" : "I need an API key to connect properly!";
+      }
+      
+      appendMessage(reply, 'bot');
+    }, 1000 + Math.random() * 800);
+    return;
+  }
+
+  // API KEY VARSA GERÃ‡EK API'YE BAÄLAN (Ã–rnek: Google Gemini API)
+  try {
+    const aiPrompt = translations[currentLang].aiPrompt || "You are the support assistant.";
+      
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${AI_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          role: "user",
+          parts: [{ text: `${aiPrompt}\nUser's message: ${text}` }]
+        }]
+      })
+    });
+    
+    removeTyping();
+    const data = await response.json();
+    if(data.error) throw new Error(data.error.message);
+    
+    // Gelen cevabÄ± ekrana yazdÄ±r
+    const botReply = data.candidates[0].content.parts[0].text;
+    appendMessage(botReply, 'bot');
+
+  } catch(err) {
+    removeTyping();
+    appendMessage("Sistemsel bir hata oluÅŸtu veya API kotasÄ± doldu: " + err.message, 'bot');
+  }
+}
+</script>
 </body>
 </html>
