@@ -33,6 +33,13 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  // SECURITY FIX: Prevent caching of sensitive data (Supabase auth/api, config files)
+  if (url.hostname.includes('supabase.co') || url.pathname.includes('config.js')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
