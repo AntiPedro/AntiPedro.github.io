@@ -974,6 +974,10 @@ footer {
     <p class="reveal delay-1" data-i18n="heroDesc">Ürün Store, favori oyunlarınızı tek bir pratik arayüzde birleştirir. İndirin, her zaman güncel kalın ve toplulukla etkileşimi koparmayın.</p>
     
     <div class="platform-selector reveal delay-2">
+      <div class="platform-tabs" style="margin-bottom: 24px;">
+        <button class="platform-tab active" onclick="switchPlatformTab('platformWindows', this)"><i class="fab fa-windows"></i> <span data-i18n="winTab">Windows</span></button>
+        <button class="platform-tab" onclick="switchPlatformTab('platformYountube', this)"><i class="fab fa-youtube"></i> <span data-i18n="ytTab">YounTube</span></button>
+      </div>
       <div class="platform-content">
         <!-- WINDOWS -->
         <div class="platform-panel active" id="platformWindows" style="width: 100%;">
@@ -985,12 +989,33 @@ footer {
               <h3 data-i18n="winTitle" style="font-size: 1.2rem; margin-bottom: 8px;">Windows için İndir</h3>
               <p data-i18n="winDesc" style="margin-bottom: 20px;">Windows 10 / 11 uyumlu &bull; Kurulum dosyası (.exe)</p>
             </div>
-            <a href="https://release-assets.githubusercontent.com/github-production-release-asset/1184779055/2d293f3c-453d-481a-974a-08feefff4630?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-04-22T20%3A21%3A41Z&rscd=attachment%3B+filename%3DUrun.Store.Setup.1.0.3.exe&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-04-22T19%3A21%3A20Z&ske=2026-04-22T20%3A21%3A41Z&sks=b&skv=2018-11-09&sig=XbI1ACUHtVI1G7EGoEtzEc0ynU3aY6Iw%2BZQ7xttRs%2BQ%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc3Njg4ODkzOCwibmJmIjoxNzc2ODg3MTM4LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.XZhzgOMirvj6GaWVkA-zUEtme5tjoW92DsxOJfAcVbg&response-content-disposition=attachment%3B%20filename%3DUrun.Store.Setup.1.0.3.exe&response-content-type=application%2Foctet-stream" class="btn-download" style="width: 100%; justify-content: center; padding: 18px; font-size: 1.2rem;">
+            <a href="https://release-assets.githubusercontent.com/github-production-release-asset/1184779055/66b5ad9e-4166-498f-ad0d-c8c8c21fdaaf?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-04-24T15%3A54%3A37Z&rscd=attachment%3B+filename%3DUrunStore.Setup.1.0.4.exe&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-04-24T14%3A53%3A48Z&ske=2026-04-24T15%3A54%3A37Z&sks=b&skv=2018-11-09&sig=lvLOLxB3BaPA5XJYYLU2JzxVbRQmpDSY9Yv8NwYpBI4%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc3NzA0NTM5MywibmJmIjoxNzc3MDQzNTkzLCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.GNnosU-P6nn0-Jits-vN5UG7N_XTfiANqbp42SZXKkw&response-content-disposition=attachment%3B%20filename%3DUrunStore.Setup.1.0.4.exe&response-content-type=application%2Foctet-stream" class="btn-download" style="width: 100%; justify-content: center; padding: 18px; font-size: 1.2rem;">
               <i class="fas fa-download"></i> <span data-i18n="dlBtn">İndir</span>
             </a>
           </div>
           <div class="download-badge">
             <i class="fas fa-shield-alt"></i> <span data-i18n="winSafe">Güvenli indirme &bull; GitHub Releases üzerinden sunulmaktadır</span>
+          </div>
+        </div>
+        <!-- YOUNTUBE -->
+        <div class="platform-panel" id="platformYountube" style="width: 100%;">
+          <div class="download-card" style="flex-direction: column; text-align: center;">
+            <div class="os-icon" style="margin-bottom: 16px; width: 64px; height: 64px; font-size: 2.5rem; color: var(--danger); background: rgba(239, 68, 68, 0.1);">
+              <i class="fab fa-youtube"></i>
+            </div>
+            <div class="os-info" style="text-align: center; width: 100%;">
+              <h3 data-i18n="ytTitle" style="font-size: 1.2rem; margin-bottom: 8px;">YounTube İçin İndir</h3>
+              <p data-i18n="ytDesc" style="margin-bottom: 20px;">Reklamsız YouTube deneyimi. İndirmek için video bilgilerinizi girin.</p>
+              <div class="form-group" style="width: 100%; margin-bottom: 20px;">
+                <input type="text" data-i18n-placeholder="ytInput" placeholder="Video Bağlantısı (URL)" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none;">
+              </div>
+            </div>
+            <button onclick="showYtComingSoon()" class="btn-download" style="width: 100%; justify-content: center; padding: 18px; font-size: 1.2rem; background: var(--danger); color: #fff;">
+              <i class="fas fa-download"></i> <span data-i18n="ytDlBtn">Hemen İndir</span>
+            </button>
+          </div>
+          <div class="download-badge" style="color: var(--danger);">
+            <i class="fas fa-clock"></i> <span data-i18n="ytComingSoon">YounTube çok yakında hizmetinizde olacak!</span>
           </div>
         </div>
       </div>
@@ -1309,6 +1334,10 @@ footer {
     <p class="subtitle">İşletim sisteminizi seçin.</p>
     
     <div class="platform-selector" style="margin-top:20px; width: 100%;">
+      <div class="platform-tabs" style="margin-bottom: 24px;">
+        <button class="platform-tab active" onclick="switchPlatformTab('platformWindowsDash', this)"><i class="fab fa-windows"></i> <span data-i18n="winTab">Windows</span></button>
+        <button class="platform-tab" onclick="switchPlatformTab('platformYountubeDash', this)"><i class="fab fa-youtube"></i> <span data-i18n="ytTab">YounTube</span></button>
+      </div>
       <div class="platform-content" style="width: 100%;">
         <!-- WINDOWS -->
         <div class="platform-panel active" id="platformWindowsDash" style="width: 100%;">
@@ -1320,9 +1349,27 @@ footer {
               <h3 style="font-size: 1.2rem; font-weight:700; margin-bottom: 8px;" data-i18n="winTitle">Windows İçin İndir</h3>
               <p style="font-size: 0.9rem; margin-bottom: 20px;" data-i18n="winDesc">Windows 10 / 11 uyumlu • Kurulum dosyası (.exe)</p>
             </div>
-            <a href="https://release-assets.githubusercontent.com/github-production-release-asset/1184779055/2d293f3c-453d-481a-974a-08feefff4630?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-04-22T20%3A21%3A41Z&rscd=attachment%3B+filename%3DUrun.Store.Setup.1.0.3.exe&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-04-22T19%3A21%3A20Z&ske=2026-04-22T20%3A21%3A41Z&sks=b&skv=2018-11-09&sig=XbI1ACUHtVI1G7EGoEtzEc0ynU3aY6Iw%2BZQ7xttRs%2BQ%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc3Njg4ODkzOCwibmJmIjoxNzc2ODg3MTM4LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.XZhzgOMirvj6GaWVkA-zUEtme5tjoW92DsxOJfAcVbg&response-content-disposition=attachment%3B%20filename%3DUrun.Store.Setup.1.0.3.exe&response-content-type=application%2Foctet-stream" class="btn btn-primary" style="width: 100%; border-radius: 8px; padding: 14px;">
+            <a href="https://release-assets.githubusercontent.com/github-production-release-asset/1184779055/66b5ad9e-4166-498f-ad0d-c8c8c21fdaaf?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-04-24T15%3A54%3A37Z&rscd=attachment%3B+filename%3DUrunStore.Setup.1.0.4.exe&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-04-24T14%3A53%3A48Z&ske=2026-04-24T15%3A54%3A37Z&sks=b&skv=2018-11-09&sig=lvLOLxB3BaPA5XJYYLU2JzxVbRQmpDSY9Yv8NwYpBI4%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc3NzA0NTM5MywibmJmIjoxNzc3MDQzNTkzLCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.GNnosU-P6nn0-Jits-vN5UG7N_XTfiANqbp42SZXKkw&response-content-disposition=attachment%3B%20filename%3DUrunStore.Setup.1.0.4.exe&response-content-type=application%2Foctet-stream" class="btn btn-primary" style="width: 100%; border-radius: 8px; padding: 14px;">
               <i class="fas fa-download"></i> <span data-i18n="dlBtn">İndir</span>
             </a>
+          </div>
+        </div>
+        <!-- YOUNTUBE -->
+        <div class="platform-panel" id="platformYountubeDash" style="width: 100%;">
+          <div class="download-card" style="padding:24px 20px; flex-direction:column; text-align:center;">
+            <div class="os-icon" style="width:64px;height:64px;font-size:2.5rem; margin:0 auto 16px; color: var(--danger); background: rgba(239, 68, 68, 0.1);">
+              <i class="fab fa-youtube"></i>
+            </div>
+            <div class="os-info" style="text-align:center; width:100%;">
+              <h3 style="font-size: 1.2rem; font-weight:700; margin-bottom: 8px;" data-i18n="ytTitle">YounTube İçin İndir</h3>
+              <p style="font-size: 0.9rem; margin-bottom: 20px;" data-i18n="ytDesc">Reklamsız YouTube deneyimi. İndirmek için video bilgilerinizi girin.</p>
+              <div class="form-group" style="width: 100%; margin-bottom: 20px;">
+                <input type="text" data-i18n-placeholder="ytInput" placeholder="Video Bağlantısı (URL)" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none;">
+              </div>
+            </div>
+            <button onclick="showYtComingSoon()" class="btn btn-primary" style="width: 100%; border-radius: 8px; padding: 14px; background: var(--danger); border-color: var(--danger);">
+              <i class="fas fa-download"></i> <span data-i18n="ytDlBtn">Hemen İndir</span>
+            </button>
           </div>
         </div>
       </div>
