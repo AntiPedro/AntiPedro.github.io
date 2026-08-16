@@ -206,83 +206,31 @@ function downloadApp() {
 }
 
 /* ============================================================================
-   BOT GATE — otomatik insan/bot tespiti
-   Katman 1: Cloudflare Turnstile (sitekey tanımlıysa) — görünmez, insanı geçirir.
-   Katman 2: Davranış + tarayıcı sinyal tespiti — gerçek tarayıcı anında geçer,
-             headless/otomasyon araçları bloklanır.
+   BOT GATE — sessiz koruma
+   Görünür kapı YOK: insan ziyaretçi hiçbir şey görmez, proxy'de de bozulmaz.
+   Headless/otomasyon sinyali tespit edilirse sayfa içeriği sessizce gizlenir.
    ============================================================================ */
 
 function initBotGate() {
-  const gate = document.getElementById('botGate');
-  const err = document.getElementById('gateErr');
   const hp = document.getElementById('gateHp');
-  if (!gate) return;
 
-  // Daha önce bu oturumda doğrulandı → kapıyı atla
-  if (sessionStorage.getItem('ug_passed') === '1') {
-    gate.classList.add('gate--passed');
-    gate.setAttribute('aria-hidden', 'true');
-    return;
-  }
-
-  // Honeypot dolu = otomatik bot
-  if (hp && hp.value && hp.value.trim() !== '') {
-    gate.classList.add('gate--passed'); // sessizce boş sayfa göster
-    document.querySelector('#mainContent, .nav').forEach(el => el && (el.style.display = 'none'));
-    return;
-  }
-
-  const passed = () => {
-    sessionStorage.setItem('ug_passed', '1');
-    gate.classList.add('gate--passed');
-    gate.setAttribute('aria-hidden', 'true');
-  };
-
-  const fail = (msg) => {
-    if (err) { err.textContent = msg; err.style.display = 'block'; }
-  };
-
-  /* ---- Katman 1: Cloudflare Turnstile ---- */
-  const siteKey = _cfg && _cfg.turnstileSiteKey ? _cfg.turnstileSiteKey : '';
-  if (siteKey && window.turnstile) {
-    try {
-      window.turnstile.render(document.getElementById('turnstileWidget'), {
-        sitekey: siteKey,
-        theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark',
-        callback: passed,
-        'error-callback': () => fail('Doğrulama hatası — lütfen sayfayı yenileyin.')
-      });
-      return; // Turnstile sonucu karar verir
-    } catch (e) { /* render başarısız → katman 2'ye düş */ }
-  }
-
-  /* ---- Katman 2: Otomasyon / headless tespiti ---- */
   const botSignals = () => {
     const nav = navigator;
     if (nav.webdriver === true) return true;
-    // Headless Chrome: window.chrome yok + Chrome UA var
     const ua = (nav.userAgent || '').toLowerCase();
     if (ua.includes('headless')) return true;
     if (ua.includes('phantomjs')) return true;
-    if (ua.includes('electron') && !ua.includes('chrome')) return true;
-    // Puppeteer/Playwright işaretleri
     if (ua.includes('puppeteer') || ua.includes('playwright')) return true;
-    // chrome.csi yok + chrome yok + Safari değil → headless Chromium
     if (ua.includes('chrome') && !window.chrome && !(window.chrome && window.chrome.csi)) return true;
+    if (hp && hp.value && hp.value.trim() !== '') return true;
     return false;
   };
 
   if (botSignals()) {
-    fail('Otomatik erişim engellendi.');
-    return; // kapı açılmaz
+    document.body.classList.add('bot-blocked');
+    // Bot için geçersiz kıl: içerik görünmez olsun
+    document.querySelectorAll('#mainContent, .nav, footer').forEach(el => { el.style.visibility = 'hidden'; });
   }
-
-  // Gerçek tarayıcı: güvenliği göstermek için kısa bir an (300ms) sonra geç.
-  // Kullanıcı etkileşimi gerekmez, buton yok, bekleme yok.
-  const t = setTimeout(passed, 300);
-  // Herhangi bir kullanıcı etkileşimi görüldüyse daha da hızlı geç.
-  window.addEventListener('pointerdown', () => { clearTimeout(t); passed(); }, { once: true });
-  window.addEventListener('keydown', () => { clearTimeout(t); passed(); }, { once: true });
 }
 
 /* ============================================================================
@@ -825,8 +773,6 @@ const translations = {
     comingTitle: 'Yakında',
     comingSub: 'İstemci şu anda geliştirme aşamasında. Hazır olduğunda ilk sen duy — topluluğa katıl.',
     comingDiscord: 'Topluluğa Katıl',
-    gateTitle: 'Doğrulama',
-    gateSub: 'Site otomatik olarak sizi doğruluyor…',
     featuresTitle: 'Bir mağaza istemcisinden fazlası',
     featuresSub: 'İndirme, güncelleme ve sosyal deneyim — tek uygulamada birleşmiş.',
     f1Title: 'Hızlı İndirme', f1Desc: 'Optimize edilmiş dağıtım ile oyunlarınızı kütüphanenize saniyeler içinde ekleyin.',
@@ -902,8 +848,6 @@ const translations = {
     comingTitle: 'Coming soon',
     comingSub: 'The client is currently in development. Be the first to know — join the community.',
     comingDiscord: 'Join the Community',
-    gateTitle: 'Verification',
-    gateSub: 'The site is verifying you automatically…',
     featuresTitle: 'More than just a store client',
     featuresSub: 'Downloads, updates, and social — combined in a single app.',
     f1Title: 'Fast Downloads', f1Desc: 'Add games to your library in seconds with an optimized delivery network.',
@@ -979,8 +923,6 @@ const translations = {
     comingTitle: 'Demnächst',
     comingSub: 'Der Client befindet sich derzeit in der Entwicklung. Erfahre es als Erster — tritt der Community bei.',
     comingDiscord: 'Community beitreten',
-    gateTitle: 'Verifizierung',
-    gateSub: 'Die Website verifiziert Sie automatisch…',
     featuresTitle: 'Mehr als ein Store-Client',
     featuresSub: 'Downloads, Updates und Soziales — in einer App vereint.',
     f1Title: 'Schnelle Downloads', f1Desc: 'Füge Spiele in Sekunden zur Bibliothek hinzu — dank optimiertem Netzwerk.',
@@ -1019,8 +961,6 @@ const translations = {
     comingTitle: 'Bientôt disponible',
     comingSub: 'Le client est actuellement en développement. Soyez le premier informé — rejoignez la communauté.',
     comingDiscord: 'Rejoindre la communauté',
-    gateTitle: 'Vérification',
-    gateSub: 'Le site vous vérifie automatiquement…',
     featuresTitle: 'Plus qu\'un client de magasin',
     featuresSub: 'Téléchargements, mises à jour et social — dans une seule app.',
     f1Title: 'Téléchargements rapides', f1Desc: 'Ajoutez des jeux en quelques secondes grâce à un réseau optimisé.',
@@ -1059,8 +999,6 @@ const translations = {
     comingTitle: 'Próximamente',
     comingSub: 'El cliente está actualmente en desarrollo. Sé el primero en enterarte — únete a la comunidad.',
     comingDiscord: 'Unirse a la comunidad',
-    gateTitle: 'Verificación',
-    gateSub: 'El sitio te está verificando automáticamente…',
     featuresTitle: 'Más que un cliente de tienda',
     featuresSub: 'Descargas, actualizaciones y social — en una sola app.',
     f1Title: 'Descargas rápidas', f1Desc: 'Añade juegos en segundos gracias a una red optimizada.',
@@ -1099,8 +1037,6 @@ const translations = {
     comingTitle: 'Скоро',
     comingSub: 'Клиент сейчас в разработке. Узнайте первыми — присоединяйтесь к сообществу.',
     comingDiscord: 'Присоединиться к сообществу',
-    gateTitle: 'Проверка',
-    gateSub: 'Сайт автоматически проверяет вас…',
     featuresTitle: 'Больше, чем клиент магазина',
     featuresSub: 'Загрузки, обновления и социальное — в одном приложении.',
     f1Title: 'Быстрые загрузки', f1Desc: 'Добавляйте игры за секунды благодаря оптимизированной сети.',
@@ -1139,8 +1075,6 @@ const translations = {
     comingTitle: '即将推出',
     comingSub: '客户端目前正在开发中。抢先了解 — 加入社区。',
     comingDiscord: '加入社区',
-    gateTitle: '验证',
-    gateSub: '网站正在自动验证您…',
     featuresTitle: '不止是一个商店客户端',
     featuresSub: '下载、更新与社交 —— 集于一个应用。',
     f1Title: '快速下载', f1Desc: '借助优化网络，几秒内将游戏加入你的库。',
