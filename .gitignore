@@ -1,0 +1,6 @@
+# node
+node_modules/
+*.log
+
+# config secrets (local builds)
+config.js.bak

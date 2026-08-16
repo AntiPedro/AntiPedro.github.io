@@ -1,5 +1,6 @@
 # Pages: Settings → Source = GitHub Actions
-# Secrets: SUPABASE_URL, SUPABASE_ANON_KEY (Actions → Repository secrets)
+# Secrets (opsiyonel): SUPABASE_URL, SUPABASE_ANON_KEY
+# Secrets yoksa repo'daki config.js kullanılır (deploy yine çalışır).
 
 name: Deploy GitHub Pages
 
@@ -26,12 +27,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Generate config.js from secrets
-        run: node scripts/build-config.js
+      - name: Generate config.js from secrets (if present)
+        shell: bash
+        run: |
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+            node scripts/build-config.js
+          else
+            echo "Secrets not set — keeping repo config.js."
+          fi
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}

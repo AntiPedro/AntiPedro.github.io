@@ -2,17 +2,30 @@
   "name": "Ürün Store",
   "short_name": "ÜrünStore",
   "description": "Tüm oyunların ve uygulamaların tek bir yerde bulunduğu mağaza. İndir, oyna ve topluluğa katıl.",
-  "start_url": "./index.html",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#18181b",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "orientation": "any",
   "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "./icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
