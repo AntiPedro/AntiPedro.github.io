@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    ÜRÜN STORE — app.js
    Supabase auth, 7 dil, tema, PWA.
    Anon anahtar config.js içinde; service_role asla tarayıcıya koyma.
@@ -135,7 +135,7 @@ function openModal(t) {
   const overlay = document.getElementById('modalOverlay');
   if (!overlay) return;
   overlay.classList.add('open');
-  ['settings', 'otp', 'kvkk'].forEach(m => {
+  ['settings', 'otp', 'kvkk', 'coming'].forEach(m => {
     const el = document.getElementById(m + 'Modal');
     if (el) el.style.display = (t === m) ? 'block' : 'none';
   });
@@ -202,9 +202,87 @@ function toggleTheme() {
    ============================================================================ */
 
 function downloadApp() {
-  const url = DOWNLOAD_URL;
-  if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener,noreferrer');
-  else showToast(getText('errGeneric'), true);
+  openModal('coming');
+}
+
+/* ============================================================================
+   BOT GATE — otomatik insan/bot tespiti
+   Katman 1: Cloudflare Turnstile (sitekey tanımlıysa) — görünmez, insanı geçirir.
+   Katman 2: Davranış + tarayıcı sinyal tespiti — gerçek tarayıcı anında geçer,
+             headless/otomasyon araçları bloklanır.
+   ============================================================================ */
+
+function initBotGate() {
+  const gate = document.getElementById('botGate');
+  const err = document.getElementById('gateErr');
+  const hp = document.getElementById('gateHp');
+  if (!gate) return;
+
+  // Daha önce bu oturumda doğrulandı → kapıyı atla
+  if (sessionStorage.getItem('ug_passed') === '1') {
+    gate.classList.add('gate--passed');
+    gate.setAttribute('aria-hidden', 'true');
+    return;
+  }
+
+  // Honeypot dolu = otomatik bot
+  if (hp && hp.value && hp.value.trim() !== '') {
+    gate.classList.add('gate--passed'); // sessizce boş sayfa göster
+    document.querySelector('#mainContent, .nav').forEach(el => el && (el.style.display = 'none'));
+    return;
+  }
+
+  const passed = () => {
+    sessionStorage.setItem('ug_passed', '1');
+    gate.classList.add('gate--passed');
+    gate.setAttribute('aria-hidden', 'true');
+  };
+
+  const fail = (msg) => {
+    if (err) { err.textContent = msg; err.style.display = 'block'; }
+  };
+
+  /* ---- Katman 1: Cloudflare Turnstile ---- */
+  const siteKey = _cfg && _cfg.turnstileSiteKey ? _cfg.turnstileSiteKey : '';
+  if (siteKey && window.turnstile) {
+    try {
+      window.turnstile.render(document.getElementById('turnstileWidget'), {
+        sitekey: siteKey,
+        theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark',
+        callback: passed,
+        'error-callback': () => fail('Doğrulama hatası — lütfen sayfayı yenileyin.')
+      });
+      return; // Turnstile sonucu karar verir
+    } catch (e) { /* render başarısız → katman 2'ye düş */ }
+  }
+
+  /* ---- Katman 2: Otomasyon / headless tespiti ---- */
+  const botSignals = () => {
+    const nav = navigator;
+    if (nav.webdriver === true) return true;
+    // Headless Chrome: window.chrome yok + Chrome UA var
+    const ua = (nav.userAgent || '').toLowerCase();
+    if (ua.includes('headless')) return true;
+    if (ua.includes('phantomjs')) return true;
+    if (ua.includes('electron') && !ua.includes('chrome')) return true;
+    // Puppeteer/Playwright işaretleri
+    if (ua.includes('puppeteer') || ua.includes('playwright')) return true;
+    // chrome.csi yok + chrome yok + Safari değil → headless Chromium
+    if (ua.includes('chrome') && !window.chrome && !(window.chrome && window.chrome.csi)) return true;
+    return false;
+  };
+
+  if (botSignals()) {
+    fail('Otomatik erişim engellendi.');
+    return; // kapı açılmaz
+  }
+
+  // Gerçek tarayıcı: güvenliği göstermek için kısa bir an (300ms) sonra geç.
+  // Kullanıcı etkileşimi gerekmez, buton yok, bekleme yok.
+  const t = setTimeout(passed, 300);
+  // Herhangi bir kullanıcı etkileşimi görüldüyse daha da hızlı geç.
+  window.addEventListener('pointerdown', () => { clearTimeout(t); passed(); }, { once: true });
+  window.addEventListener('keydown', () => { clearTimeout(t); passed(); }, { once: true });
 }
 
 /* ============================================================================
@@ -743,7 +821,12 @@ const translations = {
     heroSub: 'Favori oyunlarınızı tek bir pratik arayüzde toplayın. İndirin, her zaman güncel kalın, toplulukla bağı koparmayın.',
     winTitle: 'Windows için İndir', winDesc: 'Windows 10 / 11 uyumlu • Kurulum dosyası (.exe)',
     caseNoteL: 'Kurulum', caseNote1: 'Kurulum dosyasını indirin, çalıştırın ve talimatları izleyin.', caseNote2: 'Tüm güncellemeler istemci üzerinden otomatik gelir.',
-    dlBtn: 'İndir', dlNote: 'GitHub Releases üzerinden güvenli dağıtım',
+    dlBtn: 'Yakında', dlNote: 'GitHub Releases üzerinden güvenli dağıtım',
+    comingTitle: 'Yakında',
+    comingSub: 'İstemci şu anda geliştirme aşamasında. Hazır olduğunda ilk sen duy — topluluğa katıl.',
+    comingDiscord: 'Topluluğa Katıl',
+    gateTitle: 'Doğrulama',
+    gateSub: 'Site otomatik olarak sizi doğruluyor…',
     featuresTitle: 'Bir mağaza istemcisinden fazlası',
     featuresSub: 'İndirme, güncelleme ve sosyal deneyim — tek uygulamada birleşmiş.',
     f1Title: 'Hızlı İndirme', f1Desc: 'Optimize edilmiş dağıtım ile oyunlarınızı kütüphanenize saniyeler içinde ekleyin.',
@@ -815,7 +898,12 @@ const translations = {
     heroSub: 'Bring your favorite games together in one practical interface. Download, stay updated, and never lose touch with the community.',
     winTitle: 'Download for Windows', winDesc: 'Windows 10 / 11 compatible • Installer (.exe)',
     caseNoteL: 'Installation', caseNote1: 'Download the installer, run it and follow the instructions.', caseNote2: 'All updates come automatically through the client.',
-    dlBtn: 'Download', dlNote: 'Secure delivery via GitHub Releases',
+    dlBtn: 'Coming soon', dlNote: 'Secure delivery via GitHub Releases',
+    comingTitle: 'Coming soon',
+    comingSub: 'The client is currently in development. Be the first to know — join the community.',
+    comingDiscord: 'Join the Community',
+    gateTitle: 'Verification',
+    gateSub: 'The site is verifying you automatically…',
     featuresTitle: 'More than just a store client',
     featuresSub: 'Downloads, updates, and social — combined in a single app.',
     f1Title: 'Fast Downloads', f1Desc: 'Add games to your library in seconds with an optimized delivery network.',
@@ -887,7 +975,12 @@ const translations = {
     heroSub: 'Bündle deine Lieblingsspiele in einer praktischen Oberfläche. Lade herunter, bleib aktuell und verliere nie den Kontakt zur Community.',
     winTitle: 'Download für Windows', winDesc: 'Windows 10 / 11 kompatibel • Installationsdatei (.exe)',
     caseNoteL: 'Installation', caseNote1: 'Laden Sie die Installationsdatei herunter, führen Sie sie aus und folgen Sie den Anweisungen.', caseNote2: 'Alle Updates kommen automatisch über den Client.',
-    dlBtn: 'Herunterladen', dlNote: 'Sichere Bereitstellung über GitHub Releases',
+    dlBtn: 'Demnächst', dlNote: 'Sichere Bereitstellung über GitHub Releases',
+    comingTitle: 'Demnächst',
+    comingSub: 'Der Client befindet sich derzeit in der Entwicklung. Erfahre es als Erster — tritt der Community bei.',
+    comingDiscord: 'Community beitreten',
+    gateTitle: 'Verifizierung',
+    gateSub: 'Die Website verifiziert Sie automatisch…',
     featuresTitle: 'Mehr als ein Store-Client',
     featuresSub: 'Downloads, Updates und Soziales — in einer App vereint.',
     f1Title: 'Schnelle Downloads', f1Desc: 'Füge Spiele in Sekunden zur Bibliothek hinzu — dank optimiertem Netzwerk.',
@@ -922,7 +1015,12 @@ const translations = {
     heroSub: 'Rassemblez vos jeux préférés dans une interface pratique. Téléchargez, restez à jour, gardez le lien avec la communauté.',
     winTitle: 'Télécharger pour Windows', winDesc: 'Windows 10 / 11 compatible • Fichier (.exe)',
     caseNoteL: 'Installation', caseNote1: 'Téléchargez le fichier d\'installation, exécutez-le et suivez les instructions.', caseNote2: 'Toutes les mises à jour arrivent automatiquement via le client.',
-    dlBtn: 'Télécharger', dlNote: 'Distribution sécurisée via GitHub Releases',
+    dlBtn: 'Bientôt disponible', dlNote: 'Distribution sécurisée via GitHub Releases',
+    comingTitle: 'Bientôt disponible',
+    comingSub: 'Le client est actuellement en développement. Soyez le premier informé — rejoignez la communauté.',
+    comingDiscord: 'Rejoindre la communauté',
+    gateTitle: 'Vérification',
+    gateSub: 'Le site vous vérifie automatiquement…',
     featuresTitle: 'Plus qu\'un client de magasin',
     featuresSub: 'Téléchargements, mises à jour et social — dans une seule app.',
     f1Title: 'Téléchargements rapides', f1Desc: 'Ajoutez des jeux en quelques secondes grâce à un réseau optimisé.',
@@ -957,7 +1055,12 @@ const translations = {
     heroSub: 'Reúne tus juegos favoritos en una interfaz práctica. Descarga, mantente al día y no pierdas el contacto con la comunidad.',
     winTitle: 'Descargar para Windows', winDesc: 'Compatible con Windows 10 / 11 • Archivo (.exe)',
     caseNoteL: 'Instalación', caseNote1: 'Descarga el archivo de instalación, ejecútalo y sigue las instrucciones.', caseNote2: 'Todas las actualizaciones llegan automáticamente a través del cliente.',
-    dlBtn: 'Descargar', dlNote: 'Distribución segura vía GitHub Releases',
+    dlBtn: 'Próximamente', dlNote: 'Distribución segura vía GitHub Releases',
+    comingTitle: 'Próximamente',
+    comingSub: 'El cliente está actualmente en desarrollo. Sé el primero en enterarte — únete a la comunidad.',
+    comingDiscord: 'Unirse a la comunidad',
+    gateTitle: 'Verificación',
+    gateSub: 'El sitio te está verificando automáticamente…',
     featuresTitle: 'Más que un cliente de tienda',
     featuresSub: 'Descargas, actualizaciones y social — en una sola app.',
     f1Title: 'Descargas rápidas', f1Desc: 'Añade juegos en segundos gracias a una red optimizada.',
@@ -992,7 +1095,12 @@ const translations = {
     heroSub: 'Соберите любимые игры в одном удобном интерфейсе. Скачивайте, оставайтесь в курсе и не теряйте связь с сообществом.',
     winTitle: 'Скачать для Windows', winDesc: 'Windows 10 / 11 совместим • Установщик (.exe)',
     caseNoteL: 'Установка', caseNote1: 'Скачайте файл установки, запустите его и следуйте инструкциям.', caseNote2: 'Все обновления приходят автоматически через клиент.',
-    dlBtn: 'Скачать', dlNote: 'Безопасная доставка через GitHub Releases',
+    dlBtn: 'Скоро', dlNote: 'Безопасная доставка через GitHub Releases',
+    comingTitle: 'Скоро',
+    comingSub: 'Клиент сейчас в разработке. Узнайте первыми — присоединяйтесь к сообществу.',
+    comingDiscord: 'Присоединиться к сообществу',
+    gateTitle: 'Проверка',
+    gateSub: 'Сайт автоматически проверяет вас…',
     featuresTitle: 'Больше, чем клиент магазина',
     featuresSub: 'Загрузки, обновления и социальное — в одном приложении.',
     f1Title: 'Быстрые загрузки', f1Desc: 'Добавляйте игры за секунды благодаря оптимизированной сети.',
@@ -1027,7 +1135,12 @@ const translations = {
     heroSub: '在一个实用界面中汇集你喜爱的游戏。下载、保持最新，并始终与社区保持联系。',
     winTitle: '下载 Windows 版', winDesc: '兼容 Windows 10 / 11 • 安装程序 (.exe)',
     caseNoteL: '安装', caseNote1: '下载安装文件，运行并按照说明操作。', caseNote2: '所有更新都会通过客户端自动获取。',
-    dlBtn: '下载', dlNote: '通过 GitHub Releases 安全分发',
+    dlBtn: '即将推出', dlNote: '通过 GitHub Releases 安全分发',
+    comingTitle: '即将推出',
+    comingSub: '客户端目前正在开发中。抢先了解 — 加入社区。',
+    comingDiscord: '加入社区',
+    gateTitle: '验证',
+    gateSub: '网站正在自动验证您…',
     featuresTitle: '不止是一个商店客户端',
     featuresSub: '下载、更新与社交 —— 集于一个应用。',
     f1Title: '快速下载', f1Desc: '借助优化网络，几秒内将游戏加入你的库。',
@@ -1370,6 +1483,8 @@ function selectLang(langKey) {
    ============================================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
+  initBotGate();
+
   applyTheme(localStorage.getItem('theme') || 'light');
   changeLanguage(currentLang);
 

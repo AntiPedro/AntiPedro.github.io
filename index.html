@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://cdn.discordapp.com https://images.unsplash.com; connect-src 'self' https://qyyxblsytifczxcgpvpi.supabase.co https://api64.ipify.org; frame-src 'self' https://accounts.google.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self';">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://apis.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://cdn.discordapp.com https://images.unsplash.com; connect-src 'self' https://qyyxblsytifczxcgpvpi.supabase.co https://api64.ipify.org https://challenges.cloudflare.com; frame-src 'self' https://accounts.google.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self';">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -26,19 +26,19 @@
   <meta property="og:site_name" content="Ürün Store">
   <meta property="og:title" content="Ürün Store — Oyun ve Uygulamaların Yepyeni Evi">
   <meta property="og:description" content="Favori oyunlarınızı tek platformda yönetin. Hızlı indirme, otomatik güncelleme ve topluluk — Windows 10/11 için %100 ücretsiz.">
-  <meta property="og:image" content="https://antipedro.github.io/icon.png">
+  <meta property="og:image" content="https://urunstore.dev.tc/icon.png">
   <meta property="og:image:width" content="512">
   <meta property="og:image:height" content="512">
-  <meta property="og:url" content="https://antipedro.github.io/">
+  <meta property="og:url" content="https://urunstore.dev.tc">
   <meta property="og:locale" content="tr_TR">
   <meta property="og:locale:alternate" content="en_US">
 
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Ürün Store — Oyun ve Uygulamaların Yepyeni Evi">
   <meta name="twitter:description" content="Oyunlarınızı tek yerden yönetin. Hızlı indirme, otomatik güncelleme — ücretsiz.">
-  <meta name="twitter:image" content="https://antipedro.github.io/icon.png">
+  <meta name="twitter:image" content="https://urunstore.dev.tc/icon.png">
 
-  <link rel="canonical" href="https://antipedro.github.io/">
+  <link rel="canonical" href="https://urunstore.dev.tc">
   <link rel="manifest" href="./manifest.json">
   <link rel="sitemap" type="application/xml" href="./sitemap.xml">
   <link rel="icon" type="image/svg+xml" href="./favicon.svg">
@@ -52,7 +52,7 @@
     "@type": "SoftwareApplication",
     "name": "Ürün Store",
     "alternateName": "Urun Store",
-    "url": "https://antipedro.github.io/",
+    "url": "https://urunstore.dev.tc",
     "applicationCategory": "GameApplication",
     "operatingSystem": "Windows 10, Windows 11",
     "applicationSubCategory": "GameStore",
@@ -75,7 +75,7 @@
       "name": "Ürün Store",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://antipedro.github.io/icon.png"
+        "url": "https://urunstore.dev.tc/icon.png"
       }
     }
   }
@@ -85,7 +85,7 @@
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Ürün Store",
-    "url": "https://antipedro.github.io/",
+    "url": "https://urunstore.dev.tc",
     "inLanguage": "tr-TR",
     "publisher": {
       "@type": "Organization",
@@ -105,6 +105,23 @@
 </head>
 
 <body>
+
+  <!-- ============================================================
+       BOT GATE — otomatik insan/bot tespiti
+       1) Cloudflare Turnstile (config'de sitekey varsa) — görünmez, insanı otomatik geçirir.
+       2) Davranış tespiti — gerçek tarayıcı sinyalleri, anında geçiş.
+       ============================================================ -->
+  <div class="gate" id="botGate" aria-hidden="false" role="dialog" aria-modal="true" aria-label="Doğrulama">
+    <div class="gate__card">
+      <div class="gate__logo">Ürün Store<span class="nav__tm">®</span></div>
+      <div class="gate__spinner" aria-hidden="true"><span></span></div>
+      <h1 class="gate__title" data-i18n="gateTitle">Doğrulama</h1>
+      <p class="gate__sub" data-i18n="gateSub">Site otomatik olarak sizi doğruluyor…</p>
+      <div class="gate__turnstile" id="turnstileWidget"></div>
+      <p class="gate__err" id="gateErr" style="display:none;"></p>
+      <input type="text" class="gate__hp" id="gateHp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    </div>
+  </div>
 
   <a class="skip-link" href="#mainContent">İçeriğe geç</a>
 
@@ -731,6 +748,17 @@
       <div class="switch-line">Kod gelmedi mi? <button onclick="resendOTP()">Tekrar İste</button></div>
     </div>
 
+    <!-- COMING SOON -->
+    <div class="modal" id="comingModal" style="display:none;" role="dialog" aria-modal="true" aria-label="Yakında">
+      <button class="modal-close" onclick="closeModal()" aria-label="Kapat"><i class="fas fa-times" aria-hidden="true"></i></button>
+      <div class="modal-icon"><i class="fas fa-hourglass-half" aria-hidden="true"></i></div>
+      <h2 data-i18n="comingTitle">Yakında</h2>
+      <p class="subtitle" data-i18n="comingSub">İstemci şu anda geliştirme aşamasında. Hazır olduğunda ilk sen duy — topluluğa katıl.</p>
+      <a class="btn btn-primary btn-block btn-lg" href="https://discord.gg/ZdYUhX3u3P" target="_blank" rel="noopener" onclick="closeModal()">
+        <i class="fab fa-discord" aria-hidden="true"></i> <span data-i18n="comingDiscord">Topluluğa Katıl</span>
+      </a>
+    </div>
+
   </div>
 
   <!-- TOAST -->
@@ -778,6 +806,7 @@
        SCRIPTS
        ============================================================ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer crossorigin="anonymous"></script>
   <script src="./config.js"></script>
   <script>
     // CONFIG FALLBACK — config.js yoksa (yerel / önizleme) anon anahtar kullanılır.
